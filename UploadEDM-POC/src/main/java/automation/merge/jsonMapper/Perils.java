@@ -1,6 +1,7 @@
 package automation.merge.jsonMapper;
 
 import java.util.List;
+import java.util.Map;
 
 //POJO class Perils
 public class Perils {
@@ -31,8 +32,8 @@ public class Perils {
     String gmpeCode;
     String subPeril;
     String region;
-    String excludePostalCodes;
-    String fireOnly;
+    Boolean excludePostalCodes;
+    Boolean fireOnly;
     String perilOverride;
     Boolean dynamicAutomobileModeling;
     Boolean includePluvial;
@@ -40,7 +41,7 @@ public class Perils {
     Boolean defenceOn;
     List<String> subPerils;
     List<String> secondaryPerils;
-    String policyCoverages;
+    List<String> policyCoverages;
     String vendor;
     Boolean run1dOnly;
     List<String> specialtyModels;
@@ -49,6 +50,54 @@ public class Perils {
     String property;
     List<String> unknownForPrimaryCharacteristics;
     List<String> scaleExposureValues;
+    String portfolioId;
+    String mfId;
+    String vulnerabilitySetId;
+    String GeocodeVersion;
+
+    String GeoHazVersion;
+
+    List<String> GeoHazLayers;
+
+    public String getGeocodeVersion() {
+        return GeocodeVersion;
+    }
+
+    public void setGeocodeVersion(String geocodeVersion) {
+        GeocodeVersion = geocodeVersion;
+    }
+
+    public String getGeoHazVersion() {
+        return GeoHazVersion;
+    }
+
+    public void setGeoHazVersion(String geoHazVersion) {
+        GeoHazVersion = geoHazVersion;
+    }
+
+    public List<String> getGeoHazLayers() {
+        return GeoHazLayers;
+    }
+
+    public void setGeoHazLayers(List<String> geoHazLayers) {
+        GeoHazLayers = geoHazLayers;
+    }
+
+    public String getMfId() {
+        return mfId;
+    }
+
+    public void setMfId(String mfId) {
+        this.mfId = mfId;
+    }
+
+    public String getPortfolioId() {
+        return portfolioId;
+    }
+
+    public void setPortfolioId(String portfolioId) {
+        this.portfolioId = portfolioId;
+    }
 
     public String getPeril() {
         return peril;
@@ -250,19 +299,19 @@ public class Perils {
         this.region = region;
     }
 
-    public String getExcludePostalCodes() {
+    public Boolean getExcludePostalCodes() {
         return excludePostalCodes;
     }
 
-    public void setExcludePostalCodes(String excludePostalCodes) {
+    public void setExcludePostalCodes(Boolean excludePostalCodes) {
         this.excludePostalCodes = excludePostalCodes;
     }
 
-    public String getFireOnly() {
+    public Boolean getFireOnly() {
         return fireOnly;
     }
 
-    public void setFireOnly(String fireOnly) {
+    public void setFireOnly(Boolean fireOnly) {
         this.fireOnly = fireOnly;
     }
 
@@ -299,11 +348,11 @@ public class Perils {
         this.secondaryPerils = secondaryPerils;
     }
 
-    public String getPolicyCoverages() {
+    public List<String> getPolicyCoverages() {
         return policyCoverages;
     }
 
-    public void setPolicyCoverages(String policyCoverages) {
+    public void setPolicyCoverages(List<String> policyCoverages) {
         this.policyCoverages = policyCoverages;
     }
 
@@ -363,6 +412,14 @@ public class Perils {
         this.unknownForPrimaryCharacteristics = unknownForPrimaryCharacteristics;
     }
 
+    public String getVulnerabilitySetId() {
+        return vulnerabilitySetId;
+    }
+
+    public void setVulnerabilitySetId(String vulnerabilitySetId) {
+        this.vulnerabilitySetId = vulnerabilitySetId;
+    }
+
     public List<String> getScaleExposureValues() {
         return scaleExposureValues;
     }
@@ -409,4 +466,69 @@ public class Perils {
     public void setProfileName(String profileName) {
         this.profileName = profileName;
     }
+
+    public static Perils extractPerilFromTC(Map<String, String> tc) {
+        Perils perils = new Perils();
+        perils.setPeril(tc.get("peril"));
+        perils.setIgnoreContractDates(tc.get("ignoreContractDates").contains("YES"));
+        perils.setEngine(tc.get("engine"));
+        perils.setAlternateVulnCode(tc.get("alternateVulnCode"));
+        perils.setLabelRegion(tc.get("LabelRegion"));
+        perils.setNumberOfSamples(tc.get("numberOfSamples"));
+        perils.setPetName(tc.get("petName"));
+        perils.setPetDataVersion(tc.get("petDataVersion"));
+        perils.setNumberOfPeriods(tc.get("numberOfPeriods"));
+        perils.setInsuranceType(tc.get("insuranceType"));
+        perils.setAnalysisType(tc.get("analysisType"));
+        perils.setLocationPerRisk(tc.get("locationPerRisk"));
+        perils.setVersion(tc.get("version"));
+        perils.setEndYear(tc.get("endYear"));
+        perils.setEventRateSchemeId(tc.get("eventRateSchemeId"));
+        perils.setPolicyPerRisk(tc.get("policyPerRisk"));
+        perils.setDescription(tc.get("description"));
+        perils.setModelRegion(tc.get("modelRegion"));
+        perils.setSubRegions(tc.get("subRegions"));
+        perils.setAnalysisMode(tc.get("analysisMode"));
+        perils.setStartYear(tc.get("startYear"));
+        perils.setGmpeName(tc.get("gmpeName"));
+        perils.setApplyPLA(tc.get("applyPLA").contains("YES"));
+        perils.setGmpeCode(tc.get("gmpeCode"));
+        perils.setSubPeril(tc.get("subPeril"));
+        perils.setRegion(tc.get("region"));
+        perils.setExcludePostalCodes(tc.get("excludePostalCodes").contains("YES"));
+        perils.setFireOnly(tc.get("fireOnly").contains("YES"));
+        perils.setPerilOverride(tc.get("perilOverride"));
+        perils.setDynamicAutomobileModeling(tc.get("dynamicAutomobileModeling").contains("YES"));
+        perils.setIncludePluvial(tc.get("includePluvial").contains("YES"));
+        perils.setIncludeBespokeDefence(tc.get("includeBespokeDefence").contains("YES"));
+        perils.setDefenceOn(tc.get("defenceOn").contains("YES"));
+        perils.setSubPerils(List.of(tc.get("subPerils").split(",")));
+        perils.setSecondaryPerils(List.of(tc.get("secondaryPerils").split(",")));
+        perils.setPolicyCoverages(List.of(tc.get("policyCoverages").split(",")));
+        perils.setVendor(tc.get("vendor"));
+        perils.setRun1dOnly(tc.get("run1dOnly").contains(("YES")));
+        perils.setSpecialtyModels(List.of(tc.get("specialtyModels").split(",")));
+        perils.setFire(tc.get("fire").contains("YES"));
+        perils.setCoverage(tc.get("coverage").contains("YES"));
+        perils.setProperty(tc.get("property"));
+        perils.setUnknownForPrimaryCharacteristics(List.of(tc.get("unknownForPrimaryCharacteristics").split(",")));
+        perils.setVulnerabilitySetId(tc.get("vulnerabilitySetId"));
+        perils.setScaleExposureValues(List.of(tc.get("scaleExposureValues").split(",")));
+        perils.setMfId(tc.get("mfId"));
+        perils.setPortfolioId(tc.get("existingPortfolioId"));
+
+        perils.setGeocodeVersion(tc.get("GeocodeVersion"));
+        perils.setGeoHazVersion(tc.get("GeoHazVersion"));
+
+        String layer = tc.get("GeoHazLayers");
+        if ( layer != null && layer != "" ) {
+            String[] layersList = layer.split(",");
+            perils.setGeoHazLayers(List.of(layersList));
+        } else {
+            perils.setGeoHazLayers(List.of());
+        }
+
+        return perils;
+    }
+
 }

@@ -3,11 +3,11 @@
 <suite name="Failed suite [Suite]" guice-stage="DEVELOPMENT">
   <test thread-count="5" name="Test(failed)">
     <classes>
-      <class name="automation.batch.BatchTests">
+      <class name="automation.merge.SingleInputClass">
         <methods>
-          <include name="batchAPI"/>
+          <include name="executeSingleInputCsv"/>
         </methods>
-      </class> <!-- automation.batch.BatchTests -->
+      </class> <!-- automation.merge.SingleInputClass -->
     </classes>
   </test> <!-- Test(failed) -->
 </suite> <!-- Failed suite [Suite] -->

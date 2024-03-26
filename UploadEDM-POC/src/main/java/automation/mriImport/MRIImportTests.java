@@ -4,6 +4,7 @@ import automation.batch.BatchTests;
 import automation.edm.ApiUtil;
 import automation.edm.LoadData;
 import automation.edm.MRIImportData;
+import automation.merge.jsonMapper.Perils;
 import com.rms.core.qe.common.AuthUtil;
 import io.restassured.response.Response;
 import org.apache.commons.lang.RandomStringUtils;
@@ -16,7 +17,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static automation.edm.LoadData.MergeHeaders;
+
 public class MRIImportTests {
+
 
     @DataProvider(name="loadFromCSV")
     public Object[] provider() throws IOException {
@@ -24,30 +28,78 @@ public class MRIImportTests {
     }
 
     @Test(dataProvider = "loadFromCSV")
-    public void MRIImport(Map<String, String> tc,Boolean isCreateEDM) throws Exception {
+    public void MRIImport(Map<String, String> tc, Boolean isCreateEDM) throws Exception {
+
         System.out.println("************** Running MRIImport " );
         String token = ApiUtil.getSmlToken(LoadData.config.getUsername(), LoadData.config.getPassword(), LoadData.config.getTenant(), "accessToken");
         String dataSource = null;
         if(isCreateEDM == true) {
             System.out.println("creating edm.");
-             dataSource = createEDM(tc, token);
+            dataSource = createEDM(tc, token);
         }
         else {
             System.out.println("using existing edm.");
-             dataSource = tc.get("edmDatasourceName");
+            dataSource = tc.get("edmDatasourceName");
         }
 
-        System.out.println("datasource passed to mri import"+tc.get("edmDatasourceName"));
+        MRIImport(token, dataSource, tc, "MRI Import");
+
+    }
+    public static void MRIImport(String token, String dataSource, Map<String, String> tc, String jobType) throws Exception {
+
         if (dataSource == null) {
             throw new Exception("DataSource is null");
         }
-
         String bucketID = createMriBucket(token);
-
         if (bucketID == null) {
-           throw new Exception("Bucket ID is null");
+            throw new Exception("Bucket ID is null");
         }
 
+        String portfolioNumber = tc.get("portfolioNumber");
+        String portfolioName = tc.get("portfolioName");
+        String description = tc.get("importDescrp");
+        System.out.println(" portfolioNumber= "+portfolioNumber);
+        System.out.println(" portfolioName= "+portfolioName);
+        System.out.println(" description= "+description);
+
+        String portfolioId = null;
+        if (tc.get("isCreatePortfolio").contains("YES")) {
+
+            Response portfolioRes = ApiUtil.createPortfolio(token, dataSource, portfolioNumber, portfolioName, description);
+            if (portfolioRes.getStatusCode() != 201 && portfolioRes.getStatusCode() != 200) {
+                throw new Exception("Failed to create portfolio.");
+            }
+            String locationHdr = portfolioRes.getHeader("Location");
+            portfolioId = locationHdr.substring(locationHdr.lastIndexOf('/') + 1);
+           int portfolioId_created= Integer.parseInt(portfolioId);
+
+           if(portfolioId_created!= -1)
+            {
+               Integer index = null;
+               index = Integer.valueOf(tc.get("index"));
+                try {
+                    System.out.println("index is  = " + index);
+                } catch (Exception e) {
+                }
+                if (index != null) {
+                    try {
+                    String targetColumn ="existingPortfolioId";
+                    int columnIndex=LoadData.getColumnIndex(targetColumn);
+                    if(columnIndex !=-1)
+                    {
+                      //  LoadData.UpdateTCInLocalCSV(index, 14, String.valueOf(portfolioId_created));
+                        LoadData.UpdateTCInLocalCSV(index, columnIndex, String.valueOf(portfolioId_created));
+                    }
+                    } catch (Exception e) {
+                        System.out.println("Error on row : " + index + " is " + e.getMessage());
+                    }
+                }
+            }
+
+
+        } else {
+            portfolioId = tc.get("existingPortfolioId");
+        }
         //Upload Account file
         String accountsFile = tc.get("accntFileName");
         String filepath = tc.get("accntFilePath");
@@ -62,21 +114,6 @@ public class MRIImportTests {
         String mapFileName = tc.get("mappingFileName");
         String mapFilePath = tc.get("mappingFilePath");
         String mappingFileID =  uploadMriFiles(bucketID, mapFilePath, "mapping", mapFileName, token);
-
-        String portfolioNumber = tc.get("portfolioNumber");
-        String portfolioName = tc.get("portfolioName");
-        String description = tc.get("importDescrp");
-        System.out.println(" portfolioNumber= "+portfolioNumber);
-        System.out.println(" portfolioName= "+portfolioName);
-        System.out.println(" description= "+description);
-
-        Response portfolioRes = ApiUtil.createPortfolio(token, dataSource, portfolioNumber, portfolioName, description);
-
-        if (portfolioRes.getStatusCode() != 201 && portfolioRes.getStatusCode() != 200) {
-            throw new Exception("Failed to create portfolio.");
-        }
-        String locationHdr = portfolioRes.getHeader("Location");
-        String portfolioId = locationHdr.substring(locationHdr.lastIndexOf('/') + 1);
 
         Map<String, Object> payload = new HashMap<>();
         payload.put("accountsFileId", accountFileID);
@@ -97,7 +134,7 @@ public class MRIImportTests {
         String mriJobId = mrilocationHdr.substring(mrilocationHdr.lastIndexOf('/') + 1);
         System.out.println(submitMRIJobRes.getStatusCode()+"  :SubmitMriJob Status: mriJobUd:"+mriJobId);
 
-        String msg = ApiUtil.waitForJobToComplete(mriJobId, token);
+        String msg = ApiUtil.waitForJobToComplete( mriJobId, token, jobType );
         System.out.println("waitforjob msg: "+msg );
         System.out.println("************** Completed MRIImport " );
 
@@ -106,13 +143,15 @@ public class MRIImportTests {
         mriImportData.setPortfolioId(portfolioId);
         LoadData.mriImportData = mriImportData;
 
-//      Making call to Model profile API
+        //Making call to Batch API
         BatchTests batchTests = new BatchTests();
         batchTests.batchAPI(tc,portfolioId,dataSource);
+
     }
 
     //Create Storage API
-    public String createMriBucket(String token) {
+    private static String createMriBucket(String token) {
+
         String bucketID;
         Response response = null;
         try {
@@ -128,10 +167,10 @@ public class MRIImportTests {
             return bucketID;
         }
         return null;
+
     }
 
     public String createEDM(Map<String, String> tc, String token) throws Exception {
-
 
         String dataSourceName = tc.get("edmDatasourceName");
         String databaseStorage = tc.get("optEdmDatabaseStorage");
@@ -174,7 +213,8 @@ public class MRIImportTests {
 
     }
 
-    public String uploadMriFiles(String bucketId, String filepath, String fileType, String fileName, String authToken) throws Exception {
+    private static String uploadMriFiles(String bucketId, String filepath, String fileType, String fileName, String authToken) throws Exception {
+
         String fileId = null;
         try {
             File file = new File(filepath);
@@ -194,6 +234,7 @@ public class MRIImportTests {
         } else {
             throw new Exception("Error while uploading the file.");
         }
+
     }
 
 

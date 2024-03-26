@@ -6,9 +6,12 @@ import com.google.gson.stream.JsonReader;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import automation.edm.enums.TCFileType;
+import com.opencsv.CSVWriter;
+import com.opencsv.CSVWriterBuilder;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.*;
@@ -192,7 +195,7 @@ public class LoadData {
         //Data Source Name	Database Storage	Server Name	Share With
         List<String> headers = Arrays.asList("peril", "ignoreContractDates", "engine", "alternateVulnCode", "LabelRegion", "numberOfSamples", "petName", "petDataVersion", "numberOfPeriods", "insuranceType", "analysisType", "locationPerRisk", "version", "endYear", "eventRateSchemeId", "policyPerRisk", "description", "modelRegion", "subRegions", "analysisMode", "startYear", "gmpeName", "applyPLA", "gmpeCode", "subPeril", "region", "excludePostalCodes", "fireOnly", "perilOverride", "dynamicAutomobileModeling", "includePluvial", "includeBespokeDefence", "defenceOn", "subPerils", "secondaryPerils", "policyCoverages", "vendor", "run1dOnly", "specialtyModels","unknownForPrimaryCharacteristics","scaleExposureValues","fire","coverage","property");
 
-        //Read the values from CreateEDM CSV file and put the values in map,and return the key and values from map to the Object array.
+        //Read the values from Single Input CSV file and put the values in map,and return the key and values from map to the Object array.
         Integer headerNum;
         Integer rowNum = 0;
         Object[] objectsOfTC = new Object[headers.size()];
@@ -218,7 +221,17 @@ public class LoadData {
         return objectsOfTC;
     }
 
+    public static List<String> MergeHeaders = Arrays.asList("index","caseNo","ifRun", "ifUploadImportExpo", "ifCreateEdm", "edmDatasourceName", "edmFileName","edmFilePath", "fileExt", "dbType", "optEdmDatabaseStorage", "optServerName","optShareGroup","isCreatePortfolio","existingPortfolioId","portfolioNumber","portfolioName","accntFilePath","accntFileName","locFilePath","locFileName","ifDefaultMapping","mappingFilePath","mappingFileName","fileFormat","importCurrency","importDescrp","sysJobIdEdmUpload","sysJobIdMriImport",
+            "isGeoCoded","GeocodeVersion","GeoHazVersion","GeoHazLayers", "ifCreateModelProfile", "mfId","peril","ignoreContractDates","engine","alternateVulnCode","LabelRegion","numberOfSamples","petName","petDataVersion","numberOfPeriods","insuranceType","analysisType","locationPerRisk","version","endYear","eventRateSchemeId","policyPerRisk","description","modelRegion","subRegions","analysisMode","startYear","gmpeName","applyPLA","gmpeCode","subPeril","region","excludePostalCodes","fireOnly","perilOverride","dynamicAutomobileModeling","includePluvial","includeBespokeDefence","defenceOn","subPerils","secondaryPerils","policyCoverages","vendor","run1dOnly","specialtyModels","fire","coverage","property","unknownForPrimaryCharacteristics","scaleExposureValues"
+            ,"if_model_run","analysisId");
+
+
+
+    public static int getColumnIndex(String columnName) {
+        return MergeHeaders.indexOf(columnName);
+    }
     public static Object[] readCaseTCFromLocalCSV() throws IOException {
+        System.out.println("Dataloading");
         // Create an object of file reader
         // class with CSV file as a parameter.
         FileReader filereader = new FileReader(config.getSingleCSVFile());
@@ -229,27 +242,25 @@ public class LoadData {
                 .build();
         List<String[]> rows = csvReader.readAll();
         //Data Source Name	Database Storage	Server Name	Share With
-        List<String> headers = Arrays.asList("caseNo","ifRun", "ifUploadImportExpo", "ifCreateEdm", "edmDatasourceName", "edmFileName","edmFilePath", "fileExt", "dbType", "optEdmDatabaseStorage", "optServerName","optShareGroup","portfolioNumber","portfolioName","accntFilePath","accntFileName","locFilePath","locFileName","ifDefaultMapping","mappingFilePath","mappingFileName","fileFormat","importCurrency","importDescrp","sysJobIdEdmUpload","sysJobIdMriImport","ifCreateModelProfile","mfId",
-                "peril0","ignoreContractDates0","engine0","alternateVulnCode0","LabelRegion0","numberOfSamples0","petName0","petDataVersion0","numberOfPeriods0","insuranceType0","analysisType0","locationPerRisk0","version0","endYear0","eventRateSchemeId0","policyPerRisk0","description0","modelRegion0","subRegions0","analysisMode0","startYear0","gmpeName0","applyPLA0","gmpeCode0","subPeril0","region0","excludePostalCodes0","fireOnly0","perilOverride0","dynamicAutomobileModeling0","includePluvial0","includeBespokeDefence0","defenceOn0","subPerils0","secondaryPerils0","policyCoverages0","vendor0","run1dOnly0","specialtyModels0","fire0","coverage0","property0","unknownForPrimaryCharacteristics0","scaleExposureValues0",
-                "peril1","ignoreContractDates1","engine1","alternateVulnCode1","LabelRegion1","numberOfSamples1","petName1","petDataVersion1","numberOfPeriods1","insuranceType1","analysisType1","locationPerRisk1","version1","endYear1","eventRateSchemeId1","policyPerRisk1","description1","modelRegion1","subRegions1","analysisMode1","startYear1","gmpeName1","applyPLA1","gmpeCode1","subPeril1","region1","excludePostalCodes1","fireOnly1","perilOverride1","dynamicAutomobileModeling1","includePluvial1","includeBespokeDefence1","defenceOn1","subPerils1","secondaryPerils1","policyCoverages1","vendor1","run1dOnly1","specialtyModels1","fire1","coverage1","property1","unknownForPrimaryCharacteristics1","scaleExposureValues1"
-        );
+
+
         //Read the values from Single CSV file and put the values in map,and return the key and values from map to the Object array.
         Integer headerNum;
         Integer rowNum = 0;
-        Object[] objectsOfTC = new Object[headers.size()];
+        Object[] objectsOfTC = new Object[MergeHeaders.size()];
         for (String[] row : rows) {
             Map<String, String> rowMap = new HashMap<>();
-            for (int i = 0; i < headers.size(); i++) {
+            rowMap.put("rowNumber", rowNum+"");
+            for (int i = 0; i < MergeHeaders.size(); i++) {
                 String v = "";
                 try {
                     if (row[i] != null) {
                         v = row[i];
                     }
                 } catch (Exception ex) {
-                    System.out.println("Error in field = "+headers.get(i));
+                    System.out.println("Error in field = "+MergeHeaders.get(i));
                 }
-                System.out.println(headers.get(i)+" "+v);
-                rowMap.put(headers.get(i), v);
+                rowMap.put(MergeHeaders.get(i), v);
             }
 
             objectsOfTC[rowNum] = rowMap;
@@ -257,5 +268,80 @@ public class LoadData {
         }
         System.out.println("CSV Loaded");
         return objectsOfTC;
+    }
+
+    public static Boolean UpdateTCInLocalCSV(int rowIndex, int columnIndex, String newValue) throws IOException {
+        FileReader csvFile = new FileReader(config.getSingleCSVFile());
+
+        try (CSVReader reader = new CSVReaderBuilder(csvFile).build()) {
+
+            List<String[]> data = reader.readAll();
+
+            // Modify the data (for example, update a specific value)
+            // Let's say we want to update the value in the second row and third column
+
+            if (rowIndex < data.size() && columnIndex < data.get(rowIndex).length) {
+                data.get(rowIndex)[columnIndex] = newValue;
+                data.get(rowIndex)[columnIndex-1]="NO";
+            } else {
+                System.out.println("Invalid row or column index.");
+                return false;
+            }
+
+            // Write back to the CSV file
+            try (CSVWriter writer = new CSVWriter(new FileWriter(config.getSingleCSVFile()))) {
+               writer.writeAll(data);
+
+               // writer.writeNext(new String[]{String.valueOf(data)});
+                System.out.println("CSV file has been updated.");
+                return true;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        return false;
+    }
+
+
+    public static Boolean UpdateTCInLocalCSV_Analysis(int rowIndex, int columnIndex, String newValue) throws IOException {
+        FileReader csvFile = new FileReader(config.getSingleCSVFile());
+
+        try (CSVReader reader = new CSVReaderBuilder(csvFile).build()) {
+
+            List<String[]> data = reader.readAll();
+
+            // Modify the data (for example, update a specific value)
+            // Let's say we want to update the value in the second row and third column
+
+            if (rowIndex < data.size() && columnIndex < data.get(rowIndex).length) {
+                data.get(rowIndex)[columnIndex] = newValue;
+                //data.get(rowIndex)[columnIndex-1]="NO";
+            } else {
+                System.out.println("Invalid row or column index.");
+                return false;
+            }
+
+            // Write back to the CSV file
+            try (CSVWriter writer = new CSVWriter(new FileWriter(config.getSingleCSVFile()))) {
+                writer.writeAll(data);
+
+                // writer.writeNext(new String[]{String.valueOf(data)});
+                System.out.println("CSV file has been updated.");
+                return true;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        return false;
     }
 }

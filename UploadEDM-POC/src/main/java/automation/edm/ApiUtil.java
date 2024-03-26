@@ -1,5 +1,6 @@
 package automation.edm;
 
+import automation.batch.ModelProfileAPI;
 import automation.merge.jsonMapper.Perils;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicSessionCredentials;
@@ -12,6 +13,8 @@ import automation.edm.enums.DatabaseStorageType;
 import io.restassured.internal.RestAssuredResponseImpl;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
+import org.apache.commons.collections.bag.SynchronizedSortedBag;
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -19,11 +22,21 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 
 import java.io.*;
+import java.lang.reflect.InvocationTargetException;
 import java.net.HttpURLConnection;
 import java.util.*;
 import java.net.URL;
 
 import static io.restassured.RestAssured.given;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 
 public class ApiUtil {
 
@@ -224,7 +237,7 @@ public class ApiUtil {
         return payload.isEmpty() ? restApiHelper.submitPost() : restApiHelper.submitPost(payload);
     }
 
-    public static String waitForJobToComplete(String workflowId, String authToken) throws Exception {
+    public static String waitForJobToComplete(String workflowId, String authToken, String jobName) throws Exception {
         String status = "";
         try {
             Response jobGetJobDetailsResponse = getJobDetailsByJobId(authToken, workflowId);
@@ -232,13 +245,19 @@ public class ApiUtil {
                 if (jobGetJobDetailsResponse.getStatusCode() == 200) {
                     Map<String, Object> responseMap = jobGetJobDetailsResponse.jsonPath().getMap("$");
                     status = (String) responseMap.get("status");
+                    //List.of(jobGetJobDetailsResponse.getBody().jsonPath().getMap("$").get("jobs")).stream().filter(job -> job.get("name") == "PROCESS")
+                    //((LinkedHashMap)((ArrayList) jobGetJobDetailsResponse.getBody().jsonPath().getMap("$").get("jobs")).get(2)).get("name")
+                   // ((LinkedHashMap)(((ArrayList) jobGetJobDetailsResponse.getBody().jsonPath().getMap("$").get("jobs")).stream().filter(j -> ((LinkedHashMap) j).get("name").toString().equals("PROCESS")).findFirst().orElse(null))).get("id");
                     System.out.println(
                             String.format(
-                                    "Getting job status: Response: %s, JobId: %s , Status: %s",
+                                    "Getting  job status: Response: %s, JobId: %s , JobName: "+jobName+", Status: %s",
                                     jobGetJobDetailsResponse.getStatusCode(), workflowId, status));
                     if ((status.equalsIgnoreCase("CANCELLED"))
                             || (status.equalsIgnoreCase("FAILED"))
                             || (status.equalsIgnoreCase("FINISHED"))) {
+
+
+
                         break;
                     }
                 } else {
@@ -259,6 +278,54 @@ public class ApiUtil {
             throw ex;
         }
         return status;
+    }
+     public static int getAnalysisIDByJobId(String workflowId,String authToken)
+     {
+         String subJobId = "";
+         int analysisID = 0;
+         try
+         {
+             Response jobGetJobDetailsResponse = getJobDetailsByJobId(authToken, workflowId);
+             if(jobGetJobDetailsResponse.getStatusCode()==200)
+             {
+                 subJobId= (String) ((LinkedHashMap)(((ArrayList) jobGetJobDetailsResponse.getBody().jsonPath().getMap("$").get("jobs")).stream().filter(j -> ((LinkedHashMap) j).get("name").toString().equals("PROCESS")).findFirst().orElse(null))).get("id");
+                 System.out.println(subJobId);
+             }
+             Response subJobGetJobDetailsResponse = getsubJobDetailsByJobId(authToken,subJobId,workflowId);
+             if(subJobGetJobDetailsResponse.getStatusCode()==200)
+             {
+                 Map<Object, Object> jobResult = subJobGetJobDetailsResponse.jsonPath().getMap("$");
+                 HashMap<String, Object> summaryMap = (HashMap<String, Object>) jobResult.get("summary");
+                 analysisID = Integer.parseInt(summaryMap.get("analysisId").toString());
+             }
+             else
+             {
+                 System.out.println("Issue with API ");
+             }
+
+
+         }
+         catch(Exception ex)
+         {
+             System.out.println(ex);
+         }
+         return analysisID;
+     }
+
+    public static Response getsubJobDetailsByJobId(String authToken, String subJobId, String workflowId) {
+        String api = String.format(apiendpoints.get("detailsByJobID"), subJobId +"?parent="+workflowId);
+        String url = baseUrl + api;
+        RestApiHelper restApiHelper =
+                new RestApiHelper(
+                        authToken, url, "application/json", false);
+        Response response = restApiHelper.submitGet();
+        return response;
+    }
+
+
+
+    public static String waitForJobToComplete(String workflowId, String authToken) throws Exception{
+        return waitForJobToComplete(workflowId, authToken, "");
     }
 
     public static Boolean checkJobStatus(String workflowId, String authToken) {
@@ -320,22 +387,22 @@ public class ApiUtil {
     }
 
     public static List<String> getGroupIds(String authToken, String groupNames) throws Exception {
-            Response groupResponse = getGroups(authToken);
-            String[] groupNamesList = groupNames.split(",");
-            List<String> guidList = new ArrayList<>();
-            if (groupResponse.getStatusCode() == 200) {
-                //converting the response into list of groups,Groups.class is a type.
-                List<Groups> listOfGroups = groupResponse.jsonPath().getList("$", Groups.class);
-                //Looping over list of groups to check if group name exists in the list, then get the Gguid
-                listOfGroups.stream().forEach((Groups g) -> {
-                    if (Arrays.stream(groupNamesList).anyMatch((String n) -> n.equals(g.getGroupName()))) {
-                        guidList.add(g.getGroupGuid());
-                    }
-                });
+        Response groupResponse = getGroups(authToken);
+        String[] groupNamesList = groupNames.split(",");
+        List<String> guidList = new ArrayList<>();
+        if (groupResponse.getStatusCode() == 200) {
+            //converting the response into list of groups,Groups.class is a type.
+            List<Groups> listOfGroups = groupResponse.jsonPath().getList("$", Groups.class);
+            //Looping over list of groups to check if group name exists in the list, then get the Gguid
+            listOfGroups.stream().forEach((Groups g) -> {
+                if (Arrays.stream(groupNamesList).anyMatch((String n) -> n.equals(g.getGroupName()))) {
+                    guidList.add(g.getGroupGuid());
+                }
+            });
 
-            } else {
-                System.out.println("Error while fetching Groups: " + groupResponse.getStatusCode());
-            }
+        } else {
+            System.out.println("Error while fetching Groups: " + groupResponse.getStatusCode());
+        }
 
         return guidList;
     }
@@ -385,7 +452,7 @@ public class ApiUtil {
     }
 
     public static String uploadFile(String authToken, String bucketID, String filePath, String fileType,
-                               String fileName, long fileSize) {
+                                    String fileName, long fileSize) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("fileName", fileName);
         payload.put("fileSize", fileSize);
@@ -519,6 +586,25 @@ public class ApiUtil {
         return restApiHelper.submitPost(payload);
     }
 
+    public static Response accountsUploadToPortfolio(String authToken, String datasource, String portfolioId) {
+
+        String api = String.format(apiendpoints.get("acccountsUploadToPortfolio"), portfolioId, datasource);
+        String url = baseUrl + api;
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("manageExistingAccounts", false);
+        List<Integer> markedAccounts = new ArrayList<>();
+        markedAccounts.add(6933);
+        payload.put("markedAccounts", markedAccounts);
+        payload.put("queryFilter", "");
+        payload.put("selectAll", false);
+
+        RestApiHelper restApiHelper =
+                new RestApiHelper(
+                        authToken, url, "application/json", false);
+        return restApiHelper.submitPost(payload);
+    }
+
     public static Response submitMRIJob(String authToken, Map<String, Object> payload) {
 
         String api = apiendpoints.get("submitMRIJob");
@@ -546,9 +632,9 @@ public class ApiUtil {
         String api = String.format(apiendpoints.get("getModelProfileTemplate"),perils.getAnalysisType(), perils.getModelRegion(), perils.getSubRegions(),
                 perils.getPeril(), perils.getVersion(), perils.getVendor(), perils.getInsuranceType(), perils.getAnalysisMode(),perils.getFire(),
                 perils.getCoverage(),perils.getProperty());
-         System.out.println("---------ProfileTemplate payload for " + perils.getPeril() + " = " + api);
-         String url = baseUrl + api;
-       RestApiHelper restApiHelper =
+        System.out.println("---------ProfileTemplate payload for " + perils.getPeril() + " = " + api);
+        String url = baseUrl + api;
+        RestApiHelper restApiHelper =
                 new RestApiHelper(
                         authToken, url, "application/json", false);
         return restApiHelper.submitGet();
@@ -583,14 +669,64 @@ public class ApiUtil {
 
 
 
-    public static Response createNAEQModelProfile(String authToken, String modelProfileTemplateId, Object payload) {
+    public static Response createModelProfile(String authToken, String modelProfileTemplateId, Object payload) {
         String api = String.format(apiendpoints.get("createNAEQModelProfile"), modelProfileTemplateId);
         String url = baseUrl + api;
 
         RestApiHelper restApiHelper =
                 new RestApiHelper(
                         authToken, url, "application/json", false);
+        System.out.println("Calling API Just before Post");
         return restApiHelper.submitPost(payload);
+
+//        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+//            HttpPost httpPost = new HttpPost(url);
+//
+//            httpPost.setHeader("Authorization", "Bearer " + authToken);
+//            StringEntity stringEntity = new StringEntity(jsonPayload, ContentType.APPLICATION_JSON);
+//            httpPost.setEntity(stringEntity);
+//
+//            try (CloseableHttpResponse response = httpClient.execute(httpPost)) {
+//                HttpEntity entity = response.getEntity();
+//                if (entity != null) {
+//                    System.out.println("Response: " + EntityUtils.toString(entity));
+//                }
+//            } catch(Exception e) {
+//                e.printStackTrace();
+//            }
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//
+//        return null;
+    }
+
+    public static String createModelProfile(String token, Map<String, String> tc, Perils perils) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException, IOException {
+
+        if(tc.get("ifCreateModelProfile").equals("YES")) {
+            String randmVal = RandomStringUtils.randomNumeric(3);
+            String ModelProfile_Name = "ModelProfile_Name_" + randmVal;
+            System.out.println("Model profile name : "+ModelProfile_Name);
+            String TemplateId = null;
+
+            Response res = ApiUtil.getModelProfileTemplate(token, tc,perils);
+            TemplateId = res.getBody().jsonPath().get("id") + "";
+            System.out.println("createNAEQProfile running: NAEQ_ModelProfile_Name:" + ModelProfile_Name + " .... TemplateId:" + TemplateId);
+            String payload = ModelProfileAPI.getPayloadCreateModelProfileApi(ModelProfile_Name, tc,perils);
+            System.out.println("Before Calling ModelProfile API");
+            Response res1 = ApiUtil.createModelProfile(token, TemplateId, payload);
+            System.out.println("After Calling ModelProfile API");
+
+            ArrayList list = res1.getBody().jsonPath().get("links");
+            String link = ((String) ((Map) list.get(0)).get("href"));
+            String NAEQmodelProfileId = link.substring(link.lastIndexOf('/')+1);
+            System.out.println("createNAEQModelProfile: Finnished "+link+"    and   id is "+NAEQmodelProfileId);
+
+            return NAEQmodelProfileId;
+        }
+        else {
+            return perils.getMfId();
+        }
     }
 
 }
