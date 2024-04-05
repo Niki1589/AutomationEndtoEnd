@@ -1,7 +1,11 @@
 package automation.batch;
+import automation.currencyConverter.CurrencyConverter;
 import automation.edm.ApiUtil;
 import automation.edm.LoadData;
+import automation.export.export;
 import automation.merge.jsonMapper.Perils;
+import automation.export.RdmExportTests;
+import automation.renameAnalysis.RenameAnalysis;
 import automation.utils.Utils;
 import com.google.gson.*;
 import io.restassured.response.Response;
@@ -10,7 +14,11 @@ import java.util.*;
 
 public class BatchTests {
 
-    public void batchAPI(Map<String, String> tc,String portfolioId,String dataSourceName) throws Exception {
+   public static String referenceAnalysisId ="";
+    public static void batchAPI(Map<String, String> tc,String portfolioId,String dataSourceName) throws Exception {
+
+        String analysisId ="";
+
 
         System.out.println("***** Running Batch Api Tests ********");
         String token = ApiUtil.getSmlToken(LoadData.config.getUsername(), LoadData.config.getPassword(), LoadData.config.getTenant(), "accessToken");
@@ -26,7 +34,6 @@ public class BatchTests {
         if (portfolioId == null) {
             throw new Exception("PortfolioId is required!");
         }
-
         try {
             Object payloadObject = getPayloadBatchApi(
                     perils.getPortfolioId(),
@@ -36,46 +43,54 @@ public class BatchTests {
                     perils
             );
             System.out.println("After  Batch payload");
-            Response batchResponse = ApiUtil.batchAPI(token, payloadObject);
-            String hdr = batchResponse.getHeader("Location");
-            String jobId = hdr.substring(hdr.lastIndexOf('/') + 1);
-            System.out.println(batchResponse.getStatusCode() + "  :Batch Status: jobId:" + jobId);
+            if (perils.getIfModelRun().equals("YES")) {
+                Response batchResponse = ApiUtil.batchAPI(token, payloadObject);
+                String hdr = batchResponse.getHeader("Location");
+                String jobId = hdr.substring(hdr.lastIndexOf('/') + 1);
+                System.out.println(batchResponse.getStatusCode() + "  :Batch Status: jobId:" + jobId);
 
-            String msg = null;
-            try {
-                msg = ApiUtil.waitForJobToComplete(jobId, token, "Batch API");
-            } catch (Exception e) {
-                System.out.println("Error in waitForJobToComplete : " + e.getMessage());
-                throw new RuntimeException(e);
-            }
-            System.out.println("waitforjob msg: " + msg);
-            System.out.println("***** Finished Batch Api Tests");
-            System.out.println("***** Finished till " + perils.getPeril());
-           int analysisId = ApiUtil.getAnalysisIDByJobId(jobId, token);
-            if(tc.get("if_model_run").equals("YES") && analysisId!=-1)
-            {
-                Integer index=null;
-                index=Integer.valueOf(tc.get("index"));
-                try{
-                    System.out.println("index is="+index);
+                String msg = null;
+                try {
+                    msg = ApiUtil.waitForJobToComplete(jobId, token, "Batch API");
+                } catch (Exception e) {
+                    System.out.println("Error in waitForJobToComplete : " + e.getMessage());
+                    throw new RuntimeException(e);
                 }
-                catch(Exception e){
-                }
-                if(index!=null){
-                    try{
-                        String targetColumn="analysisId";
-                        int columnIndex=LoadData.getColumnIndex(targetColumn);
-                        if(columnIndex!=-1)
-                        {
-                            LoadData.UpdateTCInLocalCSV_Analysis(index,columnIndex,String.valueOf(analysisId));
-                        }
-                    }catch(Exception e){
-                        System.out.println("Error on row:"+index+"is"+e.getMessage());
-                    }
-                }
-            }
+                System.out.println("waitforjob msg: " + msg);
+                System.out.println("***** Finished Batch Api Tests");
+                System.out.println("***** Finished till " + perils.getPeril());
+                analysisId = ApiUtil.getAnalysisIDByJobId(jobId, token);
 
-        } catch (Exception e) {
+               referenceAnalysisId = analysisId;
+
+                if (tc.get("if_model_run").equals("YES") && analysisId != "") {
+                    LoadData.UpdateTCInLocalCSV(tc.get("index"), "analysisId", analysisId);
+                }
+                if (tc.get("if_rdm_export").equals("YES")) {
+                    export.exportType(tc, analysisId);
+                }
+                if (Utils.isTrue(tc.get("isConvertCurrency"))) {
+                    CurrencyConverter.convert(tc, analysisId);
+                }
+                if (Utils.isTrue(tc.get("isRenameAnalysis"))) {
+                    RenameAnalysis.rename(tc, analysisId);
+                }
+
+            } else {
+              analysisId = tc.get("analysisId");
+               referenceAnalysisId = analysisId;
+              if (tc.get("if_rdm_export").equals("YES")) {
+                  export.exportType(tc, analysisId);
+              }
+              if (Utils.isTrue(tc.get("isConvertCurrency"))) {
+                  CurrencyConverter.convert(tc, analysisId);
+              }
+              if (Utils.isTrue(tc.get("isRenameAnalysis"))) {
+                  RenameAnalysis.rename(tc, analysisId);
+              }
+            }
+        }
+        catch (Exception e) {
             System.out.println("Error in Code = " + e.getMessage());
             e.printStackTrace();
             throw e;
@@ -162,64 +177,47 @@ public class BatchTests {
                 "            \"label\": \"EXPOSURE_SUMMARY\",\n" +
                 "            \"operation\": \"/v2/portfolios/"+portfolioId+"/summary_report?datasource="+dataSourceName+"\"\n" +
                 "        },\n";
-
-        String payloadInString = "{\n" +
-                "    \"name\": \""+batchName+"\",\n" +
-                "    \"operations\": [\n" +
-                        exposurSummary +
-                        geoCodedPayload +
-                "        {\n" +
-                "            \"continueOnFailure\": true,\n" +
-                "            \"dependsOn\": [\n" +
-                "                \"GEOHAZ\"\n" +
-                "            ],\n" +
-                "            \"input\": {\n" +
-                "                \"currency\": {\n" +
-                "                    \"asOfDate\": \"2023-06-07\",\n" +
-                "                    \"code\": \"USD\",\n" +
-                "                    \"scheme\": \"RMS\",\n" +
-                "                    \"vintage\": \"RL23\"\n" +
-                "                },\n" +
-                "                \"edm\": \""+dataSourceName+"\",\n" +
-                "                \"eventRateSchemeId\": 163,\n" +
-                "                \"exposureType\": \"PORTFOLIO\",\n" +
-                "                \"globalAnalysisSettings\": {\n" +
-                "                    \"franchiseDeductible\": false,\n" +
-                "                    \"minLossThreshold\": \"1.00\",\n" +
-                "                    \"numMaxLossEvent\": \"1\",\n" +
-                "                    \"treatConstructionOccupancyAsUnknown\": true\n" +
-                "                },\n" +
-                "                \"id\": "+portfolioId+",\n" +
-                "                \"modelProfileId\": "+ModelProfileId+",\n" +
-                "                \"outputProfileId\": 1,\n" +
-                "                \"treaties\": [],\n" +
-                "                \"treatiesName\": [],\n" +
-                "                \"tagIds\": []\n" +
-                "            },\n" +
-                "            \"label\": \""+profileId+"\",\n" +
-                "            \"operation\": \"/v2/portfolios/"+portfolioId+"/process\"\n" +
-                "        }" +
-                "    ]\n" +
+        String payloadInString="{\n"+
+                "\"name\":\""+batchName+"\",\n"+
+                "\"operations\":[\n"+
+                exposurSummary+
+                geoCodedPayload+
+                "{\n"+
+                "\"continueOnFailure\":true,\n"+
+                "\"dependsOn\":[\n"+
+                "\"GEOHAZ\"\n"+
+                "],\n"+
+                "\"input\":{\n"+
+                "\"currency\":{\n"+
+                "\"asOfDate\":\""+ perils.getAsOfDateProcess() +"\",\n"+
+                "\"code\":\""+ perils.getCurrencyCodeProcess() +"\",\n"+
+                "\"scheme\":\""+ perils.getCurrencySchemeProcess() +"\",\n"+
+                "\"vintage\":\"" + perils.getCurrencyVintageProcess() + "\"\n"+
+                "},\n"+
+                "\"edm\":\""+dataSourceName+"\",\n"+
+                "\"eventRateSchemeId\":0,\n"+
+                "\"exposureType\":\"PORTFOLIO\",\n"+
+                "\"globalAnalysisSettings\":{\n"+
+                "\"franchiseDeductible\":false,\n"+
+                "\"minLossThreshold\":\"1.00\",\n"+
+                "\"numMaxLossEvent\":\"1\",\n"+
+                "\"treatConstructionOccupancyAsUnknown\":true\n"+
+                "},\n"+
+                "\"id\":"+portfolioId+",\n"+
+                "\"modelProfileId\":"+ModelProfileId+",\n"+
+                "\"outputProfileId\":1,\n"+
+                "\"treaties\":["+perils.getTreaties()+"],\n"+
+                "\"treatiesName\":["+ perils.getTreatiesName() +"],\n"+
+                "\"tagIds\":[]\n"+
+                "},\n"+
+                "\"label\":\""+profileId+"\",\n"+
+                "\"operation\":\"/v2/portfolios/"+portfolioId+"/process\"\n"+
+                "}"+
+                "]\n"+
                 "}";
 
-//        "        {" +
-//                "            \"label\": \"rdmExport\",\n" +
-//                "            \"operation\": \"/v2/exports\",\n" +
-//                "            \"dependsOn\": [\n" +
-//                "                "+ profileId +
-//                "            ],\n" +
-//                "            \"input\": {\n" +
-//                "                \"analysisIds\": [\n" +
-//                "                    \"{{$."+profileId+".output.analysisId}}\"\n" +
-//                "                ],\n" +
-//                "                \"rdmName\": \""+dataSourceName+"\",\n" +
-//                "                \"type\": \"ResultsExportInputV2\",\n" +
-//                "                \"exportType\": \"RDM\",\n" +
-//                "                \"createnew\": true,\n" +
-//                "                \"exportFormat\": \"BAK\",\n" +
-//                "                \"sqlVersion\": \"2019\"\n" +
-//                "            }\n" +
-//                "        }"+
+
+
 
         System.out.println("Payload Batch API");
                 System.out.println(payloadInString);

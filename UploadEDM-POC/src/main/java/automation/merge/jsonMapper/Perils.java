@@ -59,6 +59,83 @@ public class Perils {
 
     List<String> GeoHazLayers;
 
+    String ifModelRun;
+    String asOfDateProcess;
+
+
+    String currencyCodeProcess;
+
+    String currencySchemeProcess;
+
+    String currencyVintageProcess;
+
+    String outputProfileId;
+
+    String treaties;
+
+    String treatiesName;
+
+    public String getAsOfDateProcess() {
+        return asOfDateProcess;
+    }
+
+    public void setAsOfDateProcess(String asOfDateProcess) {
+        this.asOfDateProcess = asOfDateProcess;
+    }
+
+    public String getCurrencySchemeProcess() {
+        return currencySchemeProcess;
+    }
+
+    public void setCurrencySchemeProcess(String currencySchemeProcess) {
+        this.currencySchemeProcess = currencySchemeProcess;
+    }
+
+    public String getCurrencyVintageProcess() {
+        return currencyVintageProcess;
+    }
+
+    public void setCurrencyVintageProcess(String currencyVintageProcess) {
+        this.currencyVintageProcess = currencyVintageProcess;
+    }
+
+    public String getOutputProfileId() {
+        return outputProfileId;
+    }
+
+    public void setOutputProfileId(String outputProfileId) {
+        this.outputProfileId = outputProfileId;
+    }
+
+
+
+
+    public String getCurrencyCodeProcess() {
+        return currencyCodeProcess;
+    }
+
+    public void setCurrencyCodeProcess(String currencyCodeProcess) {
+        this.currencyCodeProcess = currencyCodeProcess;
+    }
+
+    public String getIfModelRun() {
+        return ifModelRun;
+    }
+
+    public void setIfModelRun(String ifModelRun) {
+        this.ifModelRun = ifModelRun;
+    }
+
+    public List<String> getAnalysisId() {
+        return analysisId;
+    }
+
+    public void setAnalysisId(List<String> analysisId) {
+        this.analysisId = analysisId;
+    }
+
+    List<String> analysisId;
+
     public String getGeocodeVersion() {
         return GeocodeVersion;
     }
@@ -467,6 +544,22 @@ public class Perils {
         this.profileName = profileName;
     }
 
+    public String getTreaties() {
+        return treaties;
+    }
+
+    public void setTreaties(String treaties) {
+        this.treaties = treaties;
+    }
+
+    public String getTreatiesName() {
+        return treatiesName;
+    }
+
+    public void setTreatiesName(String treatiesName) {
+        this.treatiesName = treatiesName;
+    }
+
     public static Perils extractPerilFromTC(Map<String, String> tc) {
         Perils perils = new Perils();
         perils.setPeril(tc.get("peril"));
@@ -519,6 +612,7 @@ public class Perils {
 
         perils.setGeocodeVersion(tc.get("GeocodeVersion"));
         perils.setGeoHazVersion(tc.get("GeoHazVersion"));
+        perils.setIfModelRun(tc.get("if_model_run"));
 
         String layer = tc.get("GeoHazLayers");
         if ( layer != null && layer != "" ) {
@@ -526,6 +620,48 @@ public class Perils {
             perils.setGeoHazLayers(List.of(layersList));
         } else {
             perils.setGeoHazLayers(List.of());
+        }
+
+        if (tc.get("asOfDateProcess") != null && tc.get("asOfDateProcess").length() > 0) {
+            perils.setAsOfDateProcess(tc.get("asOfDateProcess"));
+        } else {
+            perils.setAsOfDateProcess("");
+        }
+
+        if (tc.get("currencyCodeProcess") != null && tc.get("currencyCodeProcess").length() > 0) {
+            perils.setCurrencyCodeProcess(tc.get("currencyCodeProcess"));
+        } else {
+            perils.setCurrencyCodeProcess("");
+        }
+
+        if (tc.get("currencySchemeProcess") != null && tc.get("currencySchemeProcess").length() > 0) {
+            perils.setCurrencySchemeProcess(tc.get("currencySchemeProcess"));
+        } else {
+            perils.setCurrencySchemeProcess("");
+        }
+
+        if (tc.get("currencyVintageProcess") != null && tc.get("currencyVintageProcess").length() > 0) {
+            perils.setCurrencyVintageProcess(tc.get("currencyVintageProcess"));
+        } else {
+            perils.setCurrencyVintageProcess("");
+        }
+
+        if (tc.get("outputProfileId") != null && tc.get("outputProfileId").length() > 0) {
+            perils.setOutputProfileId(tc.get("outputProfileId"));
+        } else {
+            perils.setOutputProfileId("");
+        }
+
+        if (tc.get("treaties") != null && tc.get("treaties").length() > 0) {
+            perils.setTreaties(tc.get("treaties"));
+        } else {
+            perils.setTreaties("");
+        }
+
+        if (tc.get("treatiesName") != null && tc.get("treatiesName").length() > 0) {
+            perils.setTreatiesName(tc.get("treatiesName"));
+        } else {
+            perils.setTreatiesName("");
         }
 
         return perils;

@@ -1,5 +1,7 @@
 package automation.edm;
 
+import automation.PATE.PATETests;
+import automation.batch.BatchTests;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
@@ -221,16 +223,17 @@ public class LoadData {
         return objectsOfTC;
     }
 
-    public static List<String> MergeHeaders = Arrays.asList("index","caseNo","ifRun", "ifUploadImportExpo", "ifCreateEdm", "edmDatasourceName", "edmFileName","edmFilePath", "fileExt", "dbType", "optEdmDatabaseStorage", "optServerName","optShareGroup","isCreatePortfolio","existingPortfolioId","portfolioNumber","portfolioName","accntFilePath","accntFileName","locFilePath","locFileName","ifDefaultMapping","mappingFilePath","mappingFileName","fileFormat","importCurrency","importDescrp","sysJobIdEdmUpload","sysJobIdMriImport",
-            "isGeoCoded","GeocodeVersion","GeoHazVersion","GeoHazLayers", "ifCreateModelProfile", "mfId","peril","ignoreContractDates","engine","alternateVulnCode","LabelRegion","numberOfSamples","petName","petDataVersion","numberOfPeriods","insuranceType","analysisType","locationPerRisk","version","endYear","eventRateSchemeId","policyPerRisk","description","modelRegion","subRegions","analysisMode","startYear","gmpeName","applyPLA","gmpeCode","subPeril","region","excludePostalCodes","fireOnly","perilOverride","dynamicAutomobileModeling","includePluvial","includeBespokeDefence","defenceOn","subPerils","secondaryPerils","policyCoverages","vendor","run1dOnly","specialtyModels","fire","coverage","property","unknownForPrimaryCharacteristics","scaleExposureValues"
-            ,"if_model_run","analysisId");
-
-
+    public static List<String> MergeHeaders = Arrays.asList("index","caseNo","ifRun", "isRunUploadImportExpo", "ifUploadImportExpo", "ifCreateEdm", "edmDatasourceName", "edmFileName","edmFilePath", "fileExt", "dbType", "optEdmDatabaseStorage", "optServerName","optShareGroup","isCreatePortfolio","existingPortfolioId","portfolioNumber","portfolioName","accntFilePath","accntFileName","locFilePath","locFileName","ifDefaultMapping","mappingFilePath","mappingFileName","fileFormat","importCurrency","importDescrp","sysJobIdEdmUpload","sysJobIdMriImport",
+            "isGeoCoded","GeocodeVersion","GeoHazVersion","GeoHazLayers", "ifCreateModelProfile", "mfId","asOfDateProcess","currencyCodeProcess","currencySchemeProcess","currencyVintageProcess","outputProfileId","treaties","treatiesName","peril","ignoreContractDates","engine","alternateVulnCode","LabelRegion","numberOfSamples","petName","petDataVersion","numberOfPeriods","insuranceType","analysisType","locationPerRisk","version","endYear","eventRateSchemeId","policyPerRisk","description","modelRegion","subRegions","analysisMode","startYear","gmpeName","applyPLA","gmpeCode","subPeril","region","excludePostalCodes","fireOnly","perilOverride","dynamicAutomobileModeling","includePluvial","includeBespokeDefence","defenceOn","subPerils","secondaryPerils","policyCoverages","vendor","run1dOnly","specialtyModels","fire","coverage","property","unknownForPrimaryCharacteristics","scaleExposureValues"
+            ,"if_model_run","analysisId","if_rdm_export","exportAs","rdmLocation","dataBridgeType","rdmName","exportHDLossesAs","sqlVersion","exportFormat","dataBridgeServer",
+            "IsStatesMetric", "outputLevels_StatesMetric", "perspectives_StatesMetric", "IsEPMetric", "outputLevels_EPMetric", "perspectives_EPMetric", "IsLossTablesMetric", "outputLevels_LossTablesMetric", "perspectives_LossTablesMetric",
+            "isConvertCurrency","Currency","Currency Scheme","Currency Version","asOfDate",
+            "isRenameAnalysis", "newAnalysisName","isPate");
 
     public static int getColumnIndex(String columnName) {
         return MergeHeaders.indexOf(columnName);
     }
-    public static Object[] readCaseTCFromLocalCSV() throws IOException {
+    public static Object[] readCaseTCFromLocalCSV() throws Exception {
         System.out.println("Dataloading");
         // Create an object of file reader
         // class with CSV file as a parameter.
@@ -241,8 +244,6 @@ public class LoadData {
                 .withSkipLines(1)
                 .build();
         List<String[]> rows = csvReader.readAll();
-        //Data Source Name	Database Storage	Server Name	Share With
-
 
         //Read the values from Single CSV file and put the values in map,and return the key and values from map to the Object array.
         Integer headerNum;
@@ -262,7 +263,14 @@ public class LoadData {
                 }
                 rowMap.put(MergeHeaders.get(i), v);
             }
-
+//            if (rowMap.get("isPate").equalsIgnoreCase("YES")) {
+//
+//                //String analysisId = BatchTests.referenceAnalysisId;
+//
+//                loadSecondCSVData(rowMap);
+//
+//
+//            }
             objectsOfTC[rowNum] = rowMap;
             rowNum++;
         }
@@ -270,7 +278,44 @@ public class LoadData {
         return objectsOfTC;
     }
 
+    public static List<Map<String, String>> loadPateCSVByCase(String caseNo) throws Exception {
+
+        FileReader filereader = new FileReader(config.getPateFile());
+        CSVReader csvReader = new CSVReaderBuilder(filereader)
+                .withSkipLines(1)
+                .build();
+        List<String[]> rows = csvReader.readAll();
+        List<String> headers = Arrays.asList( "index","caseNo","ifRun","analysisId_pate","operationType","treatyId","treatyNumber","treatyName","treatyType","occurLimit","attachPt","cedant","effectDate","expireDate","pcntCovered","pcntPlaced","pcntRiShare","pcntRetent","Premium","numOfReinst","reinstCharge","aggregateLimit","aggregateDeductible","priority");
+        List<Map<String, String>> objectsOfTC = new ArrayList<>();
+        for (String[] row : rows) {
+            String pateCase = row[headers.indexOf("caseNo")];
+            if ( pateCase.equals(caseNo) ) {
+                Map<String, String> rowMap_pate = new HashMap<>();
+                for (int i = 0; i < headers.size(); i++) {
+                    String v = "";
+                    try {
+                        if (row[i] != null) {
+                            v = row[i];
+                        }
+                    } catch (Exception ex) {
+                        System.out.println("Error in field = "+headers.get(i));
+                    }
+                    System.out.println(headers.get(i)+" "+v);
+                    rowMap_pate.put(headers.get(i), v);
+                }
+                objectsOfTC.add(rowMap_pate);
+            }
+        }
+        System.out.println("CSV Loaded");
+        return objectsOfTC;
+
+    }
+
+
+
     public static Boolean UpdateTCInLocalCSV(int rowIndex, int columnIndex, String newValue) throws IOException {
+
+
         FileReader csvFile = new FileReader(config.getSingleCSVFile());
 
         try (CSVReader reader = new CSVReaderBuilder(csvFile).build()) {
@@ -282,7 +327,6 @@ public class LoadData {
 
             if (rowIndex < data.size() && columnIndex < data.get(rowIndex).length) {
                 data.get(rowIndex)[columnIndex] = newValue;
-                data.get(rowIndex)[columnIndex-1]="NO";
             } else {
                 System.out.println("Invalid row or column index.");
                 return false;
@@ -307,41 +351,67 @@ public class LoadData {
         return false;
     }
 
+    public static Boolean UpdateTCInLocalCSV(String rowIndex, String columName, String newValue) throws IOException {
+        Integer index = Integer.valueOf(rowIndex);
+        System.out.println("index is  = " + index);
+        int columnIndex = LoadData.getColumnIndex(columName);
 
-    public static Boolean UpdateTCInLocalCSV_Analysis(int rowIndex, int columnIndex, String newValue) throws IOException {
-        FileReader csvFile = new FileReader(config.getSingleCSVFile());
+        if (index != null && columnIndex !=-1) {
+            try {
+                return LoadData.UpdateTCInLocalCSV(index, columnIndex, newValue);
+            } catch (Exception e) {
+                System.out.println("Error on row : " + index + " is " + e.getMessage());
+            }
+        }
+        return null;
+    }
 
-        try (CSVReader reader = new CSVReaderBuilder(csvFile).build()) {
+    public static Boolean UpdateTCInLocalCSV_Pate(int rowIndex, String columName, String newValue) throws IOException {
+        Integer index = Integer.valueOf(rowIndex);
+        System.out.println("index is  = " + index);
+        int columnIndex_pate = LoadData.getColumnIndex(columName);
 
-            List<String[]> data = reader.readAll();
+        if (index != null && columnIndex_pate !=-1) {
+            try {
+                FileReader csvFile = new FileReader(config.getPateFile());
 
-            // Modify the data (for example, update a specific value)
-            // Let's say we want to update the value in the second row and third column
+                try (CSVReader reader = new CSVReaderBuilder(csvFile).build()) {
 
-            if (rowIndex < data.size() && columnIndex < data.get(rowIndex).length) {
-                data.get(rowIndex)[columnIndex] = newValue;
-                //data.get(rowIndex)[columnIndex-1]="NO";
-            } else {
-                System.out.println("Invalid row or column index.");
+                    List<String[]> data = reader.readAll();
+
+                    // Modify the data (for example, update a specific value)
+                    // Let's say we want to update the value in the second row and third column
+
+                    if (rowIndex < data.size() && columnIndex_pate < data.get(rowIndex).length) {
+                        data.get(rowIndex)[columnIndex_pate] = newValue;
+                    } else {
+                        System.out.println("Invalid row or column index.");
+                        return false;
+                    }
+
+                    // Write back to the CSV file
+                    try (CSVWriter writer = new CSVWriter(new FileWriter(config.getPateFile()))) {
+                        writer.writeAll(data);
+
+                        // writer.writeNext(new String[]{String.valueOf(data)});
+                        System.out.println("CSV file has been updated.");
+                        return true;
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return false;
+                }
+
                 return false;
             }
-
-            // Write back to the CSV file
-            try (CSVWriter writer = new CSVWriter(new FileWriter(config.getSingleCSVFile()))) {
-                writer.writeAll(data);
-
-                // writer.writeNext(new String[]{String.valueOf(data)});
-                System.out.println("CSV file has been updated.");
-                return true;
-            } catch (IOException e) {
-                e.printStackTrace();
+            catch (Exception e) {
+                System.out.println("Error on row : " + index + " is " + e.getMessage());
+            }
             }
 
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
-
-        return false;
+        return null;
     }
 }

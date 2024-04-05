@@ -75,25 +75,8 @@ public class MRIImportTests {
 
            if(portfolioId_created!= -1)
             {
-               Integer index = null;
-               index = Integer.valueOf(tc.get("index"));
-                try {
-                    System.out.println("index is  = " + index);
-                } catch (Exception e) {
-                }
-                if (index != null) {
-                    try {
-                    String targetColumn ="existingPortfolioId";
-                    int columnIndex=LoadData.getColumnIndex(targetColumn);
-                    if(columnIndex !=-1)
-                    {
-                      //  LoadData.UpdateTCInLocalCSV(index, 14, String.valueOf(portfolioId_created));
-                        LoadData.UpdateTCInLocalCSV(index, columnIndex, String.valueOf(portfolioId_created));
-                    }
-                    } catch (Exception e) {
-                        System.out.println("Error on row : " + index + " is " + e.getMessage());
-                    }
-                }
+                LoadData.UpdateTCInLocalCSV(tc.get("index"), "isCreatePortfolio", "NO");
+                LoadData.UpdateTCInLocalCSV(tc.get("index"), "existingPortfolioId", String.valueOf(portfolioId_created));
             }
 
 

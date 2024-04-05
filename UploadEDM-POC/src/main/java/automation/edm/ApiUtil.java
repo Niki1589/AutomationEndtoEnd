@@ -13,30 +13,13 @@ import automation.edm.enums.DatabaseStorageType;
 import io.restassured.internal.RestAssuredResponseImpl;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
-import org.apache.commons.collections.bag.SynchronizedSortedBag;
 import org.apache.commons.lang.RandomStringUtils;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.util.EntityUtils;
 
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
-import java.net.HttpURLConnection;
 import java.util.*;
-import java.net.URL;
 
 import static io.restassured.RestAssured.given;
-
-import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
 
 public class ApiUtil {
 
@@ -279,10 +262,10 @@ public class ApiUtil {
         }
         return status;
     }
-     public static int getAnalysisIDByJobId(String workflowId,String authToken)
+     public static String getAnalysisIDByJobId(String workflowId,String authToken)
      {
          String subJobId = "";
-         int analysisID = 0;
+         String analysisID = "";
          try
          {
              Response jobGetJobDetailsResponse = getJobDetailsByJobId(authToken, workflowId);
@@ -296,21 +279,39 @@ public class ApiUtil {
              {
                  Map<Object, Object> jobResult = subJobGetJobDetailsResponse.jsonPath().getMap("$");
                  HashMap<String, Object> summaryMap = (HashMap<String, Object>) jobResult.get("summary");
-                 analysisID = Integer.parseInt(summaryMap.get("analysisId").toString());
+                 analysisID = summaryMap.get("analysisId").toString();
              }
-             else
-             {
+             else {
                  System.out.println("Issue with API ");
-             }
-
-
-         }
+             }}
          catch(Exception ex)
          {
              System.out.println(ex);
          }
          return analysisID;
      }
+
+    public static int getAnalysisIDByJobId_Pate(String jobId, String authToken) {
+        // common function to get analysisID by JobID
+        int analysisID = 0;
+        try {
+            Response response = getJobDetailsByJobId(authToken, String.valueOf(jobId));
+            if (response.getStatusCode() == 200) {
+                Map<Object, Object> jobResult = response.jsonPath().getMap("$");
+                HashMap<String, Object> summaryMap = (HashMap<String, Object>) jobResult.get("summary");
+                analysisID = Integer.parseInt(summaryMap.get("analysisId").toString());
+            } else {
+                System.out.println("Issue with Job API ");
+            }
+
+        }
+        catch(Exception ex)
+        {
+            System.out.println(ex);
+        }
+        return analysisID;
+    }
+
 
     public static Response getsubJobDetailsByJobId(String authToken, String subJobId, String workflowId) {
         String api = String.format(apiendpoints.get("detailsByJobID"), subJobId +"?parent="+workflowId);
@@ -429,6 +430,78 @@ public class ApiUtil {
         RestApiHelper apiHelper =
                 new RestApiHelper(token, url, "application/json", params, false);
         Response response = apiHelper.submitPost(payload);
+        return response;
+    }
+
+    public static Response exportRDMToPlatform(int[] analysisIds, String rdmName, String exportHDLossesAs, String sqlVersion, String exportFormat, String token) throws Exception {
+        String api = apiendpoints.get("exportRDMBAK");
+        String url = baseUrl + api;
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("analysisIds",analysisIds );
+        payload.put("createnew","true");
+        payload.put("exportFormat",exportFormat);
+        payload.put("exportType","RDM");
+        payload.put("rdmName", rdmName);
+        payload.put("sqlVersion", sqlVersion);
+        payload.put("type", "ResultsExportInputV2");
+        payload.put("exportHdLossesAs",exportHDLossesAs);
+
+        RestApiHelper apiHelper =
+                new RestApiHelper(token, url, "application/json", false);
+        Response response = apiHelper.submitPost(payload);
+        return response;
+    }
+
+    public static Response exportRDMToNewDataBridge(String dataBridgeServer, Map<String, Object> payload, String token) throws Exception {
+        String api = apiendpoints.get("exportRDMBAK") + "?servername="+dataBridgeServer;
+        String url = baseUrl + api;
+
+
+        RestApiHelper apiHelper =
+                new RestApiHelper(token, url, "application/json", false);
+        Response response = apiHelper.submitPost(payload);
+        return response;
+    }
+
+    public static Response exportFile(Map<String, Object> payload, String token) throws Exception {
+        String api = apiendpoints.get("exportFile");
+        String url = baseUrl + api;
+
+
+        RestApiHelper apiHelper =
+                new RestApiHelper(token, url, "application/json", false);
+        Response response = apiHelper.submitPost(payload);
+        return response;
+    }
+
+    public static Response convertCurrencyApi(Map<String, Object> payload, String analysisId, String token) throws Exception {
+        String api = String.format(apiendpoints.get("convertCurrency"), analysisId);
+        String url = baseUrl + api;
+
+
+        RestApiHelper apiHelper =
+                new RestApiHelper(token, url, "application/json", false);
+        Response response = apiHelper.submitPost(payload);
+        return response;
+    }
+    public static Response pateApi(String pateOperationType,Map<String, List<Map<String, Object>>> payload, int analysisId, String token) throws Exception {
+        String api = String.format(apiendpoints.get("pate"), analysisId);
+        String url = baseUrl + api;
+
+            RestApiHelper apiHelper =
+                    new RestApiHelper(token, url, "application/json", false);
+           Response response = apiHelper.submitPost(payload);
+            return response;
+    }
+
+    public static Response renameAnalysisApi(Map<String, Object> payload, String analysisId, String token) throws Exception {
+        String api = String.format(apiendpoints.get("renameAnalysis"), analysisId);
+        String url = baseUrl + api;
+
+
+        RestApiHelper apiHelper =
+                new RestApiHelper(token, url, "application/json", false);
+        Response response = apiHelper.submitPut(payload);
         return response;
     }
 
@@ -721,7 +794,12 @@ public class ApiUtil {
             String link = ((String) ((Map) list.get(0)).get("href"));
             String NAEQmodelProfileId = link.substring(link.lastIndexOf('/')+1);
             System.out.println("createNAEQModelProfile: Finnished "+link+"    and   id is "+NAEQmodelProfileId);
-
+            int NAEQmodelProfileId_created=Integer.parseInt(NAEQmodelProfileId);
+            if(NAEQmodelProfileId_created!=-1)
+            {
+                LoadData.UpdateTCInLocalCSV(tc.get("index"), "ifCreateModelProfile", "NO");
+                LoadData.UpdateTCInLocalCSV(tc.get("index"), "mfId", String.valueOf(NAEQmodelProfileId_created));
+            }
             return NAEQmodelProfileId;
         }
         else {

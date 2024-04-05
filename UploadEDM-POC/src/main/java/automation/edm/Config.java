@@ -16,6 +16,16 @@ public class Config {
     private String perilType;
     private String profileTemplateJsonFile;
     private String singleCSVFile;
+
+    private  String pateFile;
+
+    public String getPateFile() {
+        return pateFile;
+    }
+
+    public void setPateFile(String pateFile) {
+        this.pateFile = pateFile;
+    }
     public String getBatchCSVFile() {
         return batchCSVFile;
     }
