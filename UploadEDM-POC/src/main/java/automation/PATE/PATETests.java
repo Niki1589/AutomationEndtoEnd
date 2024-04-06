@@ -10,6 +10,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static automation.edm.ApiUtil.getTreatyIdByAnalysisId;
+
 public class PATETests {
     //    @DataProvider(name = "loadFromPateCSV")
 //  public static Object[] provider() throws IOException {
@@ -21,9 +23,8 @@ public class PATETests {
             List<Map<String, String>> pateList = LoadData.loadPateCSVByCase(caseNo);
 
         for ( Map<String, String> tc : pateList) {
-            PATE( tc,  analysisId );
+            PATE(tc,analysisId );
         }
-            
     }
 
     public static void PATE(Map<String, String> tc, String analysisIdBatch) throws Exception {
@@ -31,7 +32,10 @@ public class PATETests {
             Map<String, List<Map<String, Object>>> payload = new HashMap<>();
             if (tc.get("ifRun").equals("YES")) {
 
-                String analysisId_pate = analysisIdBatch;
+                String analysisId_pate ="";
+                int treatyId =0;
+
+               // String analysisId_pate = analysisIdBatch;
                 System.out.println("***** Running PATE API ********");
 
                 String token = ApiUtil.getSmlToken(LoadData.config.getUsername(), LoadData.config.getPassword(), LoadData.config.getTenant(), "accessToken");
@@ -98,6 +102,44 @@ public class PATETests {
                     payload.put("insert", treatyMapList);
                     payload.put("update", new ArrayList<>());
                     payload.put("delete", new ArrayList<>());
+
+                    Response response = ApiUtil.pateApi(pateOperationType, payload, Integer.parseInt(analysisIdBatch), token);
+                    System.out.println("PATE  Status: " + response.getStatusCode());
+                    if (response.getStatusCode() == 202) {
+                        String locationHdr = response.getHeader("Location");
+                        String jobId = locationHdr.substring(locationHdr.lastIndexOf('/') + 1);
+                        System.out.println("exportFile_wf_id: " + jobId);
+                        if (jobId == null) {
+                            throw new Exception("JobId is null");
+                        }
+                        String msg = ApiUtil.waitForJobToComplete(jobId, token);
+                        System.out.println("wait for job msg: " + msg);
+                        analysisId_pate = String.valueOf(ApiUtil.getAnalysisIDByJobId_Pate(jobId, token));
+                        Response pateTreatiesResponse = getTreatyIdByAnalysisId(token,analysisId_pate);
+
+                        if (pateTreatiesResponse.getStatusCode() == 200)
+                        {
+                            treatyId = pateTreatiesResponse.jsonPath().getInt("searchMatchingPateList[0].treatyId");
+
+
+                            System.out.println("Treaty Id is "+ treatyId);
+
+                        }
+
+                        if(analysisId_pate!="")
+                        {
+                            LoadData.UpdateTCInLocalCSV_Pate(Integer.parseInt(tc.get("index")), "operationType", "update");
+                            LoadData.UpdateTCInLocalCSV_Pate(Integer.parseInt(tc.get("index")), "analysisId_pate", String.valueOf(analysisId_pate));
+                            LoadData.UpdateTCInLocalCSV_Pate(Integer.parseInt(tc.get("index")), "treatyId", String.valueOf(treatyId));
+
+
+                            //    LoadData.UpdateTCInLocalCSV_Pate(Integer.parseInt(tc.get("index")), "treatyId", String.valueOf(analysisId_pate));
+                        }
+                    } else {
+                        String msg = response.getBody().jsonPath().get("message");
+                        System.out.println("Pate Api Message: " + msg);
+                    }
+
                 }
                 else if (pateOperationType != null && pateOperationType.equals("update")) {
                     payload.put("insert", new ArrayList<>());
@@ -128,7 +170,7 @@ public class PATETests {
                     analysisId_pate = String.valueOf(ApiUtil.getAnalysisIDByJobId_Pate(jobId, token));
                     if(analysisId_pate!="")
                     {
-                        LoadData.UpdateTCInLocalCSV_Pate(Integer.parseInt(tc.get("index")), "analysisId", String.valueOf(analysisId));
+                        LoadData.UpdateTCInLocalCSV_Pate(Integer.parseInt(tc.get("index")), "analysisId", String.valueOf(analysisId_pate));
                     }
                 } else {
                     String msg = response.getBody().jsonPath().get("message");

@@ -1,4 +1,5 @@
 package automation.batch;
+import automation.PATE.PATETests;
 import automation.currencyConverter.CurrencyConverter;
 import automation.edm.ApiUtil;
 import automation.edm.LoadData;
@@ -14,7 +15,7 @@ import java.util.*;
 
 public class BatchTests {
 
-   public static String referenceAnalysisId ="";
+  // public static String referenceAnalysisId ="";
     public static void batchAPI(Map<String, String> tc,String portfolioId,String dataSourceName) throws Exception {
 
         String analysisId ="";
@@ -61,7 +62,7 @@ public class BatchTests {
                 System.out.println("***** Finished till " + perils.getPeril());
                 analysisId = ApiUtil.getAnalysisIDByJobId(jobId, token);
 
-               referenceAnalysisId = analysisId;
+               //referenceAnalysisId = analysisId;
 
                 if (tc.get("if_model_run").equals("YES") && analysisId != "") {
                     LoadData.UpdateTCInLocalCSV(tc.get("index"), "analysisId", analysisId);
@@ -76,9 +77,13 @@ public class BatchTests {
                     RenameAnalysis.rename(tc, analysisId);
                 }
 
+                if(Utils.isTrue(tc.get("isPate"))) {
+                    PATETests.executePATETests(tc.get("caseNo"),analysisId);
+                }
+
             } else {
               analysisId = tc.get("analysisId");
-               referenceAnalysisId = analysisId;
+              // referenceAnalysisId = analysisId;
               if (tc.get("if_rdm_export").equals("YES")) {
                   export.exportType(tc, analysisId);
               }
@@ -88,6 +93,10 @@ public class BatchTests {
               if (Utils.isTrue(tc.get("isRenameAnalysis"))) {
                   RenameAnalysis.rename(tc, analysisId);
               }
+
+                if(Utils.isTrue(tc.get("isPate"))) {
+                    PATETests.executePATETests(tc.get("caseNo"),analysisId);
+                }
             }
         }
         catch (Exception e) {

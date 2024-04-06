@@ -377,6 +377,17 @@ public class ApiUtil {
         return response;
     }
 
+    public static Response getTreatyIdByAnalysisId(String authToken, String analysisId_pate)
+    {
+        String api = String.format(apiendpoints.get("pate-treaties"), analysisId_pate);
+        String url = baseUrl + api;
+        RestApiHelper restApiHelper =
+                new RestApiHelper(
+                        authToken, url, "application/json", false);
+        Response response = restApiHelper.submitGet();
+        return response;
+    }
+
     public static Response getGroups(String authToken) {
         String api = apiendpoints.get("getGroups");
         String url = baseUrl + api;

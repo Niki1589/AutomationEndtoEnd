@@ -233,6 +233,11 @@ public class LoadData {
     public static int getColumnIndex(String columnName) {
         return MergeHeaders.indexOf(columnName);
     }
+
+    public static int getColumnIndex_Pate(String columnName) {
+        return PateHeaders.indexOf(columnName);
+    }
+
     public static Object[] readCaseTCFromLocalCSV() throws Exception {
         System.out.println("Dataloading");
         // Create an object of file reader
@@ -278,6 +283,9 @@ public class LoadData {
         return objectsOfTC;
     }
 
+    public static List<String> PateHeaders =Arrays.asList( "index","caseNo","ifRun","analysisId_pate","operationType","treatyId","treatyNumber","treatyName","treatyType","occurLimit","attachPt","cedant","effectDate","expireDate","pcntCovered","pcntPlaced","pcntRiShare","pcntRetent","Premium","numOfReinst","reinstCharge","aggregateLimit","aggregateDeductible","priority");;
+
+
     public static List<Map<String, String>> loadPateCSVByCase(String caseNo) throws Exception {
 
         FileReader filereader = new FileReader(config.getPateFile());
@@ -285,23 +293,23 @@ public class LoadData {
                 .withSkipLines(1)
                 .build();
         List<String[]> rows = csvReader.readAll();
-        List<String> headers = Arrays.asList( "index","caseNo","ifRun","analysisId_pate","operationType","treatyId","treatyNumber","treatyName","treatyType","occurLimit","attachPt","cedant","effectDate","expireDate","pcntCovered","pcntPlaced","pcntRiShare","pcntRetent","Premium","numOfReinst","reinstCharge","aggregateLimit","aggregateDeductible","priority");
+    //    List<String> headers = Arrays.asList( "index","caseNo","ifRun","analysisId_pate","operationType","treatyId","treatyNumber","treatyName","treatyType","occurLimit","attachPt","cedant","effectDate","expireDate","pcntCovered","pcntPlaced","pcntRiShare","pcntRetent","Premium","numOfReinst","reinstCharge","aggregateLimit","aggregateDeductible","priority");
         List<Map<String, String>> objectsOfTC = new ArrayList<>();
         for (String[] row : rows) {
-            String pateCase = row[headers.indexOf("caseNo")];
+            String pateCase = row[PateHeaders.indexOf("caseNo")];
             if ( pateCase.equals(caseNo) ) {
                 Map<String, String> rowMap_pate = new HashMap<>();
-                for (int i = 0; i < headers.size(); i++) {
+                for (int i = 0; i < PateHeaders.size(); i++) {
                     String v = "";
                     try {
                         if (row[i] != null) {
                             v = row[i];
                         }
                     } catch (Exception ex) {
-                        System.out.println("Error in field = "+headers.get(i));
+                        System.out.println("Error in field = "+PateHeaders.get(i));
                     }
-                    System.out.println(headers.get(i)+" "+v);
-                    rowMap_pate.put(headers.get(i), v);
+                    System.out.println(PateHeaders.get(i)+" "+v);
+                    rowMap_pate.put(PateHeaders.get(i), v);
                 }
                 objectsOfTC.add(rowMap_pate);
             }
@@ -369,7 +377,7 @@ public class LoadData {
     public static Boolean UpdateTCInLocalCSV_Pate(int rowIndex, String columName, String newValue) throws IOException {
         Integer index = Integer.valueOf(rowIndex);
         System.out.println("index is  = " + index);
-        int columnIndex_pate = LoadData.getColumnIndex(columName);
+        int columnIndex_pate = LoadData.getColumnIndex_Pate(columName);
 
         if (index != null && columnIndex_pate !=-1) {
             try {

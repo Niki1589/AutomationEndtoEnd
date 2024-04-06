@@ -22,7 +22,7 @@ import java.util.Map;
 
 public class SingleInputClass {
 
-public static String caseNumber="";
+//public static String caseNumber="";
     @DataProvider(name = "loadFromCSV")
     public Object[] provider() throws Exception {
         return LoadData.readCaseTCFromLocalCSV();
@@ -34,7 +34,7 @@ public static String caseNumber="";
 
       Thread thread = new Thread(() -> {
         uploadOrImportEdm(tc);
-          caseNumber = tc.get("caseNo");
+       //   caseNumber = tc.get("caseNo");
       });
 
       thread.start();
@@ -70,7 +70,7 @@ public static String caseNumber="";
                                 RenameAnalysis.rename(tc, tc.get("analysisId"));
                             }
                             if (Utils.isTrue(tc.get("isPate"))) {
-                                PATETests.executePATETests();
+                                PATETests.executePATETests(tc.get("caseNo"),tc.get("analysisId"));
                             }
                         }
                     } else {
