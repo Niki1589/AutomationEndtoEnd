@@ -312,6 +312,8 @@ public class LoadData {
                     rowMap_pate.put(PateHeaders.get(i), v);
                 }
                 objectsOfTC.add(rowMap_pate);
+            } else {
+                System.out.println("Pate Case No "+pateCase+" has been ignored.");
             }
         }
         System.out.println("CSV Loaded");

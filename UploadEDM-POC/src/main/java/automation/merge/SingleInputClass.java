@@ -23,7 +23,7 @@ import java.util.Map;
 public class SingleInputClass {
 
 //public static String caseNumber="";
-    @DataProvider(name = "loadFromCSV")
+    @DataProvider(name = "loadFromCSV", parallel = true)
     public Object[] provider() throws Exception {
         return LoadData.readCaseTCFromLocalCSV();
 
@@ -46,8 +46,6 @@ public class SingleInputClass {
             try {
                 System.out.println("Test Case No: "+tc.get("caseNo"));
                 if (tc.get("ifRun").equalsIgnoreCase("YES")) {
-
-
                     if (Utils.isTrue(tc.get("isRunUploadImportExpo"))) {
                         if (tc.get("ifUploadImportExpo").equalsIgnoreCase("Import")) {
                             MRIImportTests mriImportTests = new MRIImportTests();

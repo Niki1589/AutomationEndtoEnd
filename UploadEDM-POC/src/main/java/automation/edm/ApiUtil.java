@@ -247,7 +247,7 @@ public class ApiUtil {
                     status = String.valueOf(jobGetJobDetailsResponse.getStatusCode());
                     System.out.println("Error while checking job status: " + status);
                 }
-                Thread.sleep(interval);
+                 Thread.sleep(interval);
                 jobGetJobDetailsResponse = getJobDetailsByJobId(authToken, workflowId);
             }
             if ((status.equalsIgnoreCase("RUNNING"))
