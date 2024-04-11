@@ -62,7 +62,7 @@ public class FileExportTests {
             if (jobId == null) {
                 throw new Exception("JobId is null");
             }
-            String msg = ApiUtil.waitForJobToComplete(jobId, token);
+            String msg =  ApiUtil.waitForJobToComplete(jobId, token, "Export to file API");
             System.out.println("waitforjob msg: " + msg);
         }
         else {

@@ -38,7 +38,7 @@ public class UploadEDM extends TestCase {
         String fileExt = tc.get("fileExt");
         String dbType = tc.get("dbType");
         String dataSourceName =
-                fileName.substring(0, fileName.indexOf('.')) + "_" + RandomStringUtils.randomNumeric(8);
+                fileName.substring(0, fileName.indexOf('.')) + "_" + RandomStringUtils.randomNumeric(5);
 
         //    String dataSourceName ="Testing_EDM_E2E";
         try {
@@ -57,6 +57,13 @@ public class UploadEDM extends TestCase {
 
             String msg = ApiUtil.waitForJobToComplete(workflowId, token,"Upload EDM");
             System.out.println("waitforjob msg: " + msg);
+
+            if(actualresponse==202)
+            {
+                if (dataSourceName != "") {
+                    LoadData.UpdateTCInLocalCSV(tc.get("index"), "edmDatasourceName", dataSourceName);
+                }
+            }
 
 //            MRIImportTests.MRIImport(token, dataSourceName, tc, "Create Portfolio");
 

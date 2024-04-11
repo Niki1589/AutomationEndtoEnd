@@ -431,11 +431,15 @@ public class ApiUtil {
 
         Map<String, Object> payload = new HashMap<>();
         if (groupIds != null) {
+
+            //String[] group_Ids = new String[]{(groupIds)};
             payload.put("groups", groupIds);
             payload.put("share", (groupIds.size() > 0));
+            payload.put("tagIds", new ArrayList<String>());
         } else {
             payload.put("groups", new ArrayList<String>());
             payload.put("share", false);
+            payload.put("tagIds",new ArrayList<String>());
         }
 
         RestApiHelper apiHelper =
@@ -789,7 +793,7 @@ public class ApiUtil {
 
         if(tc.get("ifCreateModelProfile").equals("YES")) {
             String randmVal = RandomStringUtils.randomNumeric(3);
-            String ModelProfile_Name = "ModelProfile_Name_" + randmVal;
+            String ModelProfile_Name = "ModelProfile_"+tc.get("peril")+"_"+tc.get("modelRegion")+ "_"+randmVal;
             System.out.println("Model profile name : "+ModelProfile_Name);
             String TemplateId = null;
 
@@ -810,6 +814,7 @@ public class ApiUtil {
             {
                 LoadData.UpdateTCInLocalCSV(tc.get("index"), "ifCreateModelProfile", "NO");
                 LoadData.UpdateTCInLocalCSV(tc.get("index"), "mfId", String.valueOf(NAEQmodelProfileId_created));
+                LoadData.UpdateTCInLocalCSV(tc.get("index"), "mp_created_name", ModelProfile_Name);
             }
             return NAEQmodelProfileId;
         }

@@ -298,6 +298,7 @@ public class ModelProfileAPI {
 
         List<String> subPerils = perils.getSubPerils();
         List<String> policyCoverages = perils.getPolicyCoverages();
+        List<String> specialtyModels = perils.getSpecialtyModels();
 
         String payloadInString = "{\n" +
                 "    \"General\": {\n" +
@@ -336,6 +337,13 @@ public class ModelProfileAPI {
                 // "            \"inlandFlood\": "+subPerils.contains("inlandFlood")+"\n" +
                 "        },\n" +
                 "        \"applyPLA\": "+perils.getApplyPLA()+"\n" +
+                "    },\n" +
+                "    \"ExposureModifications\": {\n" +
+                "        \"specialtyModels\": {\n" +
+                "            \"mapBrChecked\": "+specialtyModels.contains("mapBrChecked")+",\n" +
+                "            \"mapIFMChecked\": "+specialtyModels.contains("mapIFMChecked")+",\n" +
+                "            \"mapMarineChecked\": "+specialtyModels.contains("mapMarineChecked")+"\n" +
+                "        }\n" +
                 "    }\n" +
                 "}";
         return payloadInString;

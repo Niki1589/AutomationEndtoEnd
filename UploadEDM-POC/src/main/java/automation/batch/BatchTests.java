@@ -18,9 +18,7 @@ public class BatchTests {
   // public static String referenceAnalysisId ="";
     public static void batchAPI(Map<String, String> tc,String portfolioId,String dataSourceName) throws Exception {
 
-        String analysisId ="";
-
-
+        String analysisId = "";
         System.out.println("***** Running Batch Api Tests ********");
         String token = ApiUtil.getSmlToken(LoadData.config.getUsername(), LoadData.config.getPassword(), LoadData.config.getTenant(), "accessToken");
 
@@ -28,7 +26,7 @@ public class BatchTests {
 
         String modelProfileId = ModelProfileAPI.getModelProfileApi(perils, tc, token);
 
-        System.out.println(dataSourceName+" ************* "+portfolioId);
+        System.out.println(dataSourceName + " ************* " + portfolioId);
         if (dataSourceName == null) {
             throw new Exception("DataSource is required!");
         }
@@ -36,19 +34,13 @@ public class BatchTests {
             throw new Exception("PortfolioId is required!");
         }
         try {
-            Object payloadObject = getPayloadBatchApi(
-                    perils.getPortfolioId(),
-                    dataSourceName,
-                    modelProfileId,
-                    Utils.isTrue(tc.get("isGeoCoded")),
-                    perils
-            );
-            System.out.println("After  Batch payload");
             if (perils.getIfModelRun().equals("YES")) {
-                Response batchResponse = ApiUtil.batchAPI(token, payloadObject);
-                String hdr = batchResponse.getHeader("Location");
-                String jobId = hdr.substring(hdr.lastIndexOf('/') + 1);
-                System.out.println(batchResponse.getStatusCode() + "  :Batch Status: jobId:" + jobId);
+            Object payloadObject = getPayloadBatchApi(perils.getPortfolioId(), dataSourceName, modelProfileId, Utils.isTrue(tc.get("isGeoCoded")), perils);
+                    System.out.println("After  Batch payload");
+                    Response batchResponse = ApiUtil.batchAPI(token, payloadObject);
+                    String hdr = batchResponse.getHeader("Location");
+                    String jobId = hdr.substring(hdr.lastIndexOf('/') + 1);
+                    System.out.println(batchResponse.getStatusCode() + "  :Batch Status: jobId:" + jobId);
 
                 String msg = null;
                 try {
@@ -62,49 +54,54 @@ public class BatchTests {
                 System.out.println("***** Finished till " + perils.getPeril());
                 analysisId = ApiUtil.getAnalysisIDByJobId(jobId, token);
 
-               //referenceAnalysisId = analysisId;
-
-                if (tc.get("if_model_run").equals("YES") && analysisId != "") {
+                if (!analysisId.isEmpty()) {
                     LoadData.UpdateTCInLocalCSV(tc.get("index"), "analysisId", analysisId);
                 }
-                if (tc.get("if_rdm_export").equals("YES")) {
-                    export.exportType(tc, analysisId);
-                }
-                if (Utils.isTrue(tc.get("isConvertCurrency"))) {
-                    CurrencyConverter.convert(tc, analysisId);
-                }
-                if (Utils.isTrue(tc.get("isRenameAnalysis"))) {
-                    RenameAnalysis.rename(tc, analysisId);
-                }
-
-                if(Utils.isTrue(tc.get("isPate"))) {
-                    PATETests.executePATETests(tc.get("caseNo"),analysisId);
-                }
-
-            } else {
-              analysisId = tc.get("analysisId");
-              // referenceAnalysisId = analysisId;
-              if (tc.get("if_rdm_export").equals("YES")) {
-                  export.exportType(tc, analysisId);
-              }
-              if (Utils.isTrue(tc.get("isConvertCurrency"))) {
-                  CurrencyConverter.convert(tc, analysisId);
-              }
-              if (Utils.isTrue(tc.get("isRenameAnalysis"))) {
-                  RenameAnalysis.rename(tc, analysisId);
-              }
-
-                if(Utils.isTrue(tc.get("isPate"))) {
-                    PATETests.executePATETests(tc.get("caseNo"),analysisId);
-                }
+                // Perform downstream workflows - RDM Export, File Export, Convert Currency , Rename Analysis, Pate
+                executeDownStreamWorkflows(tc, analysisId);
             }
-        }
-        catch (Exception e) {
+
+            else {
+                analysisId = tc.get("analysisId");
+
+                // Perform downstream workflows - RDM Export, File Export, Convert Currency , Rename Analysis, Pate
+                executeDownStreamWorkflows(tc, analysisId);
+            }
+        } catch (Exception e) {
             System.out.println("Error in Code = " + e.getMessage());
             e.printStackTrace();
             throw e;
         }
-}
+    }
+
+    private static void executeDownStreamWorkflows(Map<String, String> tc, String analysisId) throws Exception {
+        String caseNo = tc.get("caseNo");
+
+        for (String key : tc.keySet()) {
+            switch (key) {
+                case "if_rdm_export":
+                    if (Utils.isTrue(tc.get(key))) {
+                        export.exportType(tc, analysisId);
+                    }
+                    break;
+                case "isConvertCurrency":
+                    if (Utils.isTrue(tc.get(key))) {
+                        CurrencyConverter.convert(tc, analysisId);
+                    }
+                    break;
+                case "isRenameAnalysis":
+                    if (Utils.isTrue(tc.get(key))) {
+                        RenameAnalysis.rename(tc, analysisId);
+                    }
+                    break;
+                case "isPate":
+                    if (Utils.isTrue(tc.get(key))) {
+                        PATETests.executePATETests(caseNo, analysisId);
+                    }
+                    break;
+            }
+        }
+    }
 
     public static Object getPayloadBatchApi(
             String portfolioId,

@@ -38,7 +38,7 @@ public class RdmExportTests {
                 if (jobId == null) {
                     throw new Exception("JobId is null");
                 }
-                String msg = ApiUtil.waitForJobToComplete(jobId, token);
+                String msg =   msg = ApiUtil.waitForJobToComplete(jobId, token, "Export to RDM API");
                 System.out.println("waitforjob msg: " + msg);
             }
         }
@@ -70,8 +70,8 @@ public class RdmExportTests {
                 if (jobId == null) {
                     throw new Exception("JobId is null");
                 }
-                String msg = ApiUtil.waitForJobToComplete(jobId, token);
-                System.out.println("waitforjob msg: " + msg);
+                String msg = ApiUtil.waitForJobToComplete(jobId, token, "Export to RDM API");
+                System.out.println("wait for job msg: " + msg);
             }
             else {
                 String msg = response.getBody().jsonPath().get("message");

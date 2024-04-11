@@ -22,68 +22,69 @@ import java.util.Map;
 
 public class SingleInputClass {
 
-//public static String caseNumber="";
-    @DataProvider(name = "loadFromCSV", parallel = true)
+    //public static String caseNumber="";
+    @DataProvider(name = "loadFromCSV")
     public Object[] provider() throws Exception {
         return LoadData.readCaseTCFromLocalCSV();
 
 
     }
-    @Test (dataProvider = "loadFromCSV")
+
+    @Test(dataProvider = "loadFromCSV")
     public void executeSingleInputCsv(Map<String, String> tc) throws InterruptedException {
 
-      Thread thread = new Thread(() -> {
-        uploadOrImportEdm(tc);
-       //   caseNumber = tc.get("caseNo");
-      });
+        Thread thread = new Thread(() -> {
+            uploadOrImportEdm(tc);
+        });
 
-      thread.start();
-       thread.join();
+        thread.start();
+        thread.join();
 
     }
+
     public void uploadOrImportEdm(Map<String, String> tc) {
-        if(tc != null) {
+        if (tc != null) {
             try {
-                System.out.println("Test Case No: "+tc.get("caseNo"));
+                System.out.println("Test Case No: " + tc.get("caseNo"));
                 if (tc.get("ifRun").equalsIgnoreCase("YES")) {
                     if (Utils.isTrue(tc.get("isRunUploadImportExpo"))) {
-                        if (tc.get("ifUploadImportExpo").equalsIgnoreCase("Import")) {
-                            MRIImportTests mriImportTests = new MRIImportTests();
-                            if (tc.get("ifCreateEdm").equalsIgnoreCase("YES")) {
-                                mriImportTests.MRIImport(tc, true);
-                            } else {
-                                mriImportTests.MRIImport(tc, false);
-                            }
-                        } else if (tc.get("ifUploadImportExpo").equalsIgnoreCase("Upload")) {
-                            UploadEDM uploadEDM = new UploadEDM();
-                            uploadEDM.executeUploadEdm(tc);
-                        }
-                        else if(tc.get("ifUploadImportExpo").equalsIgnoreCase("Downstream"))
-                        {
-                            //export.exportType(tc, tc.get("analysisId"));
-                            if (Utils.isTrue(tc.get("isConvertCurrency"))) {
-                                CurrencyConverter.convert(tc, tc.get("analysisId"));
-                            }
-                            if (Utils.isTrue(tc.get("isRenameAnalysis"))) {
-                                RenameAnalysis.rename(tc, tc.get("analysisId"));
-                            }
-                            if (Utils.isTrue(tc.get("isPate"))) {
-                                PATETests.executePATETests(tc.get("caseNo"),tc.get("analysisId"));
-                            }
+                        switch (tc.get("ifUploadImportExpo").toUpperCase()) {
+                            case "IMPORT":
+                                MRIImportTests mriImportTests = new MRIImportTests();
+                                if (tc.get("ifCreateEdm").equalsIgnoreCase("YES")) {
+                                    mriImportTests.MRIImport(tc, true);
+                                } else {
+                                    mriImportTests.MRIImport(tc, false);
+                                }
+                                break;
+
+                            case "UPLOAD":
+
+                                UploadEDM uploadEDM = new UploadEDM();
+                                uploadEDM.executeUploadEdm(tc);
+                                break;
+
+                            case "DOWNSTREAM":
+                                if (Utils.isTrue(tc.get("isConvertCurrency"))) {
+                                    CurrencyConverter.convert(tc, tc.get("analysisId"));
+                                }
+                                if (Utils.isTrue(tc.get("isRenameAnalysis"))) {
+                                    RenameAnalysis.rename(tc, tc.get("analysisId"));
+                                }
+                                if (Utils.isTrue(tc.get("isPate"))) {
+                                    PATETests.executePATETests(tc.get("caseNo"), tc.get("analysisId"));
+                                }
+                                break;
+                            default:
+                                break;
                         }
                     } else {
-
                         String portfolioId = tc.get("existingPortfolioId");
                         String dataSourceName = tc.get("edmDatasourceName");
-
-                        //Batch API call
                         BatchTests batchTests = new BatchTests();
                         batchTests.batchAPI(tc, portfolioId, dataSourceName);
-
                     }
-                }
-
-                else {
+                } else {
                     System.out.println("Test case: " + tc.get("caseNo") + "ifRun is set to NO");
                 }
             } catch (Exception exception) {
@@ -92,3 +93,4 @@ public class SingleInputClass {
         }
     }
 }
+
