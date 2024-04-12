@@ -3,8 +3,8 @@
 <suite name="Suite" parallel="none">
     <test name="Test">
         <classes>
-            <!--        <class name="automation.mriImport.MRIImportTests" />-->
-            <class name="automation.merge.SingleInputClass" />
+            <!--        <class name="mriImport.com.rms.automation.MRIImportTests" />-->
+            <class name="com.rms.automation.merge.SingleInputClass" />
 
         </classes>
         <!-- Specify number of test files under this tag -->

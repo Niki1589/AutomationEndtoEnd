@@ -200,7 +200,7 @@
           <archive>
             <manifest>
               <addClasspath>true</addClasspath>
-              <mainClass>automation.Main</mainClass>
+              <mainClass>com.rms.automation.Main</mainClass>
             </manifest>
           </archive>
           <descriptorRefs>
