@@ -1,5 +1,7 @@
 package com.rms.automation.edm;
 
+import com.rms.automation.JobsApi.JobsApi;
+import com.rms.automation.bal.EndPointManager;
 import com.rms.automation.batchApi.ModelProfileAPI;
 import com.rms.automation.constants.AutomationConstants;
 import com.rms.automation.merge.jsonMapper.Perils;
@@ -12,6 +14,7 @@ import com.rms.automation.edm.enums.DatabaseStorageType;
 import com.rms.core.qe.common.AWSClientUtil;
 import com.rms.core.qe.common.RestApiHelper;
 import com.rms.core.qe.common.RetryUtil;
+import io.restassured.RestAssured;
 import io.restassured.internal.RestAssuredResponseImpl;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
@@ -26,16 +29,6 @@ import static io.restassured.RestAssured.given;
 public class ApiUtil {
 
     private static String rmsUploadId = null;
-    private static final long interval = 5000;
-    private static final int timeoutRequests = 17280;
-
-    private static Map<String, String> apiendpoints = new HashMap<>();
-    private static String baseUrl;
-    static {
-        apiendpoints = LoadData.readApiEndPointsFromLocal();
-        baseUrl = apiendpoints.get("baseUrl");
-    }
-
     public static String getRmsUploadId() {
         return rmsUploadId;
     }
@@ -51,7 +44,7 @@ public class ApiUtil {
 
     public static String getSmlToken(String user, String password, String tenantName, String tokenType) throws Exception {
         RetryUtil retryRequest = new RetryUtil(5);
-        String uri = baseUrl+apiendpoints.get("authorize");
+        String uri = EndPointManager.baseUrl+EndPointManager.apiendpoints.get("authorize");
         String payload = createAuthPayload(user, password, tenantName);
         RestApiHelper apiHelper = new RestApiHelper("", uri, "application/json");
         Response response = apiHelper.submitPostWithoutToken(payload);
@@ -136,8 +129,8 @@ public class ApiUtil {
 
     private static Response getS3UploadCredentials(
             String authToken, String filename, String dbType, String fileExt) {
-        String api = String.format(apiendpoints.get("s3UploadCredentials"), filename, dbType, fileExt);
-        String url = baseUrl + api;
+        String api = String.format(EndPointManager.apiendpoints.get("s3UploadCredentials"), filename, dbType, fileExt);
+        String url = EndPointManager.baseUrl + api;
         RestApiHelper restApiHelper = new RestApiHelper(authToken, url, "application/json", false);
         return restApiHelper.submitGet();
     }
@@ -217,171 +210,18 @@ public class ApiUtil {
     }
 
     public static Response uploadEDM(String authToken, String dataSource,String payload) {
-        String api = String.format(apiendpoints.get("uploadEDM"), getRmsUploadId(), dataSource);
-        String url = baseUrl + api;
+        String api = String.format(EndPointManager.apiendpoints.get("uploadEDM"), getRmsUploadId(), dataSource);
+        String url = EndPointManager.baseUrl + api;
         RestApiHelper restApiHelper = new RestApiHelper(authToken, url, "application/json", false);
         return payload.isEmpty() ? restApiHelper.submitPost() : restApiHelper.submitPost(payload);
     }
 
-    public static String waitForJobToComplete(String workflowId, String authToken, String jobName) throws Exception {
-        String status = "";
-        try {
-            Response jobGetJobDetailsResponse = getJobDetailsByJobId(authToken, workflowId);
-            for (int i = 0; i < timeoutRequests * 4; i++) {
-                if (jobGetJobDetailsResponse.getStatusCode() == 200) {
-                    Map<String, Object> responseMap = jobGetJobDetailsResponse.jsonPath().getMap("$");
-                    status = (String) responseMap.get("status");
 
-                    System.out.println(
-                            String.format(
-                                    "Getting  job status: Response: %s, JobId: %s , JobName: "+jobName+", Status: %s",
-                                    jobGetJobDetailsResponse.getStatusCode(), workflowId, status));
-                    if ((status.equalsIgnoreCase(AutomationConstants.WORKFLOW_STATUS_CANCELED))
-                            || (status.equalsIgnoreCase(AutomationConstants.WORKFLOW_STATUS_FAILED))
-                            || (status.equalsIgnoreCase(AutomationConstants.WORKFLOW_STATUS_SUCCEEDED))) {
-                        break;
-                    }
-                }
-
-
-                else {
-                    status = String.valueOf(jobGetJobDetailsResponse.getStatusCode());
-                    System.out.println("Error while checking job status: " + status);
-                }
-                 Thread.sleep(interval);
-                jobGetJobDetailsResponse = getJobDetailsByJobId(authToken, workflowId);
-            }
-            if ((status.equalsIgnoreCase("RUNNING"))
-                    || (status.equalsIgnoreCase("QUEUED"))) {
-                Double waitSeconds = Double.valueOf(interval) * Double.valueOf(timeoutRequests) / 1000;
-                status = "Job not finished. Still " + status + " after " + waitSeconds + " seconds.";
-            }
-        } catch (Exception ex) {
-            status = "Exception in waitForJobToComplete() " + ex;
-            System.out.println(status);
-            throw ex;
-        }
-        return status;
-    }
-     public static String getAnalysisIDByJobId(String workflowId,String authToken)
-     {
-         String subJobId = "";
-         String analysisID = "";
-         try
-         {
-             Response jobGetJobDetailsResponse = getJobDetailsByJobId(authToken, workflowId);
-             if(jobGetJobDetailsResponse.getStatusCode()==AutomationConstants.STATUS_OK)
-             {
-                 subJobId= (String) ((LinkedHashMap)(((ArrayList) jobGetJobDetailsResponse.getBody().jsonPath().getMap("$").get("jobs")).stream().filter(j -> ((LinkedHashMap) j).get("name").toString().equals("PROCESS")).findFirst().orElse(null))).get("id");
-                 System.out.println(subJobId);
-             }
-             Response subJobGetJobDetailsResponse = getsubJobDetailsByJobId(authToken,subJobId,workflowId);
-             if(subJobGetJobDetailsResponse.getStatusCode()==AutomationConstants.STATUS_OK)
-             {
-                 Map<Object, Object> jobResult = subJobGetJobDetailsResponse.jsonPath().getMap("$");
-                 HashMap<String, Object> summaryMap = (HashMap<String, Object>) jobResult.get("summary");
-                 analysisID = summaryMap.get("analysisId").toString();
-             }
-             else {
-                 System.out.println("Issue with API ");
-             }}
-         catch(Exception ex)
-         {
-             System.out.println(ex);
-         }
-         return analysisID;
-     }
-
-    public static int getAnalysisIDByJobId_Pate(String jobId, String authToken) {
-        // common function to get analysisID by JobID
-        int analysisID = 0;
-        try {
-            Response response = getJobDetailsByJobId(authToken, String.valueOf(jobId));
-            if (response.getStatusCode() == 200) {
-                Map<Object, Object> jobResult = response.jsonPath().getMap("$");
-                HashMap<String, Object> summaryMap = (HashMap<String, Object>) jobResult.get("summary");
-                analysisID = Integer.parseInt(summaryMap.get("analysisId").toString());
-            } else {
-                System.out.println("Issue with Job API ");
-            }
-
-        }
-        catch(Exception ex)
-        {
-            System.out.println(ex);
-        }
-        return analysisID;
-    }
-
-
-    public static Response getsubJobDetailsByJobId(String authToken, String subJobId, String workflowId) {
-        String api = String.format(apiendpoints.get("detailsByJobID"), subJobId +"?parent="+workflowId);
-        String url = baseUrl + api;
-        RestApiHelper restApiHelper =
-                new RestApiHelper(
-                        authToken, url, "application/json", false);
-        Response response = restApiHelper.submitGet();
-        return response;
-    }
-
-
-
-    public static String waitForJobToComplete(String workflowId, String authToken) throws Exception{
-        return waitForJobToComplete(workflowId, authToken, "");
-    }
-
-    public static Boolean checkJobStatus(String workflowId, String authToken) {
-        String status = "";
-        try {
-            Boolean isCheckStatus = true;
-            while(isCheckStatus) {
-                Response jobGetJobDetailsResponse = getJobDetailsByJobId(authToken, workflowId);
-                if (jobGetJobDetailsResponse.getStatusCode() == 200) {
-                    Map<String, Object> responseMap = jobGetJobDetailsResponse.jsonPath().getMap("$");
-                    status = (String) responseMap.get("status");
-                    System.out.println(
-                            String.format(
-                                    "Getting job status: Response: %s, JobId: %s , Status: %s",
-                                    jobGetJobDetailsResponse.getStatusCode(), workflowId, status));
-                    if ((status.equalsIgnoreCase("CANCELLED"))
-                            || (status.equalsIgnoreCase("FAILED"))) {
-                        System.out.println("Job has: " + status);
-                        isCheckStatus = false;
-                        return false;
-                    } else if ((status.equalsIgnoreCase("FINISHED"))) {
-                        System.out.println("Job has: " + status);
-                        isCheckStatus = false;
-                        return true;
-                    }
-                } else {
-                    status = String.valueOf(jobGetJobDetailsResponse.getStatusCode());
-                    System.out.println("Error while checking job status: " + status);
-                }
-                Thread.sleep(interval);
-            }
-
-        } catch (Exception ex) {
-            status = "Exception in checkJobStatus() " + ex;
-            System.out.println(status);
-            return false;
-        }
-        return false;
-    }
-
-    public static Response getJobDetailsByJobId(String authToken, String jobId) {
-        String api = String.format(apiendpoints.get("detailsByJobID"), jobId);
-        String url = baseUrl + api;
-        RestApiHelper restApiHelper =
-                new RestApiHelper(
-                        authToken, url, "application/json", false);
-        Response response = restApiHelper.submitGet();
-        return response;
-    }
 
     public static Response getTreatyIdByAnalysisId(String authToken, String analysisId_pate)
     {
-        String api = String.format(apiendpoints.get("pate-treaties"), analysisId_pate);
-        String url = baseUrl + api;
+        String api = String.format(EndPointManager.apiendpoints.get("pate-treaties"), analysisId_pate);
+        String url = EndPointManager.baseUrl + api;
         RestApiHelper restApiHelper =
                 new RestApiHelper(
                         authToken, url, "application/json", false);
@@ -389,9 +229,35 @@ public class ApiUtil {
         return response;
     }
 
+    public static Response getAnalysisNameByAnalysisId(String authToken, String analysisId)
+    {
+//        String api =EndPointManager.apiendpoints.get("analysisName") +"id+IN+("+analysisId +")&sort=id+DESC";
+//        String url = EndPointManager.baseUrl + api;
+//        RestApiHelper restApiHelper =
+//                new RestApiHelper(
+//                        authToken, url, "application/json", false);
+//        Response response = restApiHelper.submitGet();
+//        return response;
+
+//https://api-euw1.rms-npe.com/riskmodeler/v2/analyses?limit=200&offset=0&q=id+IN+(124516)&sort=id+DESC
+
+        String baseUrl = "https://api-euw1.rms-npe.com/riskmodeler/v2/analyses";
+
+        Response response = RestAssured.given()
+                .baseUri(baseUrl)
+                .header("Authorization", authToken)
+                .queryParam("q", "id IN (" + analysisId + ")")
+                .get();
+
+        return response;
+
+
+
+
+    }
     public static Response getGroups(String authToken) {
-        String api = apiendpoints.get("getGroups");
-        String url = baseUrl + api;
+        String api = EndPointManager.apiendpoints.get("getGroups");
+        String url = EndPointManager.baseUrl + api;
         RestApiHelper restApiHelper =
                 new RestApiHelper(
                         authToken, url, "application/json", false);
@@ -420,9 +286,11 @@ public class ApiUtil {
         return guidList;
     }
 
+
+
     public static Response createEdm(String dataSource, String databaseStorage, String serverName, List<String> groupIds, String token) throws Exception {
-        String api = apiendpoints.get("createEDM");
-        String url = baseUrl + api;
+        String api = EndPointManager.apiendpoints.get("createEDM");
+        String url = EndPointManager.baseUrl + api;
         System.out.println(" Creating Edm " + dataSource);
         Map<String, String> params = new HashMap<>();
         params.put("datasourcename", dataSource);
@@ -432,8 +300,6 @@ public class ApiUtil {
 
         Map<String, Object> payload = new HashMap<>();
         if (groupIds != null) {
-
-            //String[] group_Ids = new String[]{(groupIds)};
             payload.put("groups", groupIds);
             payload.put("share", (groupIds.size() > 0));
             payload.put("tagIds", new ArrayList<String>());
@@ -450,11 +316,11 @@ public class ApiUtil {
     }
 
     public static Response exportRDMToPlatform(int[] analysisIds, String rdmName, String exportHDLossesAs, String sqlVersion, String exportFormat, String token) throws Exception {
-        String api = apiendpoints.get("exportRDMBAK");
-        String url = baseUrl + api;
+        String api = EndPointManager.apiendpoints.get("exportRDMBAK");
+        String url = EndPointManager.baseUrl + api;
         Map<String, Object> payload = new HashMap<>();
         payload.put("analysisIds",analysisIds );
-        payload.put("createnew","true");
+        payload.put("createnew",true);
         payload.put("exportFormat",exportFormat);
         payload.put("exportType","RDM");
         payload.put("rdmName", rdmName);
@@ -469,8 +335,8 @@ public class ApiUtil {
     }
 
     public static Response exportRDMToNewDataBridge(String dataBridgeServer, Map<String, Object> payload, String token) throws Exception {
-        String api = apiendpoints.get("exportRDMBAK") + "?servername="+dataBridgeServer;
-        String url = baseUrl + api;
+        String api = EndPointManager.apiendpoints.get("exportRDMBAK") + "?servername="+dataBridgeServer;
+        String url = EndPointManager.baseUrl + api;
 
 
         RestApiHelper apiHelper =
@@ -480,8 +346,8 @@ public class ApiUtil {
     }
 
     public static Response exportFile(Map<String, Object> payload, String token) throws Exception {
-        String api = apiendpoints.get("exportFile");
-        String url = baseUrl + api;
+        String api = EndPointManager.apiendpoints.get("exportFile");
+        String url = EndPointManager.baseUrl + api;
 
 
         RestApiHelper apiHelper =
@@ -491,8 +357,8 @@ public class ApiUtil {
     }
 
     public static Response convertCurrencyApi(Map<String, Object> payload, String analysisId, String token) throws Exception {
-        String api = String.format(apiendpoints.get("convertCurrency"), analysisId);
-        String url = baseUrl + api;
+        String api = String.format(EndPointManager.apiendpoints.get("convertCurrency"), analysisId);
+        String url = EndPointManager.baseUrl + api;
 
 
         RestApiHelper apiHelper =
@@ -500,9 +366,22 @@ public class ApiUtil {
         Response response = apiHelper.submitPost(payload);
         return response;
     }
+    public static Response climateChangeApi(Map<String, Object> payload, String analysisId, String token) throws Exception {
+        String api = String.format(EndPointManager.apiendpoints.get("climateChange"), analysisId);
+        String url = EndPointManager.baseUrl + api;
+
+
+        RestApiHelper apiHelper =
+                new RestApiHelper(token, url, "application/json", false);
+        Response response = apiHelper.submitPost(payload);
+        return response;
+    }
+
+
+
     public static Response pateApi(String pateOperationType,Map<String, List<Map<String, Object>>> payload, int analysisId, String token) throws Exception {
-        String api = String.format(apiendpoints.get("pate"), analysisId);
-        String url = baseUrl + api;
+        String api = String.format(EndPointManager.apiendpoints.get("pate"), analysisId);
+        String url = EndPointManager.baseUrl + api;
 
             RestApiHelper apiHelper =
                     new RestApiHelper(token, url, "application/json", false);
@@ -511,8 +390,8 @@ public class ApiUtil {
     }
 
     public static Response renameAnalysisApi(Map<String, Object> payload, String analysisId, String token) throws Exception {
-        String api = String.format(apiendpoints.get("renameAnalysis"), analysisId);
-        String url = baseUrl + api;
+        String api = String.format(EndPointManager.apiendpoints.get("renameAnalysis"), analysisId);
+        String url = EndPointManager.baseUrl + api;
 
 
         RestApiHelper apiHelper =
@@ -522,8 +401,8 @@ public class ApiUtil {
     }
 
     public static Response CreateBucketApi(String authToken) {
-        String api = apiendpoints.get("createBucket");
-        String url = baseUrl + api;
+        String api = EndPointManager.apiendpoints.get("createBucket");
+        String url = EndPointManager.baseUrl + api;
         RestApiHelper restApiHelper =
                 new RestApiHelper(
                         authToken, url, "application/json", false);
@@ -532,8 +411,8 @@ public class ApiUtil {
     }
 
     public static Response getBucketCredentials(String authToken, Object payload, String bucketId) {
-        String api = String.format(apiendpoints.get("getBucketCredentials"), bucketId);
-        String url = baseUrl + api;
+        String api = String.format(EndPointManager.apiendpoints.get("getBucketCredentials"), bucketId);
+        String url = EndPointManager.baseUrl + api;
         RestApiHelper restApiHelper =
                 new RestApiHelper(
                         authToken, url, "application/json", false);
@@ -661,8 +540,8 @@ public class ApiUtil {
 
     public static Response createPortfolio(String authToken, String datasource, String portfolioNumber, String portfolioName, String portfolioDescription) {
 
-        String api = apiendpoints.get("createPortfolio")+datasource;
-        String url = baseUrl + api;
+        String api = EndPointManager.apiendpoints.get("createPortfolio")+datasource;
+        String url = EndPointManager.baseUrl + api;
 
         Map<String, Object> payload = new HashMap<>();
         payload.put("number", portfolioNumber);
@@ -675,29 +554,11 @@ public class ApiUtil {
         return restApiHelper.submitPost(payload);
     }
 
-    public static Response accountsUploadToPortfolio(String authToken, String datasource, String portfolioId) {
-
-        String api = String.format(apiendpoints.get("acccountsUploadToPortfolio"), portfolioId, datasource);
-        String url = baseUrl + api;
-
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("manageExistingAccounts", false);
-        List<Integer> markedAccounts = new ArrayList<>();
-        markedAccounts.add(6933);
-        payload.put("markedAccounts", markedAccounts);
-        payload.put("queryFilter", "");
-        payload.put("selectAll", false);
-
-        RestApiHelper restApiHelper =
-                new RestApiHelper(
-                        authToken, url, "application/json", false);
-        return restApiHelper.submitPost(payload);
-    }
 
     public static Response submitMRIJob(String authToken, Map<String, Object> payload) {
 
-        String api = apiendpoints.get("submitMRIJob");
-        String url = baseUrl + api;
+        String api = EndPointManager.apiendpoints.get("submitMRIJob");
+        String url = EndPointManager.baseUrl + api;
 
         RestApiHelper restApiHelper =
                 new RestApiHelper(
@@ -707,8 +568,8 @@ public class ApiUtil {
 
     public static Response batchAPI(String authToken, Object payload) {
 
-        String api = apiendpoints.get("batchAPI");
-        String url = baseUrl + api;
+        String api = EndPointManager.apiendpoints.get("batchAPI");
+        String url = EndPointManager.baseUrl + api;
 
         RestApiHelper restApiHelper =
                 new RestApiHelper(
@@ -718,49 +579,20 @@ public class ApiUtil {
 
 
     public static Response getModelProfileTemplate(String authToken, Map<String, String> tc, Perils perils) throws IOException {
-        String api = String.format(apiendpoints.get("getModelProfileTemplate"),perils.getAnalysisType(), perils.getModelRegion(), perils.getSubRegions(),
+        String api = String.format(EndPointManager.apiendpoints.get("getModelProfileTemplate"),perils.getAnalysisType(), perils.getModelRegion(), perils.getSubRegions(),
                 perils.getPeril(), perils.getVersion(), perils.getVendor(), perils.getInsuranceType(), perils.getAnalysisMode(),perils.getFire(),
                 perils.getCoverage(),perils.getProperty());
         System.out.println("---------ProfileTemplate payload for " + perils.getPeril() + " = " + api);
-        String url = baseUrl + api;
+        String url = EndPointManager.baseUrl + api;
         RestApiHelper restApiHelper =
                 new RestApiHelper(
                         authToken, url, "application/json", false);
         return restApiHelper.submitGet();
     }
 
-
-    private String buildGetTemplateIdQueryParamsForHD(Map<String, Object> modelProfilePayload) {
-        Map<String, String> generalMap = (Map<String, String>) modelProfilePayload.get("General");
-        String subRegions;
-        if (!generalMap.get("subRegions").isEmpty()) {
-            subRegions = generalMap.get("subRegions");
-        } else {
-            subRegions = generalMap.get("LabelRegion");
-        }
-
-        return "analysisType="
-                + generalMap.get("analysisType")
-                + "&modelRegionCode="
-                + generalMap.get("modelRegion")
-                + "&perilName="
-                + generalMap.get("peril")
-                + "&softwareVersion="
-                + generalMap.get("version")
-                + "&subRegion="
-                + subRegions
-                + "&vendor=RMS"
-                + "&insuranceType="
-                + generalMap.get("insuranceType")
-                + "&analysisMode="
-                + generalMap.get("analysisMode");
-    }
-
-
-
     public static Response createModelProfile(String authToken, String modelProfileTemplateId, Object payload) {
-        String api = String.format(apiendpoints.get("createNAEQModelProfile"), modelProfileTemplateId);
-        String url = baseUrl + api;
+        String api = String.format(EndPointManager.apiendpoints.get("createNAEQModelProfile"), modelProfileTemplateId);
+        String url = EndPointManager.baseUrl + api;
 
         RestApiHelper restApiHelper =
                 new RestApiHelper(
@@ -769,38 +601,5 @@ public class ApiUtil {
         return restApiHelper.submitPost(payload);
     }
 
-    public static String createModelProfile(String token, Map<String, String> tc, Perils perils) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException, IOException {
-
-        if(tc.get("ifCreateModelProfile").equals("YES")) {
-            String randmVal = RandomStringUtils.randomNumeric(3);
-            String ModelProfile_Name = "ModelProfile_"+tc.get("peril")+"_"+tc.get("modelRegion")+ "_"+randmVal;
-            System.out.println("Model profile name : "+ModelProfile_Name);
-            String TemplateId = null;
-
-            Response res = ApiUtil.getModelProfileTemplate(token, tc,perils);
-            TemplateId = res.getBody().jsonPath().get("id") + "";
-            System.out.println("createNAEQProfile running: NAEQ_ModelProfile_Name:" + ModelProfile_Name + " .... TemplateId:" + TemplateId);
-            String payload = ModelProfileAPI.getPayloadCreateModelProfileApi(ModelProfile_Name, tc,perils);
-            System.out.println("Before Calling ModelProfile API");
-            Response res1 = ApiUtil.createModelProfile(token, TemplateId, payload);
-            System.out.println("After Calling ModelProfile API");
-
-            ArrayList list = res1.getBody().jsonPath().get("links");
-            String link = ((String) ((Map) list.get(0)).get("href"));
-            String NAEQmodelProfileId = link.substring(link.lastIndexOf('/')+1);
-            System.out.println("createNAEQModelProfile: Finnished "+link+"    and   id is "+NAEQmodelProfileId);
-            int NAEQmodelProfileId_created=Integer.parseInt(NAEQmodelProfileId);
-            if(NAEQmodelProfileId_created!=-1)
-            {
-                LoadData.UpdateTCInLocalCSV(tc.get("index"), "ifCreateModelProfile", "NO");
-                LoadData.UpdateTCInLocalCSV(tc.get("index"), "mfId", String.valueOf(NAEQmodelProfileId_created));
-                LoadData.UpdateTCInLocalCSV(tc.get("index"), "mp_created_name", ModelProfile_Name);
-            }
-            return NAEQmodelProfileId;
-        }
-        else {
-            return perils.getMfId();
-        }
-    }
 
 }

@@ -6,7 +6,7 @@ public class export {
 
     public static void exportType(Map<String, String> tc, String analysisId) throws Exception {
         String exportAs = tc.get("exportAs");
-        if (exportAs.equals("rdm")) {
+        if (exportAs.equals("RDM")) {
             RdmExportTests.rdmExport(tc, analysisId);
         }
         else if(exportAs.equals("file")) {

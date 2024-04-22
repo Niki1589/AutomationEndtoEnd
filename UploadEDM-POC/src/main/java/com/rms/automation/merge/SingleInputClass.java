@@ -2,8 +2,11 @@ package com.rms.automation.merge;
 
 import com.rms.automation.PATEApi.PATETests;
 import com.rms.automation.batchApi.BatchTests;
+import com.rms.automation.climateChange.ClimateChangeTests;
 import com.rms.automation.currencyConverterApi.CurrencyConverter;
 import com.rms.automation.edm.LoadData;
+import com.rms.automation.exportApi.FileExportTests;
+import com.rms.automation.exportApi.export;
 import com.rms.automation.mriImportApi.MRIImportTests;
 import com.rms.automation.renameAnalysisApi.RenameAnalysis;
 import com.rms.automation.UploadEdmApi.UploadEDM;
@@ -20,7 +23,7 @@ public class SingleInputClass {
     //public static String caseNumber="";
     @DataProvider(name = "loadFromCSV")
     public Object[] provider() throws Exception {
-        return LoadData.readCaseTCFromLocalCSV();
+        return LoadData.readCaseTCFromLocalExcel();
 
 
     }
@@ -28,12 +31,12 @@ public class SingleInputClass {
     @Test(dataProvider = "loadFromCSV")
     public void executeSingleInputCsv(Map<String, String> tc) throws InterruptedException {
 
-        Thread thread = new Thread(() -> {
+       // Thread thread = new Thread(() -> {
             uploadOrImportEdm(tc);
-        });
+      // });
 
-        thread.start();
-        thread.join();
+    //   thread.start();
+   //   thread.join();
 
     }
 
@@ -41,7 +44,7 @@ public class SingleInputClass {
         if (tc != null) {
             try {
                 System.out.println("Test Case No: " + tc.get("caseNo"));
-                if (tc.get("ifRun").equalsIgnoreCase("YES")) {
+                if (Utils.isTrue(tc.get("ifRun"))) {
                     if (Utils.isTrue(tc.get("isRunUploadImportExpo"))) {
                         switch (tc.get("ifUploadImportExpo").toUpperCase()) {
                             case "IMPORT":
@@ -60,6 +63,9 @@ public class SingleInputClass {
                                 break;
 
                             case "DOWNSTREAM":
+                                if (Utils.isTrue(tc.get("if_rdm_export"))) {
+                                    export.exportType(tc, tc.get("analysisId"));
+                                }
                                 if (Utils.isTrue(tc.get("isConvertCurrency"))) {
                                     CurrencyConverter.convert(tc, tc.get("analysisId"));
                                 }
@@ -68,6 +74,9 @@ public class SingleInputClass {
                                 }
                                 if (Utils.isTrue(tc.get("isPate"))) {
                                     PATETests.executePATETests(tc.get("caseNo"), tc.get("analysisId"));
+                                }
+                                if (Utils.isTrue(tc.get("is_ClimateChange"))) {
+                                    ClimateChangeTests.climateChange(tc, tc.get("analysisId"));
                                 }
                                 break;
                             default:
@@ -80,7 +89,7 @@ public class SingleInputClass {
                         batchTests.batchAPI(tc, portfolioId, dataSourceName);
                     }
                 } else {
-                    System.out.println("Test case: " + tc.get("caseNo") + "ifRun is set to NO");
+                    System.out.println("ifRun for this test case is set to NO");
                 }
             } catch (Exception exception) {
                 System.out.println(exception.getMessage());

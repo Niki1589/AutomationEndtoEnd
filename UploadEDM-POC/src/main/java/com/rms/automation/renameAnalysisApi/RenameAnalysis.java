@@ -1,5 +1,7 @@
 package com.rms.automation.renameAnalysisApi;
 
+import com.rms.automation.JobsApi.JobsApi;
+import com.rms.automation.constants.AutomationConstants;
 import com.rms.automation.edm.ApiUtil;
 import com.rms.automation.edm.LoadData;
 import io.restassured.response.Response;
@@ -19,19 +21,24 @@ public class RenameAnalysis {
 
         Response response = ApiUtil.renameAnalysisApi(payload, analysisId, token);
         System.out.println("renameAnalysisApi  Status: " + response.getStatusCode());
-        if (response.getStatusCode() == 202) {
+        if (response.getStatusCode() == AutomationConstants.STATUS_ACCEPTED) {
             String locationHdr = response.getHeader("Location");
             String jobId = locationHdr.substring(locationHdr.lastIndexOf('/') + 1);
             System.out.println("renameAnalysisApi_wp_id: " + jobId);
             if (jobId == null) {
                 throw new Exception("JobId is null");
             }
-            String msg = ApiUtil.waitForJobToComplete(jobId, token);
-            System.out.println("waitforjob msg: " + msg);
+            String msg = JobsApi.waitForJobToComplete(jobId, token);
+            System.out.println("wait for job msg: " + msg);
+            if(msg.equalsIgnoreCase(AutomationConstants.JOB_STATUS_FINISHED) &&(!jobId.isEmpty()))
+            {
+                LoadData.UpdateTCInLocalExcel(tc.get("index"), "renameAnalysisJobId", jobId);
+
+            }
         }
         else {
             String msg = response.getBody().jsonPath().get("message");
-            System.out.println("renameAnalysisApi Message: " + msg);
+            System.out.println("rename Analysis Api Message: " + msg);
         }
 
     }

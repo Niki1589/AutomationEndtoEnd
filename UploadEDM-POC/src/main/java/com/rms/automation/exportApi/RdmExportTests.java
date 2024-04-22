@@ -1,5 +1,7 @@
 package com.rms.automation.exportApi;
 
+import com.rms.automation.JobsApi.JobsApi;
+import com.rms.automation.constants.AutomationConstants;
 import com.rms.automation.edm.ApiUtil;
 import com.rms.automation.edm.LoadData;
 import io.restassured.response.Response;
@@ -23,7 +25,7 @@ public class RdmExportTests {
             System.out.println("RDM  Status: " + response.getStatusCode());
             Boolean status = false;
             String jobId = null;
-            if (response.getStatusCode() == 202) {
+            if (response.getStatusCode() == AutomationConstants.STATUS_ACCEPTED) {
                 String locationHdr = response.getHeader("Location");
                 jobId = locationHdr.substring(locationHdr.lastIndexOf('/') + 1);
                 System.out.println("createedm_wf_id: " + jobId);
@@ -38,19 +40,24 @@ public class RdmExportTests {
                 if (jobId == null) {
                     throw new Exception("JobId is null");
                 }
-                String msg =   msg = ApiUtil.waitForJobToComplete(jobId, token, "Export to RDM API");
+                String msg =   msg = JobsApi.waitForJobToComplete(jobId, token, "Export to RDM API");
                 System.out.println("waitforjob msg: " + msg);
+                if(msg.equalsIgnoreCase(AutomationConstants.JOB_STATUS_FINISHED) && (!jobId.isEmpty()))
+                {
+                    LoadData.UpdateTCInLocalExcel(tc.get("index"), "ExportJobId", jobId);
+
+                }
             }
         }
         else if(tc.get("rdmLocation").equals("DataBridge"))
         {
             Map<String, Object> payload = new HashMap<>();
-            if(tc.get("dataBridgeType").equals("createNew"))
+            if(tc.get("dataBridgeType").equals("createnew"))
             {
-                payload.put("createnew","true");
+                payload.put("createnew",true);
             } else if(tc.get("dataBridgeType").equals("existing")) {
-                payload.put("createnew","false");
-                payload.put("exportHdLossesAs","PLT");
+                payload.put("createnew",false);
+                payload.put("exportHdLossesAs",exportHDLossesAs);
             }
 
             payload.put("analysisIds", analysis_Id );
@@ -70,8 +77,13 @@ public class RdmExportTests {
                 if (jobId == null) {
                     throw new Exception("JobId is null");
                 }
-                String msg = ApiUtil.waitForJobToComplete(jobId, token, "Export to RDM API");
+                String msg = JobsApi.waitForJobToComplete(jobId, token, "Export to RDM API");
                 System.out.println("wait for job msg: " + msg);
+                if(msg.equalsIgnoreCase(AutomationConstants.JOB_STATUS_FINISHED) && (!jobId.isEmpty()))
+                {
+                    LoadData.UpdateTCInLocalExcel(tc.get("index"),"ExportJobId", jobId);
+
+                }
             }
             else {
                 String msg = response.getBody().jsonPath().get("message");

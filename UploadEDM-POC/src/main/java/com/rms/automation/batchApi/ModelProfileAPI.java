@@ -1,9 +1,13 @@
 package com.rms.automation.batchApi;
 
 import com.rms.automation.edm.ApiUtil;
+import com.rms.automation.edm.LoadData;
 import com.rms.automation.merge.jsonMapper.Perils;
 import com.google.gson.Gson;
+import io.restassured.response.Response;
+import org.apache.commons.lang.RandomStringUtils;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,13 +17,46 @@ public class ModelProfileAPI {
 
     public static String getModelProfileApi(Perils perils, Map<String, String> tc, String token) throws Exception {
         try {
-            return ApiUtil.createModelProfile(token, tc, perils);
+            return createModelProfile(token, tc, perils);
         } catch (Exception e) {
             System.out.println("Error in createModelProfile : " + e.getMessage());
             throw new RuntimeException(e);
         }
     }
 
+    public static String createModelProfile(String token, Map<String, String> tc, Perils perils) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException, IOException {
+
+        if(tc.get("ifCreateModelProfile").equalsIgnoreCase("YES")) {
+            String randmVal = RandomStringUtils.randomNumeric(3);
+            String ModelProfile_Name = "ModelProfile_"+tc.get("peril")+"_"+tc.get("modelRegion")+ "_"+randmVal;
+            System.out.println("Model profile name : "+ModelProfile_Name);
+            String TemplateId = null;
+
+            Response res = ApiUtil.getModelProfileTemplate(token, tc,perils);
+            TemplateId = res.getBody().jsonPath().get("id") + "";
+            System.out.println("createNAEQProfile running: NAEQ_ModelProfile_Name:" + ModelProfile_Name + " .... TemplateId:" + TemplateId);
+            String payload = ModelProfileAPI.getPayloadCreateModelProfileApi(ModelProfile_Name, tc,perils);
+            System.out.println("Before Calling ModelProfile API");
+            Response res1 = ApiUtil.createModelProfile(token, TemplateId, payload);
+            System.out.println("After Calling ModelProfile API");
+
+            ArrayList list = res1.getBody().jsonPath().get("links");
+            String link = ((String) ((Map) list.get(0)).get("href"));
+            String NAEQmodelProfileId = link.substring(link.lastIndexOf('/')+1);
+            System.out.println("createNAEQModelProfile: Finnished "+link+"    and   id is "+NAEQmodelProfileId);
+            int NAEQmodelProfileId_created=Integer.parseInt(NAEQmodelProfileId);
+            if(NAEQmodelProfileId_created!=-1)
+            {
+                LoadData.UpdateTCInLocalExcel(tc.get("index"), "ifCreateModelProfile", "NO");
+                LoadData.UpdateTCInLocalExcel(tc.get("index"), "mfId", String.valueOf(NAEQmodelProfileId_created));
+                LoadData.UpdateTCInLocalExcel(tc.get("index"), "mp_created_name", ModelProfile_Name);
+            }
+            return NAEQmodelProfileId;
+        }
+        else {
+            return perils.getMfId();
+        }
+    }
 
     public static String getPayloadCreateModelProfileApi(String ModelProfile_Name, Map<String, String> tc, Perils perils) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
 
@@ -119,9 +156,10 @@ public class ModelProfileAPI {
         List<String> scaleExposureValues = perils.getScaleExposureValues();
         List<String> unknownForPrimaryCharacteristics = perils.getUnknownForPrimaryCharacteristics();
 
+
         String payloadInString = "{\n" +
                 "    \"General\": {\n" +
-                "     \"subPeril\": \""+perils.getSubPeril()+"\",\n"+
+                "     \"subPeril\": \"FL\",\n"+
                 "        \"peril\": \""+perils.getPeril()+"\",\n" +
                 "        \"ignoreContractDates\": "+perils.getIgnoreContractDates()+",\n" +
                 "        \"engine\": \""+perils.getEngine()+"\",\n" +
@@ -164,9 +202,17 @@ public class ModelProfileAPI {
 
         List<String> subPerils = perils.getSubPerils();
 
+        String subPeril = "FR";
+       // if (subPerils.contains("smoke")) {
+        boolean containsSmoke=subPerils.stream().map(String::toLowerCase).anyMatch(s->s.equals("smoke"));
+        if(containsSmoke)
+        {
+            subPeril += ",SM";
+        }
+
         String payloadInString = "{\n" +
                 "    \"General\": {\n" +
-                "     \"subPeril\": \""+perils.getSubPeril()+"\",\n"+
+                "     \"subPeril\": \""+subPeril+"\",\n"+
                 "        \"peril\": \""+perils.getPeril()+"\",\n" +
                 "        \"ignoreContractDates\": "+perils.getIgnoreContractDates()+",\n" +
                 "        \"engine\": \""+perils.getEngine()+"\",\n" +
@@ -190,6 +236,9 @@ public class ModelProfileAPI {
                 "        \"policyPerRisk\": \""+perils.getPolicyPerRisk()+"\",\n" +
                 "        \"description\": \""+perils.getDescription()+"\",\n" +
                 "        \"modelRegion\": \""+perils.getModelRegion()+"\",\n" +
+                "    \"eventIds\": [" +
+                                        perils.getEventIds()+
+                "        ], \n" +
                 "        \"subRegions\": \""+perils.getSubRegions()+"\",\n" +
                 "        \"analysisMode\": \""+perils.getAnalysisMode()+"\",\n" +
                 "        \"startYear\": "+perils.getStartYear()+"\n" +
@@ -233,14 +282,14 @@ public class ModelProfileAPI {
                 "    },\n" +
                 "    \"Terrorism\": {\n" +
                 "        \"calculateLossesFrom\": {\n" +
-                "            \"Radiological - Dirty Bomb\": "+subPerils.contains("Radiological - Dirty Bomb")+",\n" +
-                "            \"Sabotage - Hazmat Transportation\": "+subPerils.contains("Sabotage - Hazmat Transportation")+",\n" +
-                "            \"Sabotage - Industrial Plant (vapor release)\": "+subPerils.contains("Sabotage - Industrial Plant (vapor release)")+",\n" +
-                "            \"Nuclear Bomb\": "+subPerils.contains("Nuclear Bomb")+",\n" +
-                "            \"Chemical - Sarin Gas\": "+subPerils.contains("Chemical - Sarin Gas")+",\n" +
-                "            \"Biological - Anthrax\": "+subPerils.contains("Biological - Anthrax")+",\n" +
-                "            \"Biological - Smallpox\": "+subPerils.contains("Biological - Smallpox")+",\n" +
-                "            \"Sabotage - Nuclear Plant\": "+subPerils.contains("Sabotage - Nuclear Plant")+"\n" +
+                "            \"Aircraft Impact\": "+subPerils.contains("Aircraft Impact")+",\n" +
+                "            \"Bombs\": "+subPerils.contains("Bombs")+",\n" +
+                "            \"Conflagration\": "+subPerils.contains("Conflagration")+",\n" +
+                "            \"Sabotage - Industrial Plant (explosion only)\": "+subPerils.contains("Sabotage - Industrial Plant (explosion only)")+"\n" +
+             //   "            \"Chemical - Sarin Gas\": "+subPerils.contains("Chemical - Sarin Gas")+",\n" +
+             //   "            \"Biological - Anthrax\": "+subPerils.contains("Biological - Anthrax")+",\n" +
+             //   "            \"Biological - Smallpox\": "+subPerils.contains("Biological - Smallpox")+",\n" +
+              //  "            \"Sabotage - Nuclear Plant\": "+subPerils.contains("Sabotage - Nuclear Plant")+"\n" +
                 "        }\n" +
                 "        }\n"+
                 "}";
@@ -249,9 +298,7 @@ public class ModelProfileAPI {
 
     public static String getPayloadOfsevereConvectiveStorm(String ModelProfile_Name, Perils perils) {
         List<String> subPerils = perils.getSubPerils();
-//        List<String> specialtyModels = perils.getSpecialtyModels();
-//        List<String> scaleExposureValues = perils.getScaleExposureValues();
-//        List<String> unknownForPrimaryCharacteristics = perils.getUnknownForPrimaryCharacteristics();
+
         String payloadInString = "{\n" +
                 "    \"General\": {\n" +
                 "        \"startYear\": \""+perils.getStartYear()+"\",\n" +
@@ -306,6 +353,7 @@ public class ModelProfileAPI {
                 "        \"numberOfSamples\": "+perils.getNumberOfSamples()+",\n" +
                 "        \"vulnerabilitySetId\": "+perils.getVulnerabilitySetId()+",\n" +
                 "        \"petName\": \""+perils.getPetName()+"\",\n" +
+                "        \"vulnerabilitySetName\": \""+perils.getVulnerabilitySetName()+"\",\n" +
                 "        \"name\": \""+ModelProfile_Name+"\",\n" +
                 "        \"petDataVersion\": \""+perils.getPetDataVersion()+"\",\n" +
                 "        \"numberOfPeriods\": "+perils.getNumberOfPeriods()+",\n" +

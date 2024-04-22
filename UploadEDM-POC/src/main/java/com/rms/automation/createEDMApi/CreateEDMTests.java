@@ -1,5 +1,6 @@
 package com.rms.automation.createEDMApi;
 
+import com.rms.automation.JobsApi.JobsApi;
 import com.rms.automation.constants.AutomationConstants;
 import com.rms.automation.edm.ApiUtil;
 import com.rms.automation.edm.LoadData;
@@ -58,7 +59,7 @@ public class CreateEDMTests {
             if (jobId == null) {
                 throw new Exception("JobId is null");
             }
-            String msg = ApiUtil.waitForJobToComplete(jobId, token);
+            String msg = JobsApi.waitForJobToComplete(jobId, token);
             System.out.println("waitforjob msg: "+msg );
         }
 

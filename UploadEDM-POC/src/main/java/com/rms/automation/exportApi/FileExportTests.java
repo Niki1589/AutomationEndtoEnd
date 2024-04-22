@@ -1,10 +1,11 @@
 package com.rms.automation.exportApi;
 
+import com.rms.automation.constants.AutomationConstants;
+import com.rms.automation.JobsApi.JobsApi;
 import com.rms.automation.edm.ApiUtil;
 import com.rms.automation.edm.LoadData;
 import com.rms.automation.utils.Utils;
 import io.restassured.response.Response;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,26 +29,28 @@ public class FileExportTests {
         payload.put("type", "ResultsExportInputV2");
         payload.put("additionalOutputs", new ArrayList<String>());
 
+        Download_Settings downloadSettings = Download_Settings.parse(tc.get("Download_settings_file"));
+
         List<Map<String, Object>> lossDetailsList = new ArrayList<>();
-        if (Utils.isTrue(tc.get("IsStatesMetric"))) {
+        if (Utils.isTrue(downloadSettings.getIsStatsMetric())) {
             Map<String, Object> lossDetails = new HashMap<>();
             lossDetails.put("lossType", "STATS");
-            lossDetails.put("outputLevels", tc.get("outputLevels_StatesMetric").split(","));
-            lossDetails.put("perspectives", tc.get("perspectives_StatesMetric").split(","));
+            lossDetails.put("outputLevels",downloadSettings.getOutputLevels_StatesMetric().split(","));
+            lossDetails.put("perspectives",downloadSettings.getperspectives_StatsMetric().split(","));
             lossDetailsList.add(lossDetails);
         }
-        if (Utils.isTrue(tc.get("IsEPMetric"))) {
+        if (Utils.isTrue(downloadSettings.getIsEPMetric())) {
             Map<String, Object> lossDetails = new HashMap<>();
             lossDetails.put("lossType", "EP");
-            lossDetails.put("outputLevels", tc.get("outputLevels_EPMetric").split(","));
-            lossDetails.put("perspectives", tc.get("perspectives_EPMetric").split(","));
+            lossDetails.put("outputLevels",downloadSettings.getOutputLevels_EPMetric().split(","));
+            lossDetails.put("perspectives", downloadSettings.getperspectives_StatsMetric().split(","));
             lossDetailsList.add(lossDetails);
         }
-        if (Utils.isTrue(tc.get("IsLossTablesMetric"))) {
+        if (Utils.isTrue(downloadSettings.getIsLossTablesMetric())) {
             Map<String, Object> lossDetails = new HashMap<>();
             lossDetails.put("lossType", "LOSS_TABLES");
-            lossDetails.put("outputLevels", tc.get("outputLevels_LossTablesMetric").split(","));
-            lossDetails.put("perspectives", tc.get("perspectives_LossTablesMetric").split(","));
+            lossDetails.put("outputLevels", downloadSettings.getOutputLevels_LossTablesMetric().split(","));
+            lossDetails.put("perspectives", downloadSettings.getPerspectives_LossTablesMetric().split(","));
             lossDetailsList.add(lossDetails);
         }
 
@@ -62,8 +65,13 @@ public class FileExportTests {
             if (jobId == null) {
                 throw new Exception("JobId is null");
             }
-            String msg =  ApiUtil.waitForJobToComplete(jobId, token, "Export to file API");
-            System.out.println("waitforjob msg: " + msg);
+            String msg =  JobsApi.waitForJobToComplete(jobId, token, "Export to file API");
+            System.out.println("wait for job msg: " + msg);
+            if(msg.equalsIgnoreCase(AutomationConstants.JOB_STATUS_FINISHED) && (!jobId.isEmpty()))
+            {
+                LoadData.UpdateTCInLocalExcel(tc.get("index"),"ExportJobId", jobId);
+
+            }
         }
         else {
             String msg = response.getBody().jsonPath().get("message");

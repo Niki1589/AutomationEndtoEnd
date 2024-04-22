@@ -1,5 +1,6 @@
 package com.rms.automation.UploadEdmApi;
 
+import com.rms.automation.JobsApi.JobsApi;
 import com.rms.automation.batchApi.BatchTests;
 import com.rms.automation.constants.AutomationConstants;
 import com.rms.automation.edm.LoadData;
@@ -15,21 +16,9 @@ import java.util.*;
 
 public class UploadEDM extends TestCase {
 
-    public int actualresponse;
-    public static final int STATUS_ACCEPTED = 202;
-
-    @DataProvider(name = "file")
-    public Object[] provider() throws IOException {
-        return LoadData.readTCFromLocal();
-    }
-
-    @Test(dataProvider = "file")
-    public void UploadEdm(Map<String, String> tc) throws NullPointerException, Exception {
-        executeUploadEdm(tc);
-    }
-
     public void executeUploadEdm(Map<String, String> tc) throws NullPointerException, Exception {
 
+        int actualresponse;
         String fileName = tc.get("edmFileName");
         String filePath = tc.get("edmFilePath") + "/" + fileName;
         System.out.println("File path is " + filePath);
@@ -37,7 +26,6 @@ public class UploadEDM extends TestCase {
         String dbType = tc.get("dbType");
         String dataSourceName =
                 fileName.substring(0, fileName.indexOf('.')) + "_" + RandomStringUtils.randomNumeric(5);
-
         try {
 
             String token = ApiUtil.getSmlToken(LoadData.config.getUsername(), LoadData.config.getPassword(), LoadData.config.getTenant(), "accessToken");
@@ -47,18 +35,17 @@ public class UploadEDM extends TestCase {
             Response submitJobResponse = ApiUtil.uploadEDM(token, dataSourceName, payload);
             actualresponse = submitJobResponse.getStatusCode();
             System.out.println("UploadEDM Response: " + actualresponse);
-
             String locationHdr = submitJobResponse.getHeader("Location");
             String workflowId = locationHdr.substring(locationHdr.lastIndexOf('/') + 1);
             System.out.println("workflowId: " + workflowId);
 
-            String msg = ApiUtil.waitForJobToComplete(workflowId, token,"Upload EDM");
+            String msg = JobsApi.waitForJobToComplete(workflowId, token,"Upload EDM");
             System.out.println("waitforjob msg: " + msg);
 
             if(actualresponse== AutomationConstants.STATUS_ACCEPTED)
             {
                 if (dataSourceName != "") {
-                    LoadData.UpdateTCInLocalCSV(tc.get("index"), "edmDatasourceName", dataSourceName);
+                    LoadData.UpdateTCInLocalExcel(tc.get("index"), "edmDatasourceName", dataSourceName);
                 }
             }
 

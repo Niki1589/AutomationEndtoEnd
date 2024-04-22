@@ -17,6 +17,16 @@ public class Config {
     private String profileTemplateJsonFile;
     private String singleCSVFile;
 
+    public String getSingleExcelFile() {
+        return singleExcelFile;
+    }
+
+    public void setSingleExcelFile(String singleExcelFile) {
+        this.singleExcelFile = singleExcelFile;
+    }
+
+    private String singleExcelFile;
+
     private  String pateFile;
 
     public String getPateFile() {

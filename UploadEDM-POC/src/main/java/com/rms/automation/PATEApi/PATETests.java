@@ -1,5 +1,7 @@
 package com.rms.automation.PATEApi;
 
+import com.rms.automation.JobsApi.JobsApi;
+import com.rms.automation.constants.AutomationConstants;
 import com.rms.automation.edm.ApiUtil;
 import com.rms.automation.edm.LoadData;
 import io.restassured.response.Response;
@@ -11,14 +13,8 @@ import java.util.Map;
 import static com.rms.automation.edm.ApiUtil.getTreatyIdByAnalysisId;
 
 public class PATETests {
-    //    @DataProvider(name = "loadFromPateCSV")
-//  public static Object[] provider() throws IOException {
-//      return LoadData.readPATEFromLocalCSV();
-//
-//    }
-    // @Test(dataProvider = "loadFromPateCSV")
     public static void executePATETests(String caseNo, String analysisId) throws Exception {
-        List<Map<String, String>> pateList = LoadData.loadPateCSVByCase(caseNo);
+        List<Map<String, String>> pateList = LoadData.readCaseTCFromLocalExcel_pate(caseNo);
         for ( Map<String, String> tc : pateList) {
             PATE(tc,analysisId);
         }
@@ -149,30 +145,36 @@ public class PATETests {
 
                 Response response = ApiUtil.pateApi(pateOperationType, payload, Integer.parseInt(analysisId_pate), token);
                 System.out.println("PATE  Status: " + response.getStatusCode());
-                if (response.getStatusCode() == 202) {
+                if (response.getStatusCode() == AutomationConstants.STATUS_ACCEPTED) {
                     String locationHdr = response.getHeader("Location");
                     String jobId = locationHdr.substring(locationHdr.lastIndexOf('/') + 1);
                     System.out.println("exportFile_wf_id: " + jobId);
                     if (jobId == null) {
                         throw new Exception("JobId is null");
                     }
-                    String msg =  ApiUtil.waitForJobToComplete(jobId, token, "Pate API");
+                    String msg =  JobsApi.waitForJobToComplete(jobId, token, "Pate API");
                     System.out.println("wait for job msg: " + msg);
-                    analysisId_pate = String.valueOf(ApiUtil.getAnalysisIDByJobId_Pate(jobId, token));
+                    analysisId_pate = String.valueOf(JobsApi.getAnalysisIDByJobId_Pate(jobId, token));
                     Response pateTreatiesResponse = getTreatyIdByAnalysisId(token,analysisId_pate);
-
-                    if( analysisId_pate != "" )
-                    {
-                        LoadData.UpdateTCInLocalCSV_Pate(Integer.parseInt(tc.get("index")), "analysisId_pate", String.valueOf(analysisId_pate));
-                    }
+                    int treatyId = pateTreatiesResponse.jsonPath().getInt("searchMatchingPateList[0].treatyId");
+                    System.out.println("Treaty Id is "+ treatyId);
 
                     if (pateTreatiesResponse.getStatusCode() == 200 && pateOperationType != null && pateOperationType.equals("insert"))
                     {
-                        int treatyId = pateTreatiesResponse.jsonPath().getInt("searchMatchingPateList[0].treatyId");
-                        System.out.println("Treaty Id is "+ treatyId);
-                        LoadData.UpdateTCInLocalCSV_Pate(Integer.parseInt(tc.get("index")), "treatyId", String.valueOf(treatyId));
-                        LoadData.UpdateTCInLocalCSV_Pate(Integer.parseInt(tc.get("index")), "operationType", "update");
+
+                        LoadData.UpdateTCInLocalExcel_Pate(Integer.parseInt(tc.get("index")), "treatyId", String.valueOf(treatyId));
+                        LoadData.UpdateTCInLocalExcel_Pate(Integer.parseInt(tc.get("index")), "operationType", "update");
                     }
+                    if( pateTreatiesResponse.getStatusCode() == 200 && pateOperationType != null && pateOperationType.equals("update"))
+                    {
+                        LoadData.UpdateTCInLocalExcel_Pate(Integer.parseInt(tc.get("index")), "treatyId", String.valueOf(treatyId));
+                    }
+                    if( analysisId_pate != "" )
+                    {
+                        LoadData.UpdateTCInLocalExcel_Pate(Integer.parseInt(tc.get("index")), "analysisId_pate", String.valueOf(analysisId_pate));
+                    }
+
+
                 } else {
                     String msg = response.getBody().jsonPath().get("message");
                     System.out.println("Pate Api Message: " + msg);

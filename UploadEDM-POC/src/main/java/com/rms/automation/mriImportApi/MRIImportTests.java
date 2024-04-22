@@ -1,30 +1,21 @@
 package com.rms.automation.mriImportApi;
-
+import com.rms.automation.JobsApi.JobsApi;
 import com.rms.automation.batchApi.BatchTests;
 import com.rms.automation.constants.AutomationConstants;
 import com.rms.automation.edm.ApiUtil;
 import com.rms.automation.edm.LoadData;
 import com.rms.automation.edm.MRIImportData;
+import com.rms.automation.utils.Utils;
 import io.restassured.response.Response;
 import org.apache.commons.lang.RandomStringUtils;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class MRIImportTests {
 
-
-    @DataProvider(name="loadFromCSV")
-    public Object[] provider() throws IOException {
-        return LoadData.readMriImportFromLocalCSV();
-    }
-
-    @Test(dataProvider = "loadFromCSV")
     public void MRIImport(Map<String, String> tc, Boolean isCreateEDM) throws Exception {
 
         System.out.println("************** Running MRIImport ********* " );
@@ -60,7 +51,7 @@ public class MRIImportTests {
         System.out.println(" description= "+description);
 
         String portfolioId = null;
-        if (tc.get("isCreatePortfolio").contains("YES")) {
+        if (Utils.isTrue(tc.get("isCreatePortfolio"))) {
 
             Response portfolioRes = ApiUtil.createPortfolio(token, dataSource, portfolioNumber, portfolioName, description);
             if (portfolioRes.getStatusCode() != 201 && portfolioRes.getStatusCode() != 200) {
@@ -72,12 +63,11 @@ public class MRIImportTests {
 
            if(portfolioId_created!= -1)
             {
-                LoadData.UpdateTCInLocalCSV(tc.get("index"), "isCreatePortfolio", "NO");
-                LoadData.UpdateTCInLocalCSV(tc.get("index"), "existingPortfolioId", String.valueOf(portfolioId_created));
+                LoadData.UpdateTCInLocalExcel(tc.get("index"), "isCreatePortfolio", "NO");
+                LoadData.UpdateTCInLocalExcel(tc.get("index"), "existingPortfolioId", String.valueOf(portfolioId_created));
             }
-
-
-        } else {
+        } else
+        {
             portfolioId = tc.get("existingPortfolioId");
         }
         //Upload Account file
@@ -114,7 +104,7 @@ public class MRIImportTests {
         String mriJobId = mrilocationHdr.substring(mrilocationHdr.lastIndexOf('/') + 1);
         System.out.println(submitMRIJobRes.getStatusCode()+"  :SubmitMriJob Status: mriJobUd:"+mriJobId);
 
-        String msg = ApiUtil.waitForJobToComplete( mriJobId, token, jobType );
+        String msg = JobsApi.waitForJobToComplete( mriJobId, token, jobType );
         System.out.println("waitforjob msg: "+msg );
         System.out.println("************** Completed MRIImport " );
 
@@ -150,6 +140,30 @@ public class MRIImportTests {
 
     }
 
+    static String uploadMriFiles(String bucketId, String filepath, String fileType, String fileName, String authToken) throws Exception {
+
+        String fileId = null;
+        try {
+            File file = new File(filepath);
+            if (!file.exists() || !file.isFile()) {
+                throw new Exception("File error.");
+            }
+            long fileSize = file.length();
+            System.out.println("File size is = "+fileSize);
+            fileId = ApiUtil.uploadFile(authToken, bucketId, filepath, fileType, fileName, fileSize);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
+        if (fileId != null) {
+            System.out.println(fileType + " ID created " + fileId);
+            return fileId;
+        } else {
+            throw new Exception("Error while uploading the file.");
+        }
+
+    }
+
     public String createEDM(Map<String, String> tc, String token) throws Exception {
 
         String dataSourceName = tc.get("edmDatasourceName");
@@ -178,7 +192,7 @@ public class MRIImportTests {
                 throw new Exception("JobId is null");
             }
 
-            if (ApiUtil.checkJobStatus(jobId, token)) {
+            if (JobsApi.checkJobStatus(jobId, token)) {
                 System.out.println("EDM created successfully");
                 return dataSourceName;
             } else {
@@ -193,29 +207,6 @@ public class MRIImportTests {
 
     }
 
-    private static String uploadMriFiles(String bucketId, String filepath, String fileType, String fileName, String authToken) throws Exception {
-
-        String fileId = null;
-        try {
-            File file = new File(filepath);
-            if (!file.exists() || !file.isFile()) {
-                throw new Exception("File error.");
-            }
-            long fileSize = file.length();
-            System.out.println("File size is = "+fileSize);
-            fileId = ApiUtil.uploadFile(authToken, bucketId, filepath, fileType, fileName, fileSize);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
-        }
-        if (fileId != null) {
-            System.out.println(fileType + " ID created " + fileId);
-            return fileId;
-        } else {
-            throw new Exception("Error while uploading the file.");
-        }
-
-    }
 
 
 }

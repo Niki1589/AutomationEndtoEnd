@@ -1,5 +1,7 @@
 package com.rms.automation.batchApi;
+import com.rms.automation.JobsApi.JobsApi;
 import com.rms.automation.PATEApi.PATETests;
+import com.rms.automation.climateChange.ClimateChangeTests;
 import com.rms.automation.currencyConverterApi.CurrencyConverter;
 import com.rms.automation.edm.ApiUtil;
 import com.rms.automation.edm.LoadData;
@@ -33,7 +35,7 @@ public class BatchTests {
             throw new Exception("PortfolioId is required!");
         }
         try {
-            if (perils.getIfModelRun().equals("YES")) {
+            if (perils.getIfModelRun().equalsIgnoreCase("YES")) {
             Object payloadObject = getPayloadBatchApi(perils.getPortfolioId(), dataSourceName, modelProfileId, Utils.isTrue(tc.get("isGeoCoded")), perils);
                     System.out.println("After  Batch payload");
                     Response batchResponse = ApiUtil.batchAPI(token, payloadObject);
@@ -43,7 +45,7 @@ public class BatchTests {
 
                 String msg = null;
                 try {
-                    msg = ApiUtil.waitForJobToComplete(jobId, token, "Batch API");
+                    msg = JobsApi.waitForJobToComplete(jobId, token, "Batch API");
                 } catch (Exception e) {
                     System.out.println("Error in waitForJobToComplete : " + e.getMessage());
                     throw new RuntimeException(e);
@@ -51,12 +53,12 @@ public class BatchTests {
                 System.out.println("wait for job msg: " + msg);
                 System.out.println("***** Finished Batch Api Tests");
                 System.out.println("***** Finished till " + perils.getPeril());
-                analysisId = ApiUtil.getAnalysisIDByJobId(jobId, token);
+                analysisId = JobsApi.getAnalysisIDByJobId(jobId, token);
 
                 if (!analysisId.isEmpty()) {
-                    LoadData.UpdateTCInLocalCSV(tc.get("index"), "analysisId", analysisId);
+                    LoadData.UpdateTCInLocalExcel(tc.get("index"), "analysisId", analysisId);
                 }
-                // Perform downstream workflows - RDM Export, File Export, Convert Currency , Rename Analysis, Pate
+                // Perform downstream workflows - RDM Export, File Export, Convert Currency , Rename Analysis, Pate, Climate Change
                 executeDownStreamWorkflows(tc, analysisId);
             }
 
@@ -98,6 +100,12 @@ public class BatchTests {
                         PATETests.executePATETests(caseNo, analysisId);
                     }
                     break;
+                case "is_ClimateChange":
+                    if (Utils.isTrue(tc.get(key))) {
+                        ClimateChangeTests.climateChange(tc, analysisId);
+                    }
+                    break;
+
             }
         }
     }

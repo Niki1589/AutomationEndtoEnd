@@ -30,7 +30,6 @@ public class Perils {
     String gmpeName;
     Boolean applyPLA;
     String gmpeCode;
-    String subPeril;
     String region;
     Boolean excludePostalCodes;
     Boolean fireOnly;
@@ -42,6 +41,16 @@ public class Perils {
     List<String> subPerils;
     List<String> secondaryPerils;
     List<String> policyCoverages;
+
+    public String getEventIds() {
+        return eventIds;
+    }
+
+    public void setEventIds(String eventIds) {
+        this.eventIds = eventIds;
+    }
+    String eventIds;
+
     String vendor;
     Boolean run1dOnly;
     List<String> specialtyModels;
@@ -53,6 +62,16 @@ public class Perils {
     String portfolioId;
     String mfId;
     String vulnerabilitySetId;
+
+    public String getVulnerabilitySetName() {
+        return vulnerabilitySetName;
+    }
+
+    public void setVulnerabilitySetName(String vulnerabilitySetName) {
+        this.vulnerabilitySetName = vulnerabilitySetName;
+    }
+
+    String vulnerabilitySetName;
     String GeocodeVersion;
 
     String GeoHazVersion;
@@ -106,9 +125,6 @@ public class Perils {
     public void setOutputProfileId(String outputProfileId) {
         this.outputProfileId = outputProfileId;
     }
-
-
-
 
     public String getCurrencyCodeProcess() {
         return currencyCodeProcess;
@@ -245,7 +261,11 @@ public class Perils {
     }
 
     public void setNumberOfPeriods(String numberOfPeriods) {
-        this.numberOfPeriods = numberOfPeriods;
+        if (numberOfPeriods.isEmpty()) {
+            this.numberOfPeriods = null;
+        } else {
+            this.numberOfPeriods = numberOfPeriods;
+        }
     }
 
     public String getInsuranceType() {
@@ -285,7 +305,11 @@ public class Perils {
     }
 
     public void setEndYear(String endYear) {
-        this.endYear = endYear;
+        if (endYear.isEmpty()) {
+            this.endYear = null;
+        } else {
+            this.endYear = endYear;
+        }
     }
 
     public String getEventRateSchemeId() {
@@ -293,7 +317,16 @@ public class Perils {
     }
 
     public void setEventRateSchemeId(String eventRateSchemeId) {
-        this.eventRateSchemeId = eventRateSchemeId;
+
+        if(eventRateSchemeId.isEmpty())
+        {
+            this.eventRateSchemeId=null;
+        }
+        else
+        {
+            this.eventRateSchemeId = eventRateSchemeId;
+        }
+
     }
 
     public String getPolicyPerRisk() {
@@ -341,7 +374,16 @@ public class Perils {
     }
 
     public void setStartYear(String startYear) {
-        this.startYear = startYear;
+
+        if(startYear.isEmpty())
+        {
+            this.startYear=null;
+        }
+        else
+        {
+            this.startYear = startYear;
+        }
+
     }
 
     public String getGmpeName() {
@@ -358,14 +400,6 @@ public class Perils {
 
     public void setGmpeCode(String gmpeCode) {
         this.gmpeCode = gmpeCode;
-    }
-
-    public String getSubPeril() {
-        return subPeril;
-    }
-
-    public void setSubPeril(String subPeril) {
-        this.subPeril = subPeril;
     }
 
     public String getRegion() {
@@ -563,7 +597,7 @@ public class Perils {
     public static Perils extractPerilFromTC(Map<String, String> tc) {
         Perils perils = new Perils();
         perils.setPeril(tc.get("peril"));
-        perils.setIgnoreContractDates(tc.get("ignoreContractDates").contains("YES"));
+        perils.setIgnoreContractDates(tc.get("ignoreContractDates").equalsIgnoreCase("YES"));
         perils.setEngine(tc.get("engine"));
         perils.setAlternateVulnCode(tc.get("alternateVulnCode"));
         perils.setLabelRegion(tc.get("LabelRegion"));
@@ -584,28 +618,28 @@ public class Perils {
         perils.setAnalysisMode(tc.get("analysisMode"));
         perils.setStartYear(tc.get("startYear"));
         perils.setGmpeName(tc.get("gmpeName"));
-        perils.setApplyPLA(tc.get("applyPLA").contains("YES"));
+        perils.setApplyPLA(tc.get("applyPLA").equalsIgnoreCase("YES"));
         perils.setGmpeCode(tc.get("gmpeCode"));
-        perils.setSubPeril(tc.get("subPeril"));
         perils.setRegion(tc.get("region"));
-        perils.setExcludePostalCodes(tc.get("excludePostalCodes").contains("YES"));
-        perils.setFireOnly(tc.get("fireOnly").contains("YES"));
+        perils.setExcludePostalCodes(tc.get("excludePostalCodes").equalsIgnoreCase("YES"));
+        perils.setFireOnly(tc.get("fireOnly").equalsIgnoreCase("YES"));
         perils.setPerilOverride(tc.get("perilOverride"));
-        perils.setDynamicAutomobileModeling(tc.get("dynamicAutomobileModeling").contains("YES"));
-        perils.setIncludePluvial(tc.get("includePluvial").contains("YES"));
-        perils.setIncludeBespokeDefence(tc.get("includeBespokeDefence").contains("YES"));
-        perils.setDefenceOn(tc.get("defenceOn").contains("YES"));
+        perils.setDynamicAutomobileModeling(tc.get("dynamicAutomobileModeling").equalsIgnoreCase("YES"));
+        perils.setIncludePluvial(tc.get("includePluvial").equalsIgnoreCase("YES"));
+        perils.setIncludeBespokeDefence(tc.get("includeBespokeDefence").equalsIgnoreCase("YES"));
+        perils.setDefenceOn(tc.get("defenceOn").equalsIgnoreCase("YES"));
         perils.setSubPerils(List.of(tc.get("subPerils").split(",")));
         perils.setSecondaryPerils(List.of(tc.get("secondaryPerils").split(",")));
         perils.setPolicyCoverages(List.of(tc.get("policyCoverages").split(",")));
         perils.setVendor(tc.get("vendor"));
-        perils.setRun1dOnly(tc.get("run1dOnly").contains(("YES")));
+        perils.setRun1dOnly(tc.get("run1dOnly").equalsIgnoreCase(("YES")));
         perils.setSpecialtyModels(List.of(tc.get("specialtyModels").split(",")));
-        perils.setFire(tc.get("fire").contains("YES"));
-        perils.setCoverage(tc.get("coverage").contains("YES"));
+        perils.setFire(tc.get("fire").equalsIgnoreCase("YES"));
+        perils.setCoverage(tc.get("coverage").equalsIgnoreCase("YES"));
         perils.setProperty(tc.get("property"));
         perils.setUnknownForPrimaryCharacteristics(List.of(tc.get("unknownForPrimaryCharacteristics").split(",")));
         perils.setVulnerabilitySetId(tc.get("vulnerabilitySetId"));
+        perils.setVulnerabilitySetName(tc.get("vulnerabilitySetName"));
         perils.setScaleExposureValues(List.of(tc.get("scaleExposureValues").split(",")));
         perils.setMfId(tc.get("mfId"));
         perils.setPortfolioId(tc.get("existingPortfolioId"));
@@ -620,6 +654,16 @@ public class Perils {
             perils.setGeoHazLayers(List.of(layersList));
         } else {
             perils.setGeoHazLayers(List.of());
+        }
+
+        String eventIds=tc.get("eventIds");
+        if(eventIds!=null && eventIds !="")
+        {
+            perils.setEventIds( eventIds );
+        }
+        else
+        {
+            perils.setEventIds("");
         }
 
         if (tc.get("asOfDateProcess") != null && tc.get("asOfDateProcess").length() > 0) {

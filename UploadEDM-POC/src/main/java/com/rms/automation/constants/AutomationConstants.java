@@ -5,6 +5,28 @@ public class AutomationConstants {
     public static final String WORKFLOW_STATUS_SUCCEEDED = "FINISHED";
     public static final String WORKFLOW_STATUS_FAILED = "FAILED";
     public static final String WORKFLOW_STATUS_CANCELED = "CANCELLED";
+
+    public static final String WORKFLOW_STATUS_QUEUED = "QUEUED";
+    public static final String WORKFLOW_STATUS_RUNNING = "RUNNING";
+
+    // Job Status
+    public static final String JOB_STATUS_QUEUED = "Queued";
+
+    public static final String JOB_STATUS_FINISHED = "Finished";
+
+    public static final String JOB_STATUS_RUNNING = "Running";
+
+    public static final String JOB_STATUS_PENDING = "Pending";
+
+    public static final String JOB_STATUS_FAILED = "Failed";
+
+    public static final String JOB_STATUS_CANCELLED = "Cancelled";
+
+    public static final String JOB_STATUS_CREATED = "Created";
+
+    public static final long interval = 5000;
+    public static final int timeoutRequests = 17280;
+
     // testcase statuses
     public static final int TEST_STATUS_PASSED = 1;
     public static final int TEST_STATUS_FAILED = 2;
