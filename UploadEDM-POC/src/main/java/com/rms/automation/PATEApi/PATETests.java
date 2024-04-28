@@ -79,7 +79,7 @@ public class PATETests {
                 attachLevelMap.put("code", "PORT");
                 attachLevelMap.put("name", "Portfolio");
 
-                if (pateOperationType != null && pateOperationType.equals("update")) {
+                if (pateOperationType != null && pateOperationType.equalsIgnoreCase("update")) {
 
                     //EDIT
                     treatyMap.put("analysisId", tc.get("analysisId_pate"));
@@ -94,7 +94,7 @@ public class PATETests {
                     attachLevelMap.put("id", 0);
 
                 }
-                else if (pateOperationType != null && pateOperationType.equals("DELETE")) {
+                else if (pateOperationType != null && pateOperationType.equalsIgnoreCase("delete")) {
 
                     treatyMap.put("userId2", "");
                     treatyMap.put("analysisId", tc.get("analysisId_pate"));
@@ -123,19 +123,19 @@ public class PATETests {
                 List<Map<String, Object>> treatyMapList = new ArrayList<>();
                 treatyMapList.add(treatyMap);
 
-                if (pateOperationType != null && pateOperationType.equals("insert")) {
+                if (pateOperationType != null && pateOperationType.equalsIgnoreCase("insert")) {
                     payload.put("insert", treatyMapList);
                     payload.put("update", new ArrayList<>());
                     payload.put("delete", new ArrayList<>());
                 }
-                else if (pateOperationType != null && pateOperationType.equals("update")) {
+                else if (pateOperationType != null && pateOperationType.equalsIgnoreCase("update")) {
                     payload.put("insert", new ArrayList<>());
                     payload.put("update", treatyMapList);
                     payload.put("delete", new ArrayList<>());
 
                     analysisId_pate = tc.get("analysisId_pate");
                 }
-                else if (pateOperationType != null && pateOperationType.equals("DELETE")) {
+                else if (pateOperationType != null && pateOperationType.equalsIgnoreCase("delete")) {
                     payload.put("insert", new ArrayList<>());
                     payload.put("update", new ArrayList<>());
                     payload.put("delete", treatyMapList);
@@ -155,23 +155,34 @@ public class PATETests {
                     String msg =  JobsApi.waitForJobToComplete(jobId, token, "Pate API");
                     System.out.println("wait for job msg: " + msg);
                     analysisId_pate = String.valueOf(JobsApi.getAnalysisIDByJobId_Pate(jobId, token));
-                    Response pateTreatiesResponse = getTreatyIdByAnalysisId(token,analysisId_pate);
-                    int treatyId = pateTreatiesResponse.jsonPath().getInt("searchMatchingPateList[0].treatyId");
-                    System.out.println("Treaty Id is "+ treatyId);
 
-                    if (pateTreatiesResponse.getStatusCode() == 200 && pateOperationType != null && pateOperationType.equals("insert"))
+                    if(pateOperationType.equalsIgnoreCase("insert") || pateOperationType.equalsIgnoreCase("update"))
                     {
+                        Response pateTreatiesResponse = getTreatyIdByAnalysisId(token,analysisId_pate);
+                        int treatyId = pateTreatiesResponse.jsonPath().getInt("searchMatchingPateList[0].treatyId");
+                        System.out.println("Treaty Id is "+ treatyId);
 
-                        LoadData.UpdateTCInLocalExcel_Pate(Integer.parseInt(tc.get("index")), "treatyId", String.valueOf(treatyId));
-                        LoadData.UpdateTCInLocalExcel_Pate(Integer.parseInt(tc.get("index")), "operationType", "update");
-                    }
-                    if( pateTreatiesResponse.getStatusCode() == 200 && pateOperationType != null && pateOperationType.equals("update"))
-                    {
-                        LoadData.UpdateTCInLocalExcel_Pate(Integer.parseInt(tc.get("index")), "treatyId", String.valueOf(treatyId));
+                        if (pateTreatiesResponse.getStatusCode() == 200 && pateOperationType != null && pateOperationType.equalsIgnoreCase("insert"))
+                        {
+
+                            LoadData.UpdateTCInLocalExcel_Pate(Integer.parseInt(tc.get("index")), "treatyId", String.valueOf(treatyId));
+                            LoadData.UpdateTCInLocalExcel_Pate(Integer.parseInt(tc.get("index")), "operationType", "update");
+                        }
+                        if( pateTreatiesResponse.getStatusCode() == 200 && pateOperationType != null && pateOperationType.equalsIgnoreCase("update"))
+                        {
+                            LoadData.UpdateTCInLocalExcel_Pate(Integer.parseInt(tc.get("index")), "treatyId", String.valueOf(treatyId));
+                        }
                     }
                     if( analysisId_pate != "" )
                     {
                         LoadData.UpdateTCInLocalExcel_Pate(Integer.parseInt(tc.get("index")), "analysisId_pate", String.valueOf(analysisId_pate));
+                    }
+
+                    if(msg.equalsIgnoreCase(AutomationConstants.JOB_STATUS_FINISHED ) && (!jobId.isEmpty()))
+                    {
+                        LoadData.UpdateTCInLocalExcel_Pate(Integer.parseInt(tc.get("index")), "updatedJobId", jobId);
+                        //    LoadData.UpdateTCInLocalCSV(tc.get("index"), "ConvertCurrencyNewAnalysisId", String.valueOf(newAnalysisIdConvertCurrency));
+
                     }
 
 

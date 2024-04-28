@@ -218,7 +218,7 @@ public class BatchTests {
                 "},\n"+
                 "\"id\":"+portfolioId+",\n"+
                 "\"modelProfileId\":"+ModelProfileId+",\n"+
-                "\"outputProfileId\":1,\n"+
+                "\"outputProfileId\":"+perils.getOutputProfileId()+",\n"+
                 "\"treaties\":["+perils.getTreaties()+"],\n"+
                 "\"treatiesName\":["+ perils.getTreatiesName() +"],\n"+
                 "\"tagIds\":[]\n"+

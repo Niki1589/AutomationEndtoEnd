@@ -1,9 +1,10 @@
 package com.rms.automation.batchApi;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.rms.automation.edm.ApiUtil;
 import com.rms.automation.edm.LoadData;
 import com.rms.automation.merge.jsonMapper.Perils;
-import com.google.gson.Gson;
+import com.rms.automation.utils.Utils;
 import io.restassured.response.Response;
 import org.apache.commons.lang.RandomStringUtils;
 
@@ -26,39 +27,49 @@ public class ModelProfileAPI {
 
     public static String createModelProfile(String token, Map<String, String> tc, Perils perils) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException, IOException {
 
-        if(tc.get("ifCreateModelProfile").equalsIgnoreCase("YES")) {
-            String randmVal = RandomStringUtils.randomNumeric(3);
-            String ModelProfile_Name = "ModelProfile_"+tc.get("peril")+"_"+tc.get("modelRegion")+ "_"+randmVal;
-            System.out.println("Model profile name : "+ModelProfile_Name);
-            String TemplateId = null;
+        if((perils.getIfModelRun().equalsIgnoreCase("YES"))) {
+            if (tc.get("ifCreateModelProfile").equalsIgnoreCase("YES")) {
 
-            Response res = ApiUtil.getModelProfileTemplate(token, tc,perils);
-            TemplateId = res.getBody().jsonPath().get("id") + "";
-            System.out.println("createNAEQProfile running: NAEQ_ModelProfile_Name:" + ModelProfile_Name + " .... TemplateId:" + TemplateId);
-            String payload = ModelProfileAPI.getPayloadCreateModelProfileApi(ModelProfile_Name, tc,perils);
-            System.out.println("Before Calling ModelProfile API");
-            Response res1 = ApiUtil.createModelProfile(token, TemplateId, payload);
-            System.out.println("After Calling ModelProfile API");
+                String randmVal = RandomStringUtils.randomNumeric(3);
+                String ModelProfile_Name = "ModelProfile_" + tc.get("peril") + "_" + tc.get("modelRegion") + "_" + randmVal;
+                System.out.println("Model profile name : " + ModelProfile_Name);
+                String TemplateId = null;
 
-            ArrayList list = res1.getBody().jsonPath().get("links");
-            String link = ((String) ((Map) list.get(0)).get("href"));
-            String NAEQmodelProfileId = link.substring(link.lastIndexOf('/')+1);
-            System.out.println("createNAEQModelProfile: Finnished "+link+"    and   id is "+NAEQmodelProfileId);
-            int NAEQmodelProfileId_created=Integer.parseInt(NAEQmodelProfileId);
-            if(NAEQmodelProfileId_created!=-1)
-            {
-                LoadData.UpdateTCInLocalExcel(tc.get("index"), "ifCreateModelProfile", "NO");
-                LoadData.UpdateTCInLocalExcel(tc.get("index"), "mfId", String.valueOf(NAEQmodelProfileId_created));
-                LoadData.UpdateTCInLocalExcel(tc.get("index"), "mp_created_name", ModelProfile_Name);
+                Response res = ApiUtil.getModelProfileTemplate(token, tc, perils);
+                TemplateId = res.getBody().jsonPath().get("id") + "";
+                System.out.println("createNAEQProfile running: NAEQ_ModelProfile_Name:" + ModelProfile_Name + " .... TemplateId:" + TemplateId);
+                String payload = ModelProfileAPI.getPayloadCreateModelProfileApi(ModelProfile_Name, tc, perils);
+                System.out.println("Before Calling ModelProfile API");
+                Response res1 = ApiUtil.createModelProfile(token, TemplateId, payload);
+                System.out.println("After Calling ModelProfile API");
+
+                ArrayList list = res1.getBody().jsonPath().get("links");
+                String link = ((String) ((Map) list.get(0)).get("href"));
+                String NAEQmodelProfileId = link.substring(link.lastIndexOf('/') + 1);
+                System.out.println("createNAEQModelProfile: Finnished " + link + "    and   id is " + NAEQmodelProfileId);
+                int NAEQmodelProfileId_created = Integer.parseInt(NAEQmodelProfileId);
+                if (NAEQmodelProfileId_created != -1) {
+                    LoadData.UpdateTCInLocalExcel(tc.get("index"), "ifCreateModelProfile", "NO");
+                    LoadData.UpdateTCInLocalExcel(tc.get("index"), "mfId", String.valueOf(NAEQmodelProfileId_created));
+                    LoadData.UpdateTCInLocalExcel(tc.get("index"), "mp_created_name", ModelProfile_Name);
+                }
+                return NAEQmodelProfileId;
             }
-            return NAEQmodelProfileId;
+            else {
+                return perils.getMfId();
+            }
         }
-        else {
-            return perils.getMfId();
+
+        else
+        {
+            System.out.println("Model run is set to NO so Model Profile will not be created");
         }
+        return null;
     }
 
-    public static String getPayloadCreateModelProfileApi(String ModelProfile_Name, Map<String, String> tc, Perils perils) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
+    public static String getPayloadCreateModelProfileApi(String ModelProfile_Name, Map<String, String> tc, Perils perils) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException, JsonProcessingException {
+
+
 
         String payloadInString="";
         switch (perils.getPeril()) {
@@ -66,7 +77,7 @@ public class ModelProfileAPI {
                 payloadInString = getPayloadOfEarthquake(ModelProfile_Name, perils);
                 break;
             case "Flood":
-                payloadInString = getPayloadOfFlood(ModelProfile_Name, perils);
+                payloadInString = getPayloadOfFlood(ModelProfile_Name, tc,perils);
                 break;
             case "Windstorm":
                 payloadInString = getPayloadOfWindstorm(ModelProfile_Name, tc, perils);
@@ -118,6 +129,8 @@ public class ModelProfileAPI {
                 "        \"endYear\": "+perils.getEndYear()+",\n" +
                 "        \"eventRateSchemeId\": "+perils.getEventRateSchemeId()+",\n" +
                 "        \"policyPerRisk\": \""+perils.getPolicyPerRisk()+"\",\n" +
+//                "        \"reportingWindowStart\": \""+perils.getReportingWindowStart()+"\",\n" +
+//                "        \"reportingWindowEnd\": \""+perils.getReportingWindowEnd()+"\",\n" +
                 "        \"description\": \""+perils.getDescription()+"\",\n" +
                 "        \"modelRegion\": \""+perils.getModelRegion()+"\",\n" +
                 "        \"subRegions\": \""+perils.getSubRegions()+"\",\n" +
@@ -149,13 +162,13 @@ public class ModelProfileAPI {
         return payloadInString;
     }
 
-    public static String getPayloadOfFlood(String NAEQ_ModelProfile_Name, Perils perils){
+    public static String getPayloadOfFlood(String NAEQ_ModelProfile_Name,Map<String, String> tc, Perils perils) throws JsonProcessingException {
 
         List<String> subPerils = perils.getSubPerils();
         List<String> specialtyModels = perils.getSpecialtyModels();
         List<String> scaleExposureValues = perils.getScaleExposureValues();
         List<String> unknownForPrimaryCharacteristics = perils.getUnknownForPrimaryCharacteristics();
-
+        Download_Settings_MP downloadSettings_MP = Download_Settings_MP.parse(tc.get("Download_settings_mp"));
 
         String payloadInString = "{\n" +
                 "    \"General\": {\n" +
@@ -167,7 +180,7 @@ public class ModelProfileAPI {
                 "        \"LabelRegion\": \""+perils.getLabelRegion()+"\",\n" +
                 "        \"numberOfSamples\": "+perils.getNumberOfSamples()+",\n" +
                 "        \"petName\": \""+perils.getPetName()+"\",\n" +
-                "        \"run1dOnly\": "+perils.getRun1dOnly()+",\n" +
+                "        \"run1dOnly\": "+Utils.isTrue(downloadSettings_MP.getRun1dOnly())+",\n" +
                 "        \"name\": \""+NAEQ_ModelProfile_Name+"\",\n" +
                 "        \"petDataVersion\": \""+perils.getPetDataVersion()+"\",\n" +
                 "        \"numberOfPeriods\": "+perils.getNumberOfPeriods()+",\n" +
@@ -178,6 +191,8 @@ public class ModelProfileAPI {
                 "        \"endYear\": "+perils.getEndYear()+",\n" +
                 "        \"eventRateSchemeId\": "+perils.getEventRateSchemeId()+",\n" +
                 "        \"policyPerRisk\": \""+perils.getPolicyPerRisk()+"\",\n" +
+//                "        \"reportingWindowStart\": \""+perils.getReportingWindowStart()+"\",\n" +
+//                "        \"reportingWindowEnd\": \""+perils.getReportingWindowEnd()+"\",\n" +
                 "        \"description\": \""+perils.getDescription()+"\",\n" +
                 "        \"modelRegion\": \""+perils.getModelRegion()+"\",\n" +
                 "        \"subRegions\": \""+perils.getSubRegions()+"\",\n" +
@@ -190,9 +205,9 @@ public class ModelProfileAPI {
                 "            \"flood\": "+subPerils.contains("flood")+"\n" +
                 "        },\n" +
                 "        \"applyPLA\": "+perils.getApplyPLA()+",\n" +
-                "        \"includePluvial\": "+perils.getIncludePluvial()+",\n" +
-                "        \"includeBespokeDefence\": "+perils.getIncludeBespokeDefence()+",\n" +
-                "        \"defenceOn\": "+perils.getDefenceOn()+"\n" +
+                "        \"includePluvial\": "+ Utils.isTrue(downloadSettings_MP.getIncludePluvial())+",\n" +
+                "        \"includeBespokeDefence\": "+Utils.isTrue(downloadSettings_MP.getIncludeBespokeDefence())+",\n" +
+                "        \"defenceOn\": "+Utils.isTrue(downloadSettings_MP.getDefenceOn())+"\n" +
                 "    }\n" +
                 "}";
         return payloadInString;
@@ -234,6 +249,8 @@ public class ModelProfileAPI {
                 "        \"endYear\": "+perils.getEndYear()+",\n" +
                 "        \"eventRateSchemeId\": "+perils.getEventRateSchemeId()+",\n" +
                 "        \"policyPerRisk\": \""+perils.getPolicyPerRisk()+"\",\n" +
+//                "        \"reportingWindowStart\": \""+perils.getReportingWindowStart()+"\",\n" +
+//                "        \"reportingWindowEnd\": \""+perils.getReportingWindowEnd()+"\",\n" +
                 "        \"description\": \""+perils.getDescription()+"\",\n" +
                 "        \"modelRegion\": \""+perils.getModelRegion()+"\",\n" +
                 "    \"eventIds\": [" +
@@ -247,11 +264,12 @@ public class ModelProfileAPI {
         return payloadInString;
     }
 
-    public static String getPayloadOfTerrorism(String NAEQ_ModelProfile_Name, Map<String, String> tc,Perils perils) {
+    public static String getPayloadOfTerrorism(String NAEQ_ModelProfile_Name, Map<String, String> tc, Perils perils) throws JsonProcessingException {
         List<String> subPerils = perils.getSubPerils();
         //List<String> specialtyModels = perils.getSpecialtyModels();
         //  List<String> scaleExposureValues =perils.getScaleExposureValues();
         //  List<String> unknownForPrimaryCharacteristics = perils.getUnknownForPrimaryCharacteristics();
+        Download_Settings_MP downloadSettings_MP = Download_Settings_MP.parse(tc.get("Download_settings_mp"));
         String payloadInString = "{\n" +
                 "    \"General\": {\n" +
                 "        \"peril\": \""+perils.getPeril()+"\",\n" +
@@ -263,7 +281,7 @@ public class ModelProfileAPI {
                 "        \"numberOfSamples\": "+perils.getNumberOfSamples()+",\n" +
                 "        \"petName\": \""+perils.getPetName()+"\",\n" +
                 "        \"name\": \""+NAEQ_ModelProfile_Name+"\",\n" +
-                "        \"perilOverride\": \""+perils.getPerilOverride()+"\",\n" +
+                "        \"perilOverride\": \""+downloadSettings_MP.getPerilOverride()+"\",\n" +
                 "        \"petDataVersion\": \""+perils.getPetDataVersion()+"\",\n" +
                 "        \"numberOfPeriods\": "+perils.getNumberOfPeriods()+",\n" +
                 "        \"insuranceType\": \""+perils.getInsuranceType()+"\",\n" +
@@ -274,6 +292,8 @@ public class ModelProfileAPI {
                 "        \"endYear\": "+perils.getEndYear()+",\n" +
                 "        \"eventRateSchemeId\": "+perils.getEventRateSchemeId()+",\n" +
                 "        \"policyPerRisk\": \""+perils.getPolicyPerRisk()+"\",\n" +
+//                "        \"reportingWindowStart\": \""+perils.getReportingWindowStart()+"\",\n" +
+//                "        \"reportingWindowEnd\": \""+perils.getReportingWindowEnd()+"\",\n" +
                 "        \"description\": \""+perils.getDescription()+"\",\n" +
                 "        \"modelRegion\": \""+perils.getModelRegion()+"\",\n" +
                 "        \"subRegions\": \""+perils.getSubRegions()+"\",\n" +
@@ -319,6 +339,8 @@ public class ModelProfileAPI {
                 "        \"version\": \""+perils.getVersion()+"\",\n" +
                 "        \"eventRateSchemeId\": "+perils.getEventRateSchemeId()+",\n" +
                 "        \"policyPerRisk\": \""+perils.getPolicyPerRisk()+"\",\n" +
+//                "        \"reportingWindowStart\": \""+perils.getReportingWindowStart()+"\",\n" +
+//                "        \"reportingWindowEnd\": \""+perils.getReportingWindowEnd()+"\",\n" +
                 "        \"description\": \""+perils.getDescription()+"\",\n" +
                 "        \"modelRegion\": \""+perils.getModelRegion()+"\",\n" +
                 "        \"subRegions\": \""+perils.getSubRegions()+"\",\n" +

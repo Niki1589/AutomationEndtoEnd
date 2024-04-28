@@ -21,22 +21,22 @@ import java.util.Map;
 public class SingleInputClass {
 
     //public static String caseNumber="";
-    @DataProvider(name = "loadFromCSV")
+    @DataProvider(name = "loadFromExcel",parallel = true)
     public Object[] provider() throws Exception {
         return LoadData.readCaseTCFromLocalExcel();
 
 
     }
 
-    @Test(dataProvider = "loadFromCSV")
-    public void executeSingleInputCsv(Map<String, String> tc) throws InterruptedException {
+    @Test(dataProvider = "loadFromExcel")
+    public void executeSingleInputExcel(Map<String, String> tc) throws InterruptedException {
 
-       // Thread thread = new Thread(() -> {
+        Thread thread = new Thread(() -> {
             uploadOrImportEdm(tc);
-      // });
+      });
 
-    //   thread.start();
-   //   thread.join();
+      thread.start();
+      thread.join();
 
     }
 

@@ -57,12 +57,12 @@ public class ClimateChangeTests {
             String msg = JobsApi.waitForJobToComplete(jobId, token, "Climate Change API");;
             System.out.println("wait for job msg: " + msg);
             //newAnalysisIdConvertCurrency = JobsApi.getnewAnalysisIDByJobId(jobId, token);
-//            if(msg.equalsIgnoreCase(AutomationConstants.JOB_STATUS_FINISHED ) && (!jobId.isEmpty()))
-//            {
-//                LoadData.UpdateTCInLocalCSV(tc.get("index"), "ConvertCurrencyJobId", jobId);
-//                LoadData.UpdateTCInLocalCSV(tc.get("index"), "ConvertCurrencyNewAnalysisId", String.valueOf(newAnalysisIdConvertCurrency));
-//
-//            }
+            if(msg.equalsIgnoreCase(AutomationConstants.JOB_STATUS_FINISHED ) && (!jobId.isEmpty()))
+            {
+                LoadData.UpdateTCInLocalExcel(tc.get("index"), "climateChangeJobId", jobId);
+            //    LoadData.UpdateTCInLocalCSV(tc.get("index"), "ConvertCurrencyNewAnalysisId", String.valueOf(newAnalysisIdConvertCurrency));
+
+            }
 
 
         }

@@ -81,6 +81,25 @@ public class Perils {
     String ifModelRun;
     String asOfDateProcess;
 
+    public String getReportingWindowStart() {
+        return reportingWindowStart;
+    }
+
+    public void setReportingWindowStart(String reportingWindowStart) {
+        this.reportingWindowStart = reportingWindowStart;
+    }
+
+    String reportingWindowStart;
+
+    public String getReportingWindowEnd() {
+        return reportingWindowEnd;
+    }
+
+    public void setReportingWindowEnd(String reportingWindowEnd) {
+        this.reportingWindowEnd = reportingWindowEnd;
+    }
+
+    String reportingWindowEnd;
 
     String currencyCodeProcess;
 
@@ -621,26 +640,26 @@ public class Perils {
         perils.setApplyPLA(tc.get("applyPLA").equalsIgnoreCase("YES"));
         perils.setGmpeCode(tc.get("gmpeCode"));
         perils.setRegion(tc.get("region"));
-        perils.setExcludePostalCodes(tc.get("excludePostalCodes").equalsIgnoreCase("YES"));
-        perils.setFireOnly(tc.get("fireOnly").equalsIgnoreCase("YES"));
-        perils.setPerilOverride(tc.get("perilOverride"));
-        perils.setDynamicAutomobileModeling(tc.get("dynamicAutomobileModeling").equalsIgnoreCase("YES"));
-        perils.setIncludePluvial(tc.get("includePluvial").equalsIgnoreCase("YES"));
-        perils.setIncludeBespokeDefence(tc.get("includeBespokeDefence").equalsIgnoreCase("YES"));
-        perils.setDefenceOn(tc.get("defenceOn").equalsIgnoreCase("YES"));
+     //   perils.setExcludePostalCodes(tc.get("excludePostalCodes").equalsIgnoreCase("YES"));
+     //   perils.setFireOnly(tc.get("fireOnly").equalsIgnoreCase("YES"));
+     //   perils.setPerilOverride(tc.get("perilOverride"));
+    //    perils.setDynamicAutomobileModeling(tc.get("dynamicAutomobileModeling").equalsIgnoreCase("YES"));
+    //    perils.setIncludePluvial(tc.get("includePluvial").equalsIgnoreCase("YES"));
+    //    perils.setIncludeBespokeDefence(tc.get("includeBespokeDefence").equalsIgnoreCase("YES"));
+    //    perils.setDefenceOn(tc.get("defenceOn").equalsIgnoreCase("YES"));
         perils.setSubPerils(List.of(tc.get("subPerils").split(",")));
         perils.setSecondaryPerils(List.of(tc.get("secondaryPerils").split(",")));
         perils.setPolicyCoverages(List.of(tc.get("policyCoverages").split(",")));
         perils.setVendor(tc.get("vendor"));
-        perils.setRun1dOnly(tc.get("run1dOnly").equalsIgnoreCase(("YES")));
+     //   perils.setRun1dOnly(tc.get("run1dOnly").equalsIgnoreCase(("YES")));
         perils.setSpecialtyModels(List.of(tc.get("specialtyModels").split(",")));
-        perils.setFire(tc.get("fire").equalsIgnoreCase("YES"));
-        perils.setCoverage(tc.get("coverage").equalsIgnoreCase("YES"));
+       // perils.setFire(tc.get("fire").equalsIgnoreCase("YES"));
+       // perils.setCoverage(tc.get("coverage").equalsIgnoreCase("YES"));
         perils.setProperty(tc.get("property"));
-        perils.setUnknownForPrimaryCharacteristics(List.of(tc.get("unknownForPrimaryCharacteristics").split(",")));
+       // perils.setUnknownForPrimaryCharacteristics(List.of(tc.get("unknownForPrimaryCharacteristics").split(",")));
         perils.setVulnerabilitySetId(tc.get("vulnerabilitySetId"));
         perils.setVulnerabilitySetName(tc.get("vulnerabilitySetName"));
-        perils.setScaleExposureValues(List.of(tc.get("scaleExposureValues").split(",")));
+ //       perils.setScaleExposureValues(List.of(tc.get("scaleExposureValues").split(",")));
         perils.setMfId(tc.get("mfId"));
         perils.setPortfolioId(tc.get("existingPortfolioId"));
 
@@ -671,6 +690,20 @@ public class Perils {
         } else {
             perils.setAsOfDateProcess("");
         }
+
+        if (tc.get("reportingWindowStart") != null && tc.get("reportingWindowStart").length() > 0) {
+            perils.setReportingWindowStart(tc.get("reportingWindowStart"));
+        } else {
+            perils.setReportingWindowStart("");
+        }
+
+        if (tc.get("reportingWindowEnd") != null && tc.get("reportingWindowEnd").length() > 0) {
+            perils.setReportingWindowEnd(tc.get("reportingWindowEnd"));
+        } else {
+            perils.setReportingWindowEnd("");
+        }
+
+
 
         if (tc.get("currencyCodeProcess") != null && tc.get("currencyCodeProcess").length() > 0) {
             perils.setCurrencyCodeProcess(tc.get("currencyCodeProcess"));
