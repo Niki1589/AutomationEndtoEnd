@@ -16,7 +16,7 @@ import java.util.*;
 
 public class UploadEDM extends TestCase {
 
-    public void executeUploadEdm(Map<String, String> tc) throws NullPointerException, Exception {
+    public static void executeUploadEdm(Map<String, String> tc) {
 
         int actualresponse;
         String fileName = tc.get("edmFileName");
@@ -67,4 +67,5 @@ public class UploadEDM extends TestCase {
         }
 
     }
+
 }

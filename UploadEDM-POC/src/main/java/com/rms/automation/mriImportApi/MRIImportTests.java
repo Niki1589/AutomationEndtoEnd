@@ -16,7 +16,7 @@ import java.util.Map;
 
 public class MRIImportTests {
 
-    public void MRIImport(Map<String, String> tc, Boolean isCreateEDM) throws Exception {
+    public static void MRIImport(Map<String, String> tc, Boolean isCreateEDM) throws Exception {
 
         System.out.println("************** Running MRIImport ********* " );
         String token = ApiUtil.getSmlToken(LoadData.config.getUsername(), LoadData.config.getPassword(), LoadData.config.getTenant(), "accessToken");
@@ -172,7 +172,7 @@ public class MRIImportTests {
 
     }
 
-    public String createEDM(Map<String, String> tc, String token) throws Exception {
+    public static String createEDM(Map<String, String> tc, String token) throws Exception {
 
         String dataSourceName = tc.get("edmDatasourceName");
         String databaseStorage = tc.get("optEdmDatabaseStorage");
@@ -214,7 +214,5 @@ public class MRIImportTests {
         }
 
     }
-
-
 
 }

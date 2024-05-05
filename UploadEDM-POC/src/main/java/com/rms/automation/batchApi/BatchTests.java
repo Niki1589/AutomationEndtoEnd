@@ -16,7 +16,6 @@ import java.util.*;
 
 public class BatchTests {
 
-  // public static String referenceAnalysisId ="";
     public static void batchAPI(Map<String, String> tc,String portfolioId,String dataSourceName) throws Exception {
 
         String analysisId = "";
@@ -237,30 +236,4 @@ public class BatchTests {
         return gson.fromJson(payloadInString, Object.class);
     }
 
-    // Custom toMap function to convert model and it's fields to hashmap
-    // This will also convert nested fields that are models to hashmap
-    public static Object toMap(Object mainObj) throws IllegalAccessException {
-        Map<String, Object> map = new HashMap<>();
-        try {
-            // Iterating over each field of mainObj
-            for (Field field : mainObj.getClass().getDeclaredFields()) {
-                if (field != null) {
-                    // Accessing value of field from mainObj storing it to Object cause we don't know the type of field
-                    Object ob = field.get(mainObj);
-                    if (ob != null) {
-                        // checking if ob is a model to convert to hashmap
-                        if (!ob.getClass().isPrimitive() && !ob.getClass().isArray() && !ob.getClass().getName().startsWith("java")) {
-                            ob = toMap(ob);
-                        }
-
-                        // stroing values to hashmap
-                        map.put( field.getName(), ob );
-                    }
-                }
-            }
-        } catch (Exception ex) {
-            System.out.println("Exception while converting to map = "+ex.getMessage());
-        }
-        return map;
-    }
 }
