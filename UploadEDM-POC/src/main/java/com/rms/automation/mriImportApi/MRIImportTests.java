@@ -105,8 +105,16 @@ public class MRIImportTests {
         System.out.println(submitMRIJobRes.getStatusCode()+"  :SubmitMriJob Status: mriJobUd:"+mriJobId);
 
         String msg = JobsApi.waitForJobToComplete( mriJobId, token, jobType );
-        System.out.println("waitforjob msg: "+msg );
+        System.out.println("wait for job msg: "+msg );
         System.out.println("************** Completed MRIImport " );
+
+        if(msg.equalsIgnoreCase(AutomationConstants.JOB_STATUS_FINISHED ) && (!mriJobId.isEmpty()))
+        {
+            LoadData.UpdateTCInLocalExcel(tc.get("index"), "mriImportJobId", mriJobId);
+            //    LoadData.UpdateTCInLocalCSV(tc.get("index"), "ConvertCurrencyNewAnalysisId", String.valueOf(newAnalysisIdConvertCurrency));
+
+        }
+
 
         MRIImportData mriImportData = new MRIImportData();
         mriImportData.setDataSource(dataSource);

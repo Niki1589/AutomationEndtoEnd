@@ -37,7 +37,7 @@ public class BatchTests {
         try {
             if (perils.getIfModelRun().equalsIgnoreCase("YES")) {
             Object payloadObject = getPayloadBatchApi(perils.getPortfolioId(), dataSourceName, modelProfileId, Utils.isTrue(tc.get("isGeoCoded")), perils);
-                    System.out.println("After  Batch payload");
+                    System.out.println("After Batch payload");
                     Response batchResponse = ApiUtil.batchAPI(token, payloadObject);
                     String hdr = batchResponse.getHeader("Location");
                     String jobId = hdr.substring(hdr.lastIndexOf('/') + 1);

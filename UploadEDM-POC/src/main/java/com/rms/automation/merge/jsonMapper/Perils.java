@@ -1,5 +1,9 @@
 package com.rms.automation.merge.jsonMapper;
 
+import com.rms.automation.edm.LoadData;
+import com.rms.automation.utils.Utils;
+
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -80,6 +84,16 @@ public class Perils {
 
     String ifModelRun;
     String asOfDateProcess;
+
+    Boolean isApplyContractDatesOn = false;
+
+    public Boolean getApplyContractDatesOn() {
+        return isApplyContractDatesOn;
+    }
+
+    public void setApplyContractDatesOn(Boolean applyContractDatesOn) {
+        isApplyContractDatesOn = applyContractDatesOn;
+    }
 
     public String getReportingWindowStart() {
         return reportingWindowStart;
@@ -613,7 +627,7 @@ public class Perils {
         this.treatiesName = treatiesName;
     }
 
-    public static Perils extractPerilFromTC(Map<String, String> tc) {
+    public static Perils extractPerilFromTC(Map<String, String> tc) throws IOException {
         Perils perils = new Perils();
         perils.setPeril(tc.get("peril"));
         perils.setIgnoreContractDates(tc.get("ignoreContractDates").equalsIgnoreCase("YES"));
@@ -739,6 +753,23 @@ public class Perils {
             perils.setTreatiesName(tc.get("treatiesName"));
         } else {
             perils.setTreatiesName("");
+        }
+
+        perils.setApplyContractDatesOn(Utils.isTrue(tc.get("isApplyContractDatesOn")));
+        if (perils.getApplyContractDatesOn()) {
+            String date = tc.get("reportingWindowStart");
+            if (date != null && date.length() > 0) {
+                Map<String, String> dates = Utils.getEndDateAndFormat(date);
+                perils.setReportingWindowStart(dates.get("startDate"));
+                perils.setReportingWindowEnd(dates.get("endDate"));
+
+                String reportingWindowEndDate=dates.get("endDate");
+
+                if(!reportingWindowEndDate.isEmpty())
+                {
+                    LoadData.UpdateTCInLocalExcel(tc.get("index"), "reportingWindowEnd", reportingWindowEndDate);
+                }
+            }
         }
 
         return perils;

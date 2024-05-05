@@ -108,14 +108,14 @@ public class LoadData {
 
     public static List<String> MergeHeaders = Arrays.asList("index","caseNo","ifRun", "isRunUploadImportExpo", "ifUploadImportExpo", "ifCreateEdm", "edmDatasourceName", "edmFileName",
             "edmFilePath", "fileExt", "dbType", "optEdmDatabaseStorage","tagIds","UploadedEDMJobId","optServerName","optShareGroup","isCreatePortfolio","existingPortfolioId","portfolioNumber",
-            "portfolioName","accntFilePath","accntFileName","locFilePath","locFileName","ifDefaultMapping","mappingFilePath","mappingFileName","importDescrp",
+            "portfolioName","accntFilePath","accntFileName","locFilePath","locFileName","ifDefaultMapping","mappingFilePath","mappingFileName","importDescrp","mriImportJobId",
             "isGeoCoded","GeocodeVersion","GeoHazVersion","GeoHazLayers", "ifCreateModelProfile", "mfId","mp_created_name","asOfDateProcess","currencyCodeProcess",
             "currencySchemeProcess","currencyVintageProcess","outputProfileId","treaties","treatiesName","peril","ignoreContractDates","engine","alternateVulnCode",
             "LabelRegion","numberOfSamples","petName","petDataVersion","numberOfPeriods","insuranceType","analysisType","vulnerabilitySetId","vulnerabilitySetName",
-            "locationPerRisk","version","eventRateSchemeId","policyPerRisk","description","modelRegion","eventIds","subRegions","analysisMode","startYear","endYear","isApplyContractDatesOn","reportingWindowStart","reportingWindowEnd",
+            "locationPerRisk","version","eventRateSchemeId","policyPerRisk","description","modelRegion","eventIds","subRegions","analysisMode","isApplyContractDatesOn","reportingWindowStart","reportingWindowEnd","startYear","endYear",
             "gmpeName","applyPLA","gmpeCode","region","Download_settings_mp","subPerils","secondaryPerils","policyCoverages","vendor","specialtyModels"
-            ,"if_model_run","analysisId","if_rdm_export","exportAs","rdmLocation","dataBridgeType","rdmName","exportHDLossesAs","sqlVersion","exportFormat","dataBridgeServer",
-            "Download_settings_file","ExportJobId",
+            ,"if_model_run","analysisId","if_rdm_export","if_file_export","rdmLocation","dataBridgeType","rdmName","exportHDLossesAs","sqlVersion","exportFormat_rdm","exportFormat_file","dataBridgeServer",
+            "Download_settings_file","fileExportJobId","rdmExportJobId",
             "isConvertCurrency","Currency","Currency Scheme","Currency Version","asOfDate","ConvertCurrencyJobId","ConvertCurrencyNewAnalysisId",
             "isRenameAnalysis", "newAnalysisName","renameAnalysisJobId","isPate","is_ClimateChange","referenceRateSchemeId","climateConditionView","is2CWarmingScenario",
             "rcpScenario","timeHorizon","climateChangeJobId");

@@ -17,7 +17,7 @@ public class RdmExportTests {
         String rdmName = tc.get("rdmName");
         String exportHDLossesAs = tc.get("exportHDLossesAs");
         String sqlVersion = tc.get("sqlVersion");
-        String exportFormat = tc.get("exportFormat");
+        String exportFormat = tc.get("exportFormat_rdm");
         String token = ApiUtil.getSmlToken(LoadData.config.getUsername(), LoadData.config.getPassword(), LoadData.config.getTenant(), "accessToken");
 
         if (tc.get("rdmLocation").equals("Platform")) {
@@ -44,7 +44,7 @@ public class RdmExportTests {
                 System.out.println("waitforjob msg: " + msg);
                 if(msg.equalsIgnoreCase(AutomationConstants.JOB_STATUS_FINISHED) && (!jobId.isEmpty()))
                 {
-                    LoadData.UpdateTCInLocalExcel(tc.get("index"), "ExportJobId", jobId);
+                    LoadData.UpdateTCInLocalExcel(tc.get("index"), "rdmExportJobId", jobId);
 
                 }
             }
@@ -81,7 +81,7 @@ public class RdmExportTests {
                 System.out.println("wait for job msg: " + msg);
                 if(msg.equalsIgnoreCase(AutomationConstants.JOB_STATUS_FINISHED) && (!jobId.isEmpty()))
                 {
-                    LoadData.UpdateTCInLocalExcel(tc.get("index"),"ExportJobId", jobId);
+                    LoadData.UpdateTCInLocalExcel(tc.get("index"),"rdmExportJobId", jobId);
 
                 }
             }

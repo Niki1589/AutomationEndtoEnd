@@ -139,9 +139,6 @@ public class Config {
                 ", password='" + password + '\'' +
                 ", tenant='" + tenant + '\'' +
                 ", apiendpointsFile='" + apiendpointsFile + '\'' +
-                ", tcFile='" + tcFile + '\'' +
-                ", tcFileType=" + tcFileType +
-                ", createEdmFile='" + createEdmFile + '\'' +
                 '}';
     }
 }

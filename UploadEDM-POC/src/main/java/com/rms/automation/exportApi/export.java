@@ -5,11 +5,11 @@ import java.util.Map;
 public class export {
 
     public static void exportType(Map<String, String> tc, String analysisId) throws Exception {
-        String exportAs = tc.get("exportAs");
-        if (exportAs.equalsIgnoreCase("RDM")) {
+
+        if (tc.get("if_rdm_export").equalsIgnoreCase("YES")) {
             RdmExportTests.rdmExport(tc, analysisId);
         }
-        else if(exportAs.equalsIgnoreCase("file")) {
+        if (tc.get("if_file_export").equalsIgnoreCase("YES")) {
             FileExportTests.fileExport(tc, analysisId);
         }
     }

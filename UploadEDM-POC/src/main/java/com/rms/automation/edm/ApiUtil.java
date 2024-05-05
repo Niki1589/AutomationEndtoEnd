@@ -76,13 +76,13 @@ public class ApiUtil {
                         new String(Base64.getDecoder().decode((String) (jsonPath.get("uploadKey2"))));
                 setRmsUploadId(jsonPath.get("uploadId"));
 
-                String[] sessionTokenEncoded = ((String) (jsonPath.get("uploadKey3"))).split("\n");
-                String sessionTokenBase64 = "";
-                for (int i = 0; i < sessionTokenEncoded.length; i++) {
-                    sessionTokenBase64 += sessionTokenEncoded[i];
+                String[] uploadKey3Encoded = ((String) (jsonPath.get("uploadKey3"))).split("\n");
+                String sessionToken = "";
+                for (int i = 0; i < uploadKey3Encoded.length; i++) {
+                    sessionToken += uploadKey3Encoded[i];
                 }
 
-                String sessionToken = new String(Base64.getDecoder().decode(sessionTokenBase64));
+                String uploadKey3 = new String(Base64.getDecoder().decode(sessionToken));
 
                 System.out.println("Region: "+region+
                         ", AccessKey: "+accessKey+
@@ -91,7 +91,7 @@ public class ApiUtil {
                         ", SessionToken: "+sessionToken);
 
                 BasicSessionCredentials sessionCredentials =
-                        new BasicSessionCredentials(accessKey, secretKey, sessionToken);
+                        new BasicSessionCredentials(accessKey, secretKey, uploadKey3);
                 AmazonS3 s3Client =
                         AmazonS3ClientBuilder.standard()
                                 .withCredentials(new AWSStaticCredentialsProvider(sessionCredentials))

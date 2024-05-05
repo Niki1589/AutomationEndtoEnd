@@ -3,7 +3,11 @@ package com.rms.automation.utils;
 import org.apache.poi.ss.usermodel.*;
 
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Utils {
 
@@ -34,5 +38,22 @@ public class Utils {
                 return "";
         }
     }
+
+    public static Map<String, String> getEndDateAndFormat(String rawStartDate) {
+
+        DateTimeFormatter rawStartDateParser = DateTimeFormatter.ofPattern("yyyy-dd-MM");
+        DateTimeFormatter startDateParser = DateTimeFormatter.ofPattern("MMMM-dd-yyyy");
+        DateTimeFormatter endDateParser = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+        LocalDate date = LocalDate.parse(rawStartDate, rawStartDateParser);
+        LocalDate minusOneDay = date.minusDays(1);
+        LocalDate newDate = minusOneDay.plusYears(1);
+
+        Map<String, String> mapList= new HashMap<>();
+        mapList.put("startDate", date.format(startDateParser));
+        mapList.put("endDate", newDate.format(endDateParser));
+        return  mapList;
+    }
+
 
 }

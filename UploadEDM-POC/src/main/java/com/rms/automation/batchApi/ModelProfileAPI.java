@@ -107,8 +107,13 @@ public class ModelProfileAPI {
         List<String> subPerils = perils.getSubPerils();
         List<String> secondaryPerils = perils.getSecondaryPerils();
         List<String> specialtyModels = perils.getSpecialtyModels();
-        List<String> scaleExposureValues = perils.getScaleExposureValues();
-        List<String> unknownForPrimaryCharacteristics = perils.getUnknownForPrimaryCharacteristics();
+
+        String reportsWindow = "";
+        if (perils.getApplyContractDatesOn() && perils.getAnalysisType().equalsIgnoreCase("EP")) {
+            reportsWindow = "" +
+                    "\"reportingWindowStart\": \""+perils.getReportingWindowStart()+"\",\n"+
+                    "\"reportingWindowEnd\": \""+perils.getReportingWindowEnd()+"\", \n";
+        }
 
         String payloadInString = "{\n" +
                 "    \"General\": {\n" +
@@ -129,8 +134,7 @@ public class ModelProfileAPI {
                 "        \"endYear\": "+perils.getEndYear()+",\n" +
                 "        \"eventRateSchemeId\": "+perils.getEventRateSchemeId()+",\n" +
                 "        \"policyPerRisk\": \""+perils.getPolicyPerRisk()+"\",\n" +
-//                "        \"reportingWindowStart\": \""+perils.getReportingWindowStart()+"\",\n" +
-//                "        \"reportingWindowEnd\": \""+perils.getReportingWindowEnd()+"\",\n" +
+                        reportsWindow +
                 "        \"description\": \""+perils.getDescription()+"\",\n" +
                 "        \"modelRegion\": \""+perils.getModelRegion()+"\",\n" +
                 "        \"subRegions\": \""+perils.getSubRegions()+"\",\n" +
@@ -165,10 +169,14 @@ public class ModelProfileAPI {
     public static String getPayloadOfFlood(String NAEQ_ModelProfile_Name,Map<String, String> tc, Perils perils) throws JsonProcessingException {
 
         List<String> subPerils = perils.getSubPerils();
-        List<String> specialtyModels = perils.getSpecialtyModels();
-        List<String> scaleExposureValues = perils.getScaleExposureValues();
-        List<String> unknownForPrimaryCharacteristics = perils.getUnknownForPrimaryCharacteristics();
         Download_Settings_MP downloadSettings_MP = Download_Settings_MP.parse(tc.get("Download_settings_mp"));
+
+        String reportsWindow = "";
+        if (perils.getApplyContractDatesOn() && perils.getAnalysisType().equalsIgnoreCase("EP")) {
+            reportsWindow = "" +
+                    "\"reportingWindowStart\": \""+perils.getReportingWindowStart()+"\",\n"+
+                    "\"reportingWindowEnd\": \""+perils.getReportingWindowEnd()+"\", \n";
+        }
 
         String payloadInString = "{\n" +
                 "    \"General\": {\n" +
@@ -191,8 +199,7 @@ public class ModelProfileAPI {
                 "        \"endYear\": "+perils.getEndYear()+",\n" +
                 "        \"eventRateSchemeId\": "+perils.getEventRateSchemeId()+",\n" +
                 "        \"policyPerRisk\": \""+perils.getPolicyPerRisk()+"\",\n" +
-//                "        \"reportingWindowStart\": \""+perils.getReportingWindowStart()+"\",\n" +
-//                "        \"reportingWindowEnd\": \""+perils.getReportingWindowEnd()+"\",\n" +
+                            reportsWindow +
                 "        \"description\": \""+perils.getDescription()+"\",\n" +
                 "        \"modelRegion\": \""+perils.getModelRegion()+"\",\n" +
                 "        \"subRegions\": \""+perils.getSubRegions()+"\",\n" +
@@ -225,6 +232,13 @@ public class ModelProfileAPI {
             subPeril += ",SM";
         }
 
+        String reportsWindow = "";
+        if (perils.getApplyContractDatesOn() && perils.getAnalysisType().equalsIgnoreCase("EP")) {
+            reportsWindow = "" +
+                    "\"reportingWindowStart\": \""+perils.getReportingWindowStart()+"\",\n"+
+                    "\"reportingWindowEnd\": \""+perils.getReportingWindowEnd()+"\", \n";
+        }
+
         String payloadInString = "{\n" +
                 "    \"General\": {\n" +
                 "     \"subPeril\": \""+subPeril+"\",\n"+
@@ -249,8 +263,7 @@ public class ModelProfileAPI {
                 "        \"endYear\": "+perils.getEndYear()+",\n" +
                 "        \"eventRateSchemeId\": "+perils.getEventRateSchemeId()+",\n" +
                 "        \"policyPerRisk\": \""+perils.getPolicyPerRisk()+"\",\n" +
-//                "        \"reportingWindowStart\": \""+perils.getReportingWindowStart()+"\",\n" +
-//                "        \"reportingWindowEnd\": \""+perils.getReportingWindowEnd()+"\",\n" +
+                reportsWindow +
                 "        \"description\": \""+perils.getDescription()+"\",\n" +
                 "        \"modelRegion\": \""+perils.getModelRegion()+"\",\n" +
                 "    \"eventIds\": [" +
@@ -265,11 +278,16 @@ public class ModelProfileAPI {
     }
 
     public static String getPayloadOfTerrorism(String NAEQ_ModelProfile_Name, Map<String, String> tc, Perils perils) throws JsonProcessingException {
+
         List<String> subPerils = perils.getSubPerils();
-        //List<String> specialtyModels = perils.getSpecialtyModels();
-        //  List<String> scaleExposureValues =perils.getScaleExposureValues();
-        //  List<String> unknownForPrimaryCharacteristics = perils.getUnknownForPrimaryCharacteristics();
         Download_Settings_MP downloadSettings_MP = Download_Settings_MP.parse(tc.get("Download_settings_mp"));
+        String reportsWindow = "";
+        if (perils.getApplyContractDatesOn() && perils.getAnalysisType().equalsIgnoreCase("EP")) {
+            reportsWindow = "" +
+                    "\"reportingWindowStart\": \""+perils.getReportingWindowStart()+"\",\n"+
+                    "\"reportingWindowEnd\": \""+perils.getReportingWindowEnd()+"\", \n";
+        }
+
         String payloadInString = "{\n" +
                 "    \"General\": {\n" +
                 "        \"peril\": \""+perils.getPeril()+"\",\n" +
@@ -292,8 +310,7 @@ public class ModelProfileAPI {
                 "        \"endYear\": "+perils.getEndYear()+",\n" +
                 "        \"eventRateSchemeId\": "+perils.getEventRateSchemeId()+",\n" +
                 "        \"policyPerRisk\": \""+perils.getPolicyPerRisk()+"\",\n" +
-//                "        \"reportingWindowStart\": \""+perils.getReportingWindowStart()+"\",\n" +
-//                "        \"reportingWindowEnd\": \""+perils.getReportingWindowEnd()+"\",\n" +
+                reportsWindow +
                 "        \"description\": \""+perils.getDescription()+"\",\n" +
                 "        \"modelRegion\": \""+perils.getModelRegion()+"\",\n" +
                 "        \"subRegions\": \""+perils.getSubRegions()+"\",\n" +
@@ -317,10 +334,18 @@ public class ModelProfileAPI {
     }
 
     public static String getPayloadOfsevereConvectiveStorm(String ModelProfile_Name, Perils perils) {
+
         List<String> subPerils = perils.getSubPerils();
+        String reportsWindow = "";
+        if (perils.getApplyContractDatesOn() && perils.getAnalysisType().equalsIgnoreCase("EP")) {
+            reportsWindow = "" +
+                    "\"reportingWindowStart\": \""+perils.getReportingWindowStart()+"\",\n"+
+                    "\"reportingWindowEnd\": \""+perils.getReportingWindowEnd()+"\", \n";
+        }
 
         String payloadInString = "{\n" +
                 "    \"General\": {\n" +
+                reportsWindow +
                 "        \"startYear\": \""+perils.getStartYear()+"\",\n" +
                 "        \"endYear\": \""+perils.getEndYear()+"\",\n" +
                 "        \"name\": \""+ModelProfile_Name+"\",\n" +
@@ -339,8 +364,6 @@ public class ModelProfileAPI {
                 "        \"version\": \""+perils.getVersion()+"\",\n" +
                 "        \"eventRateSchemeId\": "+perils.getEventRateSchemeId()+",\n" +
                 "        \"policyPerRisk\": \""+perils.getPolicyPerRisk()+"\",\n" +
-//                "        \"reportingWindowStart\": \""+perils.getReportingWindowStart()+"\",\n" +
-//                "        \"reportingWindowEnd\": \""+perils.getReportingWindowEnd()+"\",\n" +
                 "        \"description\": \""+perils.getDescription()+"\",\n" +
                 "        \"modelRegion\": \""+perils.getModelRegion()+"\",\n" +
                 "        \"subRegions\": \""+perils.getSubRegions()+"\",\n" +
@@ -365,8 +388,16 @@ public class ModelProfileAPI {
         List<String> policyCoverages = perils.getPolicyCoverages();
         List<String> specialtyModels = perils.getSpecialtyModels();
 
+        String reportsWindow = "";
+        if (perils.getApplyContractDatesOn() && perils.getAnalysisType().equalsIgnoreCase("EP")) {
+            reportsWindow = "" +
+                    "\"reportingWindowStart\": \""+perils.getReportingWindowStart()+"\",\n"+
+                    "\"reportingWindowEnd\": \""+perils.getReportingWindowEnd()+"\", \n";
+        }
+
         String payloadInString = "{\n" +
                 "    \"General\": {\n" +
+                    reportsWindow +
                 "        \"peril\": \""+perils.getPeril()+"\",\n" +
                 "        \"ignoreContractDates\": "+perils.getIgnoreContractDates()+",\n" +
                 "        \"engine\": \""+perils.getEngine()+"\",\n" +

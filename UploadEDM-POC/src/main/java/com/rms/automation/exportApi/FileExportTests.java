@@ -19,7 +19,7 @@ public class FileExportTests {
         int anlsId= Integer.parseInt(analysisId);
         int[] analysis_Id = new int[]{(anlsId)};
 
-        String exportFormat = tc.get("exportFormat");
+        String exportFormat = tc.get("exportFormat_file");
         String token = ApiUtil.getSmlToken(LoadData.config.getUsername(), LoadData.config.getPassword(), LoadData.config.getTenant(), "accessToken");
 
         Map<String, Object> payload = new HashMap<>();
@@ -69,7 +69,7 @@ public class FileExportTests {
             System.out.println("wait for job msg: " + msg);
             if(msg.equalsIgnoreCase(AutomationConstants.JOB_STATUS_FINISHED) && (!jobId.isEmpty()))
             {
-                LoadData.UpdateTCInLocalExcel(tc.get("index"),"ExportJobId", jobId);
+                LoadData.UpdateTCInLocalExcel(tc.get("index"),"fileExportJobId", jobId);
 
             }
         }
