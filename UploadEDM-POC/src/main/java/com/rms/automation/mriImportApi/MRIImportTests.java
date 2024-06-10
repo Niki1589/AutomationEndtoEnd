@@ -27,7 +27,7 @@ public class MRIImportTests {
         }
         else {
             System.out.println("using existing edm.");
-            dataSource = tc.get("edmDatasourceName");
+            dataSource = tc.get("EXP_EDM_DATASOURCE_NAME");
         }
 
         MRIImport(token, dataSource, tc, "MRI Import");
@@ -43,15 +43,15 @@ public class MRIImportTests {
             throw new Exception("Bucket ID is null");
         }
 
-        String portfolioNumber = tc.get("portfolioNumber");
-        String portfolioName = tc.get("portfolioName");
-        String description = tc.get("importDescrp");
+        String portfolioNumber = tc.get("EXP_PORTFOLIO_NUMBER");
+        String portfolioName = tc.get("EXP_PORTFOLIO_NAME");
+        String description = tc.get("EXP_IMPORT_DESCRP");
         System.out.println(" portfolioNumber= "+portfolioNumber);
         System.out.println(" portfolioName= "+portfolioName);
         System.out.println(" description= "+description);
 
         String portfolioId = null;
-        if (Utils.isTrue(tc.get("isCreatePortfolio"))) {
+        if (Utils.isTrue(tc.get("EXP_IS_CREATE_PORTFOLIO"))) {
 
             Response portfolioRes = ApiUtil.createPortfolio(token, dataSource, portfolioNumber, portfolioName, description);
             if (portfolioRes.getStatusCode() != 201 && portfolioRes.getStatusCode() != 200) {
@@ -63,26 +63,26 @@ public class MRIImportTests {
 
            if(portfolioId_created!= -1)
             {
-                LoadData.UpdateTCInLocalExcel(tc.get("index"), "isCreatePortfolio", "NO");
-                LoadData.UpdateTCInLocalExcel(tc.get("index"), "existingPortfolioId", String.valueOf(portfolioId_created));
+                LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "EXP_IS_CREATE_PORTFOLIO", "NO");
+                LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "EXP_EXISTING_PORTFOLIO_ID", String.valueOf(portfolioId_created));
             }
         } else
         {
-            portfolioId = tc.get("existingPortfolioId");
+            portfolioId = tc.get("EXP_EXISTING_PORTFOLIO_ID");
         }
         //Upload Account file
-        String accountsFile = tc.get("accntFileName");
-        String filepath = tc.get("accntFilePath");
+        String accountsFile = tc.get("EXP_ACCNT_FILE_NAME");
+        String filepath = tc.get("EXP_ACCNT_FILE_PATH");
         String accountFileID = uploadMriFiles(bucketID, filepath, "account", accountsFile, token);
 
         // Upload location file
-        String locationFile = tc.get("locFileName");
-        String locFilepath = tc.get("locFilePath");
+        String locationFile = tc.get("EXP_LOC_FILE_NAME");
+        String locFilepath = tc.get("EXP_LOC_FILE_PATH");
         String locationFileID =  uploadMriFiles(bucketID, locFilepath, "location", locationFile, token);
 
         //Upload Mapping file
-        String mapFileName = tc.get("mappingFileName");
-        String mapFilePath = tc.get("mappingFilePath");
+        String mapFileName = tc.get("EXP_MAPPING_FILE_NAME");
+        String mapFilePath = tc.get("EXP_MAPPING_FILE_PATH");
         String mappingFileID =  uploadMriFiles(bucketID, mapFilePath, "mapping", mapFileName, token);
 
         Map<String, Object> payload = new HashMap<>();
@@ -110,7 +110,7 @@ public class MRIImportTests {
 
         if(msg.equalsIgnoreCase(AutomationConstants.JOB_STATUS_FINISHED ) && (!mriJobId.isEmpty()))
         {
-            LoadData.UpdateTCInLocalExcel(tc.get("index"), "mriImportJobId", mriJobId);
+            LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "EXP_MRI_IMPORT_JOBID", mriJobId);
             //    LoadData.UpdateTCInLocalCSV(tc.get("index"), "ConvertCurrencyNewAnalysisId", String.valueOf(newAnalysisIdConvertCurrency));
 
         }
@@ -174,17 +174,20 @@ public class MRIImportTests {
 
     public String createEDM(Map<String, String> tc, String token) throws Exception {
 
-        String dataSourceName = tc.get("edmDatasourceName");
-        String databaseStorage = tc.get("optEdmDatabaseStorage");
-        String serverName = tc.get("optServerName");
-        String shareWith = tc.get("optShareGroup");
+        String dataSourceName = tc.get("EXP_EDM_DATASOURCE_NAME");
+        String databaseStorage = tc.get("EXP_OPT_EDM_DATABASE_STORAGE");
+        String serverName = tc.get("EXP_OPT_SERVER_NAME");
+        String shareWith = tc.get("EXP_OPT_SHARE_GROUP");
 
         if (dataSourceName == null || databaseStorage == null) {
             throw new Exception("Test case data is incorrect. Check MRIImport CSV");
         }
 
-        String randmVal = RandomStringUtils.randomNumeric(3);
-        dataSourceName = dataSourceName + randmVal;
+        Response res = ApiUtil.findEdmByName(token, dataSourceName);
+        Boolean isEdmExists = !res.getBody().jsonPath().getMap("$").get("searchTotalMatch").equals(0);
+        if (isEdmExists) {
+            throw new Exception("EDM "+dataSourceName+" already exists");
+        }
 
         List<String> ids = ApiUtil.getGroupIds(token, shareWith);
         System.out.println(dataSourceName+" Group Ids: "+ids.toString());

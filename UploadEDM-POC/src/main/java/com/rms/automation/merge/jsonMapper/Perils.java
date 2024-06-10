@@ -629,31 +629,31 @@ public class Perils {
 
     public static Perils extractPerilFromTC(Map<String, String> tc) throws IOException {
         Perils perils = new Perils();
-        perils.setPeril(tc.get("peril"));
-        perils.setIgnoreContractDates(tc.get("ignoreContractDates").equalsIgnoreCase("YES"));
-        perils.setEngine(tc.get("engine"));
-        perils.setAlternateVulnCode(tc.get("alternateVulnCode"));
-        perils.setLabelRegion(tc.get("LabelRegion"));
-        perils.setNumberOfSamples(tc.get("numberOfSamples"));
-        perils.setPetName(tc.get("petName"));
-        perils.setPetDataVersion(tc.get("petDataVersion"));
-        perils.setNumberOfPeriods(tc.get("numberOfPeriods"));
-        perils.setInsuranceType(tc.get("insuranceType"));
-        perils.setAnalysisType(tc.get("analysisType"));
-        perils.setLocationPerRisk(tc.get("locationPerRisk"));
-        perils.setVersion(tc.get("version"));
-        perils.setEndYear(tc.get("endYear"));
-        perils.setEventRateSchemeId(tc.get("eventRateSchemeId"));
-        perils.setPolicyPerRisk(tc.get("policyPerRisk"));
-        perils.setDescription(tc.get("description"));
-        perils.setModelRegion(tc.get("modelRegion"));
-        perils.setSubRegions(tc.get("subRegions"));
-        perils.setAnalysisMode(tc.get("analysisMode"));
-        perils.setStartYear(tc.get("startYear"));
-        perils.setGmpeName(tc.get("gmpeName"));
-        perils.setApplyPLA(tc.get("applyPLA").equalsIgnoreCase("YES"));
-        perils.setGmpeCode(tc.get("gmpeCode"));
-        perils.setRegion(tc.get("region"));
+        perils.setPeril(tc.get("MPF_PERIL"));
+        perils.setIgnoreContractDates(tc.get("MPF_IGNORE_CONTRACT_DATES").equalsIgnoreCase("YES"));
+        perils.setEngine(tc.get("MPF_ENGINE"));
+        perils.setAlternateVulnCode(tc.get("MPF_ALTERNATE_VULN_CODE"));
+        perils.setLabelRegion(tc.get("MPF_LABEL_REGION"));
+        perils.setNumberOfSamples(tc.get("MPF_NUMBER_OF_SAMPLES"));
+        perils.setPetName(tc.get("MPF_PET_NAME"));
+        perils.setPetDataVersion(tc.get("MPF_PET_DATA_VERSION"));
+        perils.setNumberOfPeriods(tc.get("MPF_NUMBER_OF_PERIODS"));
+        perils.setInsuranceType(tc.get("MPF_INSURANCE_TYPE"));
+        perils.setAnalysisType(tc.get("MPF_ANALYSIS_TYPE"));
+        perils.setLocationPerRisk(tc.get("MPF_LOCATION_PER_RISK"));
+        perils.setVersion(tc.get("MPF_VERSION"));
+        perils.setEndYear(tc.get("MPF_END_YEAR"));
+        perils.setEventRateSchemeId(tc.get("MPF_EVENT_RATE_SCHEME_ID"));
+        perils.setPolicyPerRisk(tc.get("MPF_POLICY_PER_RISK"));
+        perils.setDescription(tc.get("MPF_DESCRIPTION"));
+        perils.setModelRegion(tc.get("MPF_MODEL_REGION"));
+        perils.setSubRegions(tc.get("MPF_SUB_REGIONS"));
+        perils.setAnalysisMode(tc.get("MPF_ANALYSIS_MODE"));
+        perils.setStartYear(tc.get("MPF_START_YEAR"));
+        perils.setGmpeName(tc.get("MPF_GMPE_NAME"));
+        perils.setApplyPLA(tc.get("MPF_APPLY_PLA").equalsIgnoreCase("YES"));
+        perils.setGmpeCode(tc.get("MPF_GMPE_CODE"));
+        perils.setRegion(tc.get("MPF_REGION"));
      //   perils.setExcludePostalCodes(tc.get("excludePostalCodes").equalsIgnoreCase("YES"));
      //   perils.setFireOnly(tc.get("fireOnly").equalsIgnoreCase("YES"));
      //   perils.setPerilOverride(tc.get("perilOverride"));
@@ -661,27 +661,27 @@ public class Perils {
     //    perils.setIncludePluvial(tc.get("includePluvial").equalsIgnoreCase("YES"));
     //    perils.setIncludeBespokeDefence(tc.get("includeBespokeDefence").equalsIgnoreCase("YES"));
     //    perils.setDefenceOn(tc.get("defenceOn").equalsIgnoreCase("YES"));
-        perils.setSubPerils(List.of(tc.get("subPerils").split(",")));
-        perils.setSecondaryPerils(List.of(tc.get("secondaryPerils").split(",")));
-        perils.setPolicyCoverages(List.of(tc.get("policyCoverages").split(",")));
-        perils.setVendor(tc.get("vendor"));
+        perils.setSubPerils(List.of(tc.get("MPF_SUB_PERILS").split(",")));
+        perils.setSecondaryPerils(List.of(tc.get("MPF_SECONDARY_PERILS").split(",")));
+        perils.setPolicyCoverages(List.of(tc.get("MPF_POLICY_COVERAGES").split(",")));
+        perils.setVendor(tc.get("MPF_VENDOR"));
      //   perils.setRun1dOnly(tc.get("run1dOnly").equalsIgnoreCase(("YES")));
-        perils.setSpecialtyModels(List.of(tc.get("specialtyModels").split(",")));
+        perils.setSpecialtyModels(List.of(tc.get("MPF_SPECIALTY_MODELS").split(",")));
        // perils.setFire(tc.get("fire").equalsIgnoreCase("YES"));
        // perils.setCoverage(tc.get("coverage").equalsIgnoreCase("YES"));
         perils.setProperty(tc.get("property"));
        // perils.setUnknownForPrimaryCharacteristics(List.of(tc.get("unknownForPrimaryCharacteristics").split(",")));
-        perils.setVulnerabilitySetId(tc.get("vulnerabilitySetId"));
-        perils.setVulnerabilitySetName(tc.get("vulnerabilitySetName"));
+        perils.setVulnerabilitySetId(tc.get("MPF_VULNERABILITY_SET_ID"));
+        perils.setVulnerabilitySetName(tc.get("MPF_VULNERABILITY_SET_NAME"));
  //       perils.setScaleExposureValues(List.of(tc.get("scaleExposureValues").split(",")));
-        perils.setMfId(tc.get("mfId"));
-        perils.setPortfolioId(tc.get("existingPortfolioId"));
+        perils.setMfId(tc.get("MPF_MFID"));
+        perils.setPortfolioId(tc.get("EXP_EXISTING_PORTFOLIO_ID"));
 
-        perils.setGeocodeVersion(tc.get("GeocodeVersion"));
-        perils.setGeoHazVersion(tc.get("GeoHazVersion"));
-        perils.setIfModelRun(tc.get("if_model_run"));
+        perils.setGeocodeVersion(tc.get("GEO_GEOCODE_VERSION"));
+        perils.setGeoHazVersion(tc.get("GEO_GEOHAZ_VERSION"));
+        perils.setIfModelRun(tc.get("MRN_IF_MODEL_RUN"));
 
-        String layer = tc.get("GeoHazLayers");
+        String layer = tc.get("GEO_GEOHAZ_LAYERS");
         if ( layer != null && layer != "" ) {
             String[] layersList = layer.split(",");
             perils.setGeoHazLayers(List.of(layersList));
@@ -689,7 +689,7 @@ public class Perils {
             perils.setGeoHazLayers(List.of());
         }
 
-        String eventIds=tc.get("eventIds");
+        String eventIds=tc.get("MPF_EVENT_IDS");
         if(eventIds!=null && eventIds !="")
         {
             perils.setEventIds( eventIds );
@@ -699,65 +699,65 @@ public class Perils {
             perils.setEventIds("");
         }
 
-        if (tc.get("asOfDateProcess") != null && tc.get("asOfDateProcess").length() > 0) {
-            perils.setAsOfDateProcess(tc.get("asOfDateProcess"));
+        if (tc.get("MRN_AS_OF_DATE_PROCESS") != null && tc.get("MRN_AS_OF_DATE_PROCESS").length() > 0) {
+            perils.setAsOfDateProcess(tc.get("MRN_AS_OF_DATE_PROCESS"));
         } else {
             perils.setAsOfDateProcess("");
         }
 
-        if (tc.get("reportingWindowStart") != null && tc.get("reportingWindowStart").length() > 0) {
-            perils.setReportingWindowStart(tc.get("reportingWindowStart"));
+        if (tc.get("MPF_REPORTING_WINDOW_START_YEAR") != null && tc.get("MPF_REPORTING_WINDOW_START_YEAR").length() > 0) {
+            perils.setReportingWindowStart(tc.get("MPF_REPORTING_WINDOW_START_YEAR"));
         } else {
             perils.setReportingWindowStart("");
         }
 
-        if (tc.get("reportingWindowEnd") != null && tc.get("reportingWindowEnd").length() > 0) {
-            perils.setReportingWindowEnd(tc.get("reportingWindowEnd"));
+        if (tc.get("MPF_REPORTING_WINDOW_END_YEAR") != null && tc.get("MPF_REPORTING_WINDOW_END_YEAR").length() > 0) {
+            perils.setReportingWindowEnd(tc.get("MPF_REPORTING_WINDOW_END_YEAR"));
         } else {
             perils.setReportingWindowEnd("");
         }
 
 
 
-        if (tc.get("currencyCodeProcess") != null && tc.get("currencyCodeProcess").length() > 0) {
-            perils.setCurrencyCodeProcess(tc.get("currencyCodeProcess"));
+        if (tc.get("MRN_CURRENCY_CODE") != null && tc.get("MRN_CURRENCY_CODE").length() > 0) {
+            perils.setCurrencyCodeProcess(tc.get("MRN_CURRENCY_CODE"));
         } else {
             perils.setCurrencyCodeProcess("");
         }
 
-        if (tc.get("currencySchemeProcess") != null && tc.get("currencySchemeProcess").length() > 0) {
-            perils.setCurrencySchemeProcess(tc.get("currencySchemeProcess"));
+        if (tc.get("MRN_CURRENCY_SCHEME") != null && tc.get("MRN_CURRENCY_SCHEME").length() > 0) {
+            perils.setCurrencySchemeProcess(tc.get("MRN_CURRENCY_SCHEME"));
         } else {
             perils.setCurrencySchemeProcess("");
         }
 
-        if (tc.get("currencyVintageProcess") != null && tc.get("currencyVintageProcess").length() > 0) {
-            perils.setCurrencyVintageProcess(tc.get("currencyVintageProcess"));
+        if (tc.get("MRN_CURRENCY_VINTAGE") != null && tc.get("MRN_CURRENCY_VINTAGE").length() > 0) {
+            perils.setCurrencyVintageProcess(tc.get("MRN_CURRENCY_VINTAGE"));
         } else {
             perils.setCurrencyVintageProcess("");
         }
 
-        if (tc.get("outputProfileId") != null && tc.get("outputProfileId").length() > 0) {
-            perils.setOutputProfileId(tc.get("outputProfileId"));
+        if (tc.get("MRN_OUTPUT_PROFILE_ID") != null && tc.get("MRN_OUTPUT_PROFILE_ID").length() > 0) {
+            perils.setOutputProfileId(tc.get("MRN_OUTPUT_PROFILE_ID"));
         } else {
             perils.setOutputProfileId("");
         }
 
-        if (tc.get("treaties") != null && tc.get("treaties").length() > 0) {
-            perils.setTreaties(tc.get("treaties"));
+        if (tc.get("MRN_TREATIES") != null && tc.get("MRN_TREATIES").length() > 0) {
+            perils.setTreaties(tc.get("MRN_TREATIES"));
         } else {
             perils.setTreaties("");
         }
 
-        if (tc.get("treatiesName") != null && tc.get("treatiesName").length() > 0) {
-            perils.setTreatiesName(tc.get("treatiesName"));
+        if (tc.get("MRN_TREATIES_NAME") != null && tc.get("MRN_TREATIES_NAME").length() > 0) {
+            perils.setTreatiesName(tc.get("MRN_TREATIES_NAME"));
         } else {
             perils.setTreatiesName("");
         }
 
-        perils.setApplyContractDatesOn(Utils.isTrue(tc.get("isApplyContractDatesOn")));
+        perils.setApplyContractDatesOn(Utils.isTrue(tc.get("MPF_IS_APPLY_CONTRACT_DATES_ON")));
         if (perils.getApplyContractDatesOn()) {
-            String date = tc.get("reportingWindowStart");
+            String date = tc.get("MPF_REPORTING_WINDOW_START_YEAR");
             if (date != null && date.length() > 0) {
                 Map<String, String> dates = Utils.getEndDateAndFormat(date);
                 perils.setReportingWindowStart(dates.get("startDate"));
@@ -767,7 +767,7 @@ public class Perils {
 
                 if(!reportingWindowEndDate.isEmpty())
                 {
-                    LoadData.UpdateTCInLocalExcel(tc.get("index"), "reportingWindowEnd", reportingWindowEndDate);
+                    LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "MPF_REPORTING_WINDOW_END_YEAR", reportingWindowEndDate);
                 }
             }
         }

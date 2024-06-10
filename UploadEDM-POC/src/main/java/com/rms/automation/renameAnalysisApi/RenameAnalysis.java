@@ -17,7 +17,7 @@ public class RenameAnalysis {
         String token = ApiUtil.getSmlToken(LoadData.config.getUsername(), LoadData.config.getPassword(), LoadData.config.getTenant(), "accessToken");
 
         Map<String, Object> payload = new HashMap<>();
-        payload.put("newAnalysisName", tc.get("newAnalysisName"));
+        payload.put("newAnalysisName", tc.get("RNM_NEW_ANALYSIS_NAME"));
 
         Response response = ApiUtil.renameAnalysisApi(payload, analysisId, token);
         System.out.println("renameAnalysisApi  Status: " + response.getStatusCode());
@@ -28,11 +28,11 @@ public class RenameAnalysis {
             if (jobId == null) {
                 throw new Exception("JobId is null");
             }
-            String msg = JobsApi.waitForJobToComplete(jobId, token);
+            String msg = JobsApi.waitForJobToComplete(jobId, token, "Rename Analysis API");
             System.out.println("wait for job msg: " + msg);
             if(msg.equalsIgnoreCase(AutomationConstants.JOB_STATUS_FINISHED) &&(!jobId.isEmpty()))
             {
-                LoadData.UpdateTCInLocalExcel(tc.get("index"), "renameAnalysisJobId", jobId);
+                LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "RNM_RENAME_ANALYSIS_JOBID", jobId);
 
             }
         }

@@ -21,10 +21,10 @@ public class CreateEDMTests {
 
     @Test(dataProvider = "loadFromCSV")
     public void CreateEDM(Map<String, String> tc) throws Exception {
-        String dataSourceName = tc.get("edmDatasourceName");
-        String databaseStorage = tc.get("optEdmDatabaseStorage");
-        String serverName = tc.get("optServerName");
-        String shareWith = tc.get("optShareGroup");
+        String dataSourceName = tc.get("EXP_EDM_DATASOURCE_NAME");
+        String databaseStorage = tc.get("EXP_OPT_EDM_DATABASE_STORAGE");
+        String serverName = tc.get("EXP_OPT_SERVER_NAME");
+        String shareWith = tc.get("EXP_OPT_SHARE_GROUP");
 
         if (dataSourceName == null || databaseStorage == null) {
             throw new Exception("Test case data is incorrect. Check CreateEDM CSV");
@@ -46,7 +46,7 @@ public class CreateEDMTests {
         if (response.getStatusCode() == AutomationConstants.STATUS_ACCEPTED) {
             String locationHdr = response.getHeader("Location");
             jobId = locationHdr.substring(locationHdr.lastIndexOf('/') + 1);
-            System.out.println("createedm_wf_id: "+ jobId );
+            System.out.println("create edm_wf_id: "+ jobId );
             status = true;
         }
         else {
@@ -60,7 +60,7 @@ public class CreateEDMTests {
                 throw new Exception("JobId is null");
             }
             String msg = JobsApi.waitForJobToComplete(jobId, token);
-            System.out.println("waitforjob msg: "+msg );
+            System.out.println("wait for job msg: "+msg );
         }
 
     }

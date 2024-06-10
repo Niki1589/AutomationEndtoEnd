@@ -216,7 +216,24 @@ public class ApiUtil {
         return payload.isEmpty() ? restApiHelper.submitPost() : restApiHelper.submitPost(payload);
     }
 
+    public static Response uploadRDM(String authToken, String rdmName, String payload) {
+        String api = String.format(EndPointManager.apiendpoints.get("uploadRDM"), getRmsUploadId(), getRmsUploadId(), rdmName);
+        String url = EndPointManager.baseUrl + api;
+        RestApiHelper restApiHelper = new RestApiHelper(authToken, url, "application/json", false);
+        return payload.isEmpty() ? restApiHelper.submitPost() : restApiHelper.submitPost(payload);
+    }
 
+
+    public static Response findEdmByName(String authToken, String edmName)
+    {
+        String api = EndPointManager.apiendpoints.get("findEdmByName") + edmName;
+        String url = EndPointManager.baseUrl + api;
+        RestApiHelper restApiHelper =
+                new RestApiHelper(
+                        authToken, url, "application/json", false);
+        Response response = restApiHelper.submitGet();
+        return response;
+    }
 
     public static Response getTreatyIdByAnalysisId(String authToken, String analysisId_pate)
     {
@@ -577,7 +594,16 @@ public class ApiUtil {
         return restApiHelper.submitPost(payload);
     }
 
+    public static Response groupingAPI(String authToken, Object payload) {
 
+        String api = EndPointManager.apiendpoints.get("analysis-groups");
+        String url = EndPointManager.baseUrl + api;
+
+        RestApiHelper restApiHelper =
+                new RestApiHelper(
+                        authToken, url, "application/json", false);
+        return restApiHelper.submitPost(payload);
+    }
     public static Response getModelProfileTemplate(String authToken, Map<String, String> tc, Perils perils) throws IOException {
         String api = String.format(EndPointManager.apiendpoints.get("getModelProfileTemplate"),perils.getAnalysisType(), perils.getModelRegion(), perils.getSubRegions(),
                 perils.getPeril(), perils.getVersion(), perils.getVendor(), perils.getInsuranceType(), perils.getAnalysisMode(),perils.getFire(),

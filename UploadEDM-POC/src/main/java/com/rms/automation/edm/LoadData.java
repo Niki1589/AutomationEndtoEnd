@@ -106,19 +106,48 @@ public class LoadData {
 
 
 
-    public static List<String> MergeHeaders = Arrays.asList("index","caseNo","ifRun", "isRunUploadImportExpo", "ifUploadImportExpo", "ifCreateEdm", "edmDatasourceName", "edmFileName",
-            "edmFilePath", "fileExt", "dbType", "optEdmDatabaseStorage","tagIds","UploadedEDMJobId","optServerName","optShareGroup","isCreatePortfolio","existingPortfolioId","portfolioNumber",
-            "portfolioName","accntFilePath","accntFileName","locFilePath","locFileName","ifDefaultMapping","mappingFilePath","mappingFileName","importDescrp","mriImportJobId",
-            "isGeoCoded","GeocodeVersion","GeoHazVersion","GeoHazLayers", "ifCreateModelProfile", "mfId","mp_created_name","asOfDateProcess","currencyCodeProcess",
-            "currencySchemeProcess","currencyVintageProcess","outputProfileId","treaties","treatiesName","peril","ignoreContractDates","engine","alternateVulnCode",
-            "LabelRegion","numberOfSamples","petName","petDataVersion","numberOfPeriods","insuranceType","analysisType","vulnerabilitySetId","vulnerabilitySetName",
-            "locationPerRisk","version","eventRateSchemeId","policyPerRisk","description","modelRegion","eventIds","subRegions","analysisMode","isApplyContractDatesOn","reportingWindowStart","reportingWindowEnd","startYear","endYear",
-            "gmpeName","applyPLA","gmpeCode","region","Download_settings_mp","subPerils","secondaryPerils","policyCoverages","vendor","specialtyModels"
-            ,"if_model_run","analysisId","if_rdm_export","if_file_export","rdmLocation","dataBridgeType","rdmName","exportHDLossesAs","sqlVersion","exportFormat_rdm","exportFormat_file","dataBridgeServer",
-            "Download_settings_file","fileExportJobId","rdmExportJobId",
-            "isConvertCurrency","Currency","Currency Scheme","Currency Version","asOfDate","ConvertCurrencyJobId","ConvertCurrencyNewAnalysisId",
-            "isRenameAnalysis", "newAnalysisName","renameAnalysisJobId","isPate","is_ClimateChange","referenceRateSchemeId","climateConditionView","is2CWarmingScenario",
-            "rcpScenario","timeHorizon","climateChangeJobId");
+//    public static List<String> MergeHeaders = Arrays.asList("index","caseNo","ifRun", "isRunUploadImportExpo", "ifUploadImportExpo", "ifCreateEdm", "edmDatasourceName", "edmFileName",
+//            "edmFilePath", "fileExt", "dbType", "optEdmDatabaseStorage","tagIds","UploadedEDMJobId","optServerName","optShareGroup","isCreatePortfolio","existingPortfolioId","portfolioNumber",
+//            "portfolioName","accntFilePath","accntFileName","locFilePath","locFileName","ifDefaultMapping","mappingFilePath","mappingFileName","importDescrp","mriImportJobId",
+//            "isGeoCoded","GeocodeVersion","GeoHazVersion","GeoHazLayers", "ifCreateModelProfile", "mfId","mp_created_name","asOfDateProcess","currencyCodeProcess",
+//            "currencySchemeProcess","currencyVintageProcess","outputProfileId","treaties","treatiesName","peril","ignoreContractDates","engine","alternateVulnCode",
+//            "LabelRegion","numberOfSamples","petName","petDataVersion","numberOfPeriods","insuranceType","analysisType","vulnerabilitySetId","vulnerabilitySetName",
+//            "locationPerRisk","version","eventRateSchemeId","policyPerRisk","description","modelRegion","eventIds","subRegions","analysisMode","isApplyContractDatesOn","reportingWindowStart","reportingWindowEnd","startYear","endYear",
+//            "gmpeName","applyPLA","gmpeCode","region","Download_settings_mp","subPerils","secondaryPerils","policyCoverages","vendor","specialtyModels"
+//            ,"if_model_run","analysisId","if_rdm_export","if_file_export","rdmLocation","dataBridgeType","rdmName","exportHDLossesAs","sqlVersion","exportFormat_rdm","exportFormat_file","dataBridgeServer",
+//            "Download_settings_file","fileExportJobId","rdmExportJobId",
+//            "isConvertCurrency","Currency","Currency Scheme","Currency Version","asOfDate","ConvertCurrencyJobId","ConvertCurrencyNewAnalysisId",
+//            "isRenameAnalysis", "newAnalysisName","renameAnalysisJobId","isPate","is_ClimateChange","referenceRateSchemeId","climateConditionView","is2CWarmingScenario",
+//            "rcpScenario","timeHorizon","climateChangeJobId");
+
+
+//    public static List<String> MergeHeaders=Arrays.asList("INDEX","TEST_CASE_NO","TEST_CASE_DESCRIP","IF_TEST_CASE_RUN","EXP_IS_RUN_UPLOAD_IMPORT","EXP_IF_UPLOAD_OR_IMPORT","EXP_IF_CREATE_EDM","EXP_EDM_DATASOURCE_NAME","EXP_EDM_FILE_NAME",
+//            "EXP_EDM_FILE_PATH","EXP_FILE_EXT","EXP_DB_TYPE","EXP_OPT_EDM_DATABASE_STORAGE","EXP_TAGIDS","EXP_UPLOAD_EDM_JOBID","EXP_OPT_SERVER_NAME","EXP_OPT_SHARE_GROUP","EXP_IS_CREATE_PORTFOLIO","EXP_EXISTING_PORTFOLIO_ID","EXP_PORTFOLIO_NUMBER",
+//            "EXP_PORTFOLIO_NAME","EXP_ACCNT_FILE_PATH","EXP_ACCNT_FILE_NAME","EXP_LOC_FILE_PATH","EXP_LOC_FILE_NAME","EXP_IF_DEFAULT_MAPPING","EXP_MAPPING_FILE_PATH","EXP_MAPPING_FILE_NAME","EXP_IMPORT_DESCRP","EXP_MRI_IMPORT_JOBID",
+//            "GEO_IS_GEOCODE","GEO_GEOCODE_VERSION","GEO_GEOHAZ_VERSION","GEO_GEOHAZ_LAYERS","MPF_IF_CREATE_MODEL_PROFILE","MPF_MFID","MPF_CREATED_NAME","MPF_DESCRIPTION","MPF_PERIL",
+//            "MPF_LABEL_REGION","MPF_MODEL_REGION","MPF_REGION","MPF_SUB_REGIONS","MPF_VERSION","MPF_SUB_PERILS","MPF_SECONDARY_PERILS","MPF_ANALYSIS_TYPE","MPF_ANALYSIS_MODE",
+//            "MPF_PET_NAME","MPF_PET_DATA_VERSION","MPF_NUMBER_OF_PERIODS","MPF_EVENT_IDS","MPF_NUMBER_OF_SAMPLES","MPF_GMPE_NAME","MPF_GMPE_CODE","MPF_IGNORE_CONTRACT_DATES","MPF_START_YEAR",
+//            "MPF_END_YEAR","MPF_REPORTING_WINDOW_START_YEAR","MPF_REPORTING_WINDOW_END_YEAR","MPF_APPLY_PLA","MPF_ALTERNATE_VULN_CODE","MPF_VULNERABILITY_SET_ID","MPF_VULNERABILITY_SET_NAME","MPF_SPECIALTY_MODELS","MPF_INSURANCE_TYPE","MPF_LOCATION_PER_RISK","MPF_POLICY_PER_RISK","MPF_POLICY_COVERAGES","MPF_ENGINE","MPF_VENDOR","MPF_DOWNLOAD_SETTINGS","MPF_EVENT_RATE_SCHEME_ID",
+//            "MRN_IF_MODEL_RUN","MRN_AS_OF_DATE_PROCESS","MRN_CURRENCY_CODE","MRN_CURRENCY_SCHEME","MRN_CURRENCY_VINTAGE","MRN_OUTPUT_PROFILE_ID","MRN_TREATIES","MRN_TREATIES_NAME","BASELINE_PATH","MRN_ANALYSIS_ID","REX_IF_RDM_EXPORT","REX_IF_FILE_EXPORT","REX_RDM_LOCATION"
+//            ,"REX_DATA_BRIDGE_TYPE","REX_RDM_NAME","REX_EXPORT_HD_LOSSES_AS","SQLVERSION","EXPORT_FORMAT_RDM","EXPORT_FORMAT_FILE","DATABRIDGESERVER","DOWNLOAD_SETTINGS_FILE","RDM_EXPORT_JOBID","FILE_EXPORT_JOBID","CCU_IS_CONVERT_CURRENCY","CCU_CURRENCY","CCU_CURRENCY_SCHEME","CCU_CURRENCY_VERSION",
+//            "CCU_AS_OF_DATE","CCU_CONVERT_CURRENCY_JOB_ID","CCU_CONVERT_CURRENCY_NEW_ANALYSIS_ID",
+//            "RNM_IS_RENAME_ANALYSIS","RNM_NEW_ANALYSIS_NAME","RNM_RENAME_ANALYSIS_JOBID","IS_PATE","CCG_IS_CLIMATE_CHANGE","CCG_REFERENCE_RATE_SCHEMEID","CCG_CLIMATE_CONDITION_VIEW",
+//            "CCG_IS_2C_WARMING_SCENARIO","CCG_RCP_SCENARIO","CCG_TIME_HORIZON","CCG_CLIMATE_CHANGE_JOBID");
+
+
+    public static List<String> MergeHeaders= Arrays.asList(
+            "INDEX","TEST_CASE_NO","TEST_CASE_DESCRIP","IF_TEST_CASE_RUN","EXP_IS_RUN_UPLOAD_IMPORT","EXP_IF_UPLOAD_OR_IMPORT","EXP_IF_CREATE_EDM","EXP_EDM_DATASOURCE_NAME","EXP_EDM_FILE_NAME",
+            "EXP_EDM_FILE_PATH","EXP_FILE_EXT","EXP_DB_TYPE","EXP_OPT_EDM_DATABASE_STORAGE","EXP_TAGIDS","EXP_UPLOAD_EDM_JOBID","EXP_OPT_SERVER_NAME","EXP_OPT_SHARE_GROUP","EXP_IS_CREATE_PORTFOLIO","EXP_EXISTING_PORTFOLIO_ID","EXP_PORTFOLIO_NUMBER",
+            "EXP_PORTFOLIO_NAME","EXP_ACCNT_FILE_PATH","EXP_ACCNT_FILE_NAME","EXP_LOC_FILE_PATH","EXP_LOC_FILE_NAME","EXP_IF_DEFAULT_MAPPING","EXP_MAPPING_FILE_PATH","EXP_MAPPING_FILE_NAME","EXP_IMPORT_DESCRP","EXP_MRI_IMPORT_JOBID",
+            "GEO_IS_GEOCODE","GEO_GEOCODE_VERSION","GEO_GEOHAZ_VERSION","GEO_GEOHAZ_LAYERS","MPF_IF_CREATE_MODEL_PROFILE","MPF_MFID","MPF_CREATED_NAME","MPF_DESCRIPTION","MPF_PERIL",
+            "MPF_LABEL_REGION","MPF_MODEL_REGION","MPF_REGION","MPF_SUB_REGIONS","MPF_VERSION","MPF_SUB_PERILS","MPF_SECONDARY_PERILS","MPF_ANALYSIS_TYPE","MPF_ANALYSIS_MODE",
+            "MPF_PET_NAME","MPF_PET_DATA_VERSION","MPF_NUMBER_OF_PERIODS","MPF_EVENT_IDS","MPF_NUMBER_OF_SAMPLES","MPF_GMPE_NAME","MPF_GMPE_CODE","MPF_IGNORE_CONTRACT_DATES","MPF_START_YEAR",
+            "MPF_END_YEAR","MPF_IS_APPLY_CONTRACT_DATES_ON","MPF_REPORTING_WINDOW_START_YEAR","MPF_REPORTING_WINDOW_END_YEAR","MPF_APPLY_PLA","MPF_ALTERNATE_VULN_CODE","MPF_VULNERABILITY_SET_ID","MPF_VULNERABILITY_SET_NAME","MPF_SPECIALTY_MODELS","MPF_INSURANCE_TYPE","MPF_LOCATION_PER_RISK","MPF_POLICY_PER_RISK","MPF_POLICY_COVERAGES","MPF_ENGINE","MPF_VENDOR","MPF_DOWNLOAD_SETTINGS","MPF_EVENT_RATE_SCHEME_ID",
+            "MRN_IF_MODEL_RUN","MRN_AS_OF_DATE_PROCESS","MRN_CURRENCY_CODE","MRN_CURRENCY_SCHEME","MRN_CURRENCY_VINTAGE","MRN_OUTPUT_PROFILE_ID","MRN_TREATIES","MRN_TREATIES_NAME","BASELINE_PATH","MRN_ANALYSIS_ID","REX_IF_RDM_EXPORT","REX_IF_FILE_EXPORT","REX_RDM_LOCATION",
+            "REX_DATA_BRIDGE_TYPE","REX_RDM_NAME","REX_EXPORT_HD_LOSSES_AS","SQLVERSION","EXPORT_FORMAT_RDM","EXPORT_FORMAT_FILE","DATABRIDGESERVER","DOWNLOAD_SETTINGS_FILE","RDM_EXPORT_JOBID","FILE_EXPORT_JOBID","RDM_EXPORT_FILE_LOCATION","IF_IMPR_ANALYSIS_FROM_RDM","IMPR_ANALYSIS_FROM_RDM_FILE_NAME", "IMPR_ANALYSIS_FROM_RDM_FILE_PATH", "IMPR_ANALYSIS_FROM_RDM_FILE_EXT", "IMPR_ANALYSIS_FROM_RDM_DB_TYPE","IMPR_ANALYSIS_FROM_RDM_JOB_ID","CCU_IS_CONVERT_CURRENCY","CCU_CURRENCY","CCU_CURRENCY_SCHEME","CCU_CURRENCY_VERSION",
+            "CCU_AS_OF_DATE","CCU_CONVERT_CURRENCY_JOB_ID","CCU_CONVERT_CURRENCY_NEW_ANALYSIS_ID",
+            "RNM_IS_RENAME_ANALYSIS","RNM_NEW_ANALYSIS_NAME","RNM_RENAME_ANALYSIS_JOBID","IS_PATE","CCG_IS_CLIMATE_CHANGE","CCG_REFERENCE_RATE_SCHEMEID","CCG_CLIMATE_CONDITION_VIEW",
+            "CCG_IS_2C_WARMING_SCENARIO","CCG_RCP_SCENARIO","CCG_TIME_HORIZON","CCG_CLIMATE_CHANGE_JOBID");
 
     public static int getColumnIndex(String columnName) {
         return MergeHeaders.indexOf(columnName);
@@ -128,6 +157,9 @@ public class LoadData {
         return PateHeaders.indexOf(columnName);
     }
 
+    public static int getColumnIndex_Grouping(String columnName) {
+        return GroupingColumns.indexOf(columnName);
+    }
 
     public static Object[] readCaseTCFromLocalExcel() throws Exception {
         System.out.println("Dataloading");
@@ -141,12 +173,6 @@ public class LoadData {
             FileInputStream file = new FileInputStream(excelFilePath);
             //Workbook workbook = WorkbookFactory.create(file);
             Workbook workbook = new XSSFWorkbook(file);
-//            WorkbookFactory.addProvider(new HSSFWorkbookFactory());
-//            WorkbookFactory.addProvider(new XSSFWorkbookFactory());
-//
-//            try (InputStream fileInputStream = new FileInputStream(excelFilePath);
-//                 BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream)) {
-//                Workbook workbook = WorkbookFactory.create(bufferedInputStream);
 
                 // Get the first sheet
                 Sheet sheet = workbook.getSheetAt(0);
@@ -154,16 +180,17 @@ public class LoadData {
                 // Iterate through rows and cells
                 int rowCount = 0;
                 for (Row row : sheet) {
-                    if (rowCount == 0) {
+                    if (rowCount <= 1) {  // Skip the first two rows
                         rowCount++;
                         continue; // Skip the header row
                     }
+                 //   System.out.println("Columns-------------------");
                     Map<String, String> rowData = new HashMap<>();
-                    for (int cn = 0; cn < row.getLastCellNum(); cn++) {
+                    for (int cn = 0; cn < MergeHeaders.size(); cn++) {
                         Cell cell = row.getCell(cn, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
                         String cellValue = Utils.getCellValue(cell);
                         String header = MergeHeaders.get(cn);
-                        // System.out.println("Column name: "+header+" at "+cn);
+                     //    System.out.println(header+":"+cn+",");
                         rowData.put(header, cellValue);
                     }
                     dataList.add(rowData);
@@ -180,7 +207,7 @@ public class LoadData {
         return dataList.toArray();
     }
 
-    public static List<String> PateHeaders =Arrays.asList( "caseNo","index","ifRun","analysisId_pate","operationType","treatyId","updatedJobId","treatyNumber","treatyName","treatyType","occurLimit","attachPt","cedant","effectDate","expireDate","pcntCovered","pcntPlaced","pcntRiShare","pcntRetent","Premium","numOfReinst","reinstCharge","aggregateLimit","aggregateDeductible","priority");;
+    public static List<String> PateHeaders =Arrays.asList( "caseNo","index","ifRun","analysisId_pate","operationType","treatyId","updatedJobId","treatyNumber","treatyName","treatyType","occurLimit","attachPt","cedant","effectDate","expireDate","pcntCovered","pcntPlaced","pcntRiShare","pcntRetent","Premium","numOfReinst","reinstCharge","aggregateLimit","aggregateDeductible","priority");
 
     public static List<Map<String, String>> readCaseTCFromLocalExcel_pate(String caseNo) throws Exception {
         System.out.println("Dataloading");
@@ -252,14 +279,15 @@ public class LoadData {
 
         return dataList;
     }
-    public static Boolean UpdateTCInLocalExcel(String rowIndex, String columName, String newValue) throws IOException {
-        Integer index = Integer.valueOf(rowIndex);
+
+    public static Boolean UpdateTCInGroupingExcel(String rowIndex, String columName, String newValue) throws IOException {
+        Integer index = 1 + Integer.valueOf(rowIndex);
         System.out.println("index is  = " + index);
-        int columnIndex = LoadData.getColumnIndex(columName);
+        int columnIndex = getColumnIndex_Grouping(columName);
 
         if (index != null && columnIndex !=-1) {
             try {
-                return LoadData.UpdateTCInLocalExcel_column(index, columnIndex, newValue);
+                return LoadData.UpdateTCInLocalExcel_column(index, columnIndex, newValue, 2);
             } catch (Exception e) {
                 System.out.println("Error on row : " + index + " is " + e.getMessage());
             }
@@ -267,12 +295,29 @@ public class LoadData {
         return null;
     }
 
+    public static Boolean UpdateTCInLocalExcel(String rowIndex, String columName, String newValue) throws IOException {
+        Integer index = 1 + Integer.valueOf(rowIndex);
+        System.out.println("index is  = " + index);
+        int columnIndex = LoadData.getColumnIndex(columName);
+
+        if (index != null && columnIndex !=-1) {
+            try {
+                return LoadData.UpdateTCInLocalExcel_column(index, columnIndex, newValue, 0);
+            } catch (Exception e) {
+                System.out.println("Error on row : " + index + " is " + e.getMessage());
+            }
+        }
+        return null;
+    }
     public static Boolean UpdateTCInLocalExcel_column(int rowIndex, int columnIndex, String newValue) throws IOException {
+        return UpdateTCInLocalExcel_column(rowIndex, columnIndex, newValue, 0);
+    }
+    public static Boolean UpdateTCInLocalExcel_column(int rowIndex, int columnIndex, String newValue, Integer sheetNo) throws IOException {
 
         try {
             FileInputStream excelFile = new FileInputStream(config.getSingleExcelFile());
             XSSFWorkbook workbook = new XSSFWorkbook(excelFile);
-            XSSFSheet sheet = workbook.getSheetAt(0); // Assuming you're working with the first sheet
+            XSSFSheet sheet = workbook.getSheetAt(sheetNo); // Assuming you're working with the first sheet
 
                 Row row = sheet.getRow(rowIndex);
                 if (row != null) {
@@ -331,4 +376,48 @@ public class LoadData {
             return false;
         }
     }
+
+
+
+    public static List<String> GroupingColumns = Arrays.asList("index","is_grouping","Group_TestCase","CandidateAnalysis_TestCases","name", "description", "numOfSimulations", "propagateDetailedLosses", "simulationWindowStart", "simulationWindowEnd", "reportingWindowStart", "code", "scheme", "vintage", "asOfDate", "regionPerilSimulationSet","jobId_group","analysisId_group");
+    public static List<Map<String, String>> readCaseTCFromLocalExcel_grouping() throws Exception {
+        List<Map<String, String>> dataList = new ArrayList<>();
+        try {
+            String excelFilePath = config.getSingleExcelFile();
+            // Load Excel file
+            FileInputStream file = new FileInputStream(excelFilePath);
+            Workbook workbook = new XSSFWorkbook(file);
+
+            // Get the Grouping sheet number 3rd
+            Sheet sheet = workbook.getSheetAt(2);
+
+            // Iterate through rows and cells
+            int rowCount = 0;
+            for (Row row : sheet) {
+                if (rowCount <= 1) {  // Skip the first two rows
+                    rowCount++;
+                    continue; // Skip the header row
+                }
+                Map<String, String> rowData = new HashMap<>();
+                for (int cn = 0; cn < GroupingColumns.size(); cn++) {
+                    Cell cell = row.getCell(cn, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
+                    String cellValue = Utils.getCellValue(cell);
+                    String header = GroupingColumns.get(cn);
+                    rowData.put(header, cellValue);
+                }
+                dataList.add(rowData);
+                rowCount++;
+            }
+            workbook.close();
+            System.out.println("Grouping Excel Loaded");
+        }
+        catch (Exception e) {
+            System.out.println("Error in Loading Grouping excel file: "+e.getMessage());
+            e.printStackTrace();
+        }
+
+        return dataList;
+    }
+
+
 }

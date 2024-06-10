@@ -27,11 +27,11 @@ public class ModelProfileAPI {
 
     public static String createModelProfile(String token, Map<String, String> tc, Perils perils) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException, IOException {
 
-        if((perils.getIfModelRun().equalsIgnoreCase("YES"))) {
-            if (tc.get("ifCreateModelProfile").equalsIgnoreCase("YES")) {
+        //if((perils.getIfModelRun().equalsIgnoreCase("YES"))) {
+            if (tc.get("MPF_IF_CREATE_MODEL_PROFILE").equalsIgnoreCase("YES")) {
 
                 String randmVal = RandomStringUtils.randomNumeric(3);
-                String ModelProfile_Name = "ModelProfile_" + tc.get("peril") + "_" + tc.get("modelRegion") + "_" + randmVal;
+                String ModelProfile_Name = "ModelProfile_" + tc.get("MPF_PERIL") + "_" + tc.get("MPF_MODEL_REGION") + "_" + randmVal;
                 System.out.println("Model profile name : " + ModelProfile_Name);
                 String TemplateId = null;
 
@@ -49,9 +49,9 @@ public class ModelProfileAPI {
                 System.out.println("createNAEQModelProfile: Finnished " + link + "    and   id is " + NAEQmodelProfileId);
                 int NAEQmodelProfileId_created = Integer.parseInt(NAEQmodelProfileId);
                 if (NAEQmodelProfileId_created != -1) {
-                    LoadData.UpdateTCInLocalExcel(tc.get("index"), "ifCreateModelProfile", "NO");
-                    LoadData.UpdateTCInLocalExcel(tc.get("index"), "mfId", String.valueOf(NAEQmodelProfileId_created));
-                    LoadData.UpdateTCInLocalExcel(tc.get("index"), "mp_created_name", ModelProfile_Name);
+                    LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "MPF_IF_CREATE_MODEL_PROFILE", "NO");
+                    LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "MPF_MFID", String.valueOf(NAEQmodelProfileId_created));
+                    LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "MPF_CREATED_NAME", ModelProfile_Name);
                 }
                 return NAEQmodelProfileId;
             }
@@ -59,13 +59,12 @@ public class ModelProfileAPI {
                 return perils.getMfId();
             }
         }
+//        else
+//        {
+//            System.out.println("Model run is set to NO so Model Profile will not be created");
+//            return null;
+//        }
 
-        else
-        {
-            System.out.println("Model run is set to NO so Model Profile will not be created");
-        }
-        return null;
-    }
 
     public static String getPayloadCreateModelProfileApi(String ModelProfile_Name, Map<String, String> tc, Perils perils) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException, JsonProcessingException {
 

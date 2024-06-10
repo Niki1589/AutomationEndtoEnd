@@ -18,10 +18,10 @@ public class CurrencyConverter {
         String token = ApiUtil.getSmlToken(LoadData.config.getUsername(), LoadData.config.getPassword(), LoadData.config.getTenant(), "accessToken");
 
         Map<String, Object> currency = new HashMap<>();
-        currency.put("code", tc.get("Currency"));
-        currency.put("scheme", tc.get("Currency Scheme"));
-        currency.put("vintage", tc.get("Currency Version"));
-        currency.put("asOfDate", tc.get("asOfDate"));
+        currency.put("code", tc.get("CCU_CURRENCY"));
+        currency.put("scheme", tc.get("CCU_CURRENCY_SCHEME"));
+        currency.put("vintage", tc.get("CCU_CURRENCY_VERSION"));
+        currency.put("asOfDate", tc.get("CCU_AS_OF_DATE"));
 
         Map<String, Object> payload = new HashMap<>();
         payload.put("currency", currency);
@@ -36,12 +36,12 @@ public class CurrencyConverter {
                 throw new Exception("JobId is null");
             }
             String msg = JobsApi.waitForJobToComplete(jobId, token, "Convert Currency API");;
-            System.out.println("waitforjob msg: " + msg);
+            System.out.println("wait for job msg: " + msg);
             newAnalysisIdConvertCurrency = JobsApi.getnewAnalysisIDByJobId(jobId, token);
             if(msg.equalsIgnoreCase(AutomationConstants.JOB_STATUS_FINISHED ) && (!jobId.isEmpty()))
             {
-                LoadData.UpdateTCInLocalExcel(tc.get("index"), "ConvertCurrencyJobId", jobId);
-                LoadData.UpdateTCInLocalExcel(tc.get("index"), "ConvertCurrencyNewAnalysisId", String.valueOf(newAnalysisIdConvertCurrency));
+                LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "CCU_CONVERT_CURRENCY_JOB_ID", jobId);
+                LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "CCU_CONVERT_CURRENCY_NEW_ANALYSIS_ID", String.valueOf(newAnalysisIdConvertCurrency));
 
             }
 
