@@ -1,15 +1,13 @@
-package com.rms.automation.edm;
+package com.rms.automation.apiManager;
 
-import com.rms.automation.JobsApi.JobsApi;
-import com.rms.automation.bal.EndPointManager;
-import com.rms.automation.batchApi.ModelProfileAPI;
 import com.rms.automation.constants.AutomationConstants;
-import com.rms.automation.merge.jsonMapper.Perils;
+import com.rms.automation.TCRunner.jsonMapper.Perils;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicSessionCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.*;
+import com.rms.automation.edm.Groups;
 import com.rms.automation.edm.enums.DatabaseStorageType;
 import com.rms.core.qe.common.AWSClientUtil;
 import com.rms.core.qe.common.RestApiHelper;
@@ -18,10 +16,8 @@ import io.restassured.RestAssured;
 import io.restassured.internal.RestAssuredResponseImpl;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
-import org.apache.commons.lang.RandomStringUtils;
 
 import java.io.*;
-import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 import static io.restassured.RestAssured.given;

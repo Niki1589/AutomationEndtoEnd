@@ -3,17 +3,16 @@ package com.rms.automation.Upload;
 import com.rms.automation.JobsApi.JobsApi;
 import com.rms.automation.batchApi.BatchTests;
 import com.rms.automation.constants.AutomationConstants;
-import com.rms.automation.edm.LoadData;
-import com.rms.automation.edm.TestCase;
-import com.rms.automation.edm.ApiUtil;
+import com.rms.automation.dataProviders.LoadData;
+import com.rms.automation.dataProviders.TestCase;
+import com.rms.automation.apiManager.ApiUtil;
 import io.restassured.response.Response;
-import org.apache.commons.lang.RandomStringUtils;
 
 import java.util.*;
 
 public class UploadEDM extends TestCase {
 
-    public void executeUploadEdm(Map<String, String> tc) throws NullPointerException, Exception {
+    public static void executeUploadEdm(Map<String, String> tc) throws NullPointerException, Exception {
 
         int actualresponse;
         String fileName = tc.get("EXP_EDM_FILE_NAME");
@@ -21,13 +20,10 @@ public class UploadEDM extends TestCase {
         System.out.println("File path is " + filePath);
         String fileExt = tc.get("EXP_FILE_EXT");
         String dbType = tc.get("EXP_DB_TYPE");
-      //  String dataSourceName =
-       //         fileName.substring(0, fileName.indexOf('.')) + "_" + RandomStringUtils.randomNumeric(5);
 
         try {
 
             String token = ApiUtil.getSmlToken(LoadData.config.getUsername(), LoadData.config.getPassword(), LoadData.config.getTenant(), "accessToken");
-
             String dataSourceName =tc.get("EXP_EDM_DATASOURCE_NAME");
 
             if (!dataSourceName.isEmpty()) {
@@ -59,21 +55,15 @@ public class UploadEDM extends TestCase {
             if(actualresponse== AutomationConstants.STATUS_ACCEPTED &&(msg.equalsIgnoreCase(AutomationConstants.JOB_STATUS_FINISHED ) && (!jobId.isEmpty())))
             {
                 if (dataSourceName != "") {
-                  //  LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "EXP_EDM_DATASOURCE_NAME", dataSourceName);
                     LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "EXP_UPLOAD_EDM_JOBID", jobId);
                 }
             }
 
             String portfolioId = null;
-        //   String portfolioNumber = tc.get("portfolioNumber");
-         //   String portfolioName = tc.get("portfolioName");
-         //  String description = tc.get("importDescrp");
-                portfolioId = tc.get("EXP_EXISTING_PORTFOLIO_ID");
-
+            portfolioId = tc.get("EXP_EXISTING_PORTFOLIO_ID");
 
             //Batch API call
-            BatchTests batchTests = new BatchTests();
-            batchTests.batchAPI(tc, portfolioId, dataSourceName);
+            BatchTests.batchAPI(tc, portfolioId, dataSourceName);
 
         } catch (Exception e) {
             throw new RuntimeException(e);

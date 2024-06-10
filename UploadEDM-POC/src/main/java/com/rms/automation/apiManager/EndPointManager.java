@@ -1,6 +1,6 @@
-package com.rms.automation.bal;
+package com.rms.automation.apiManager;
 
-import com.rms.automation.edm.LoadData;
+import com.rms.automation.dataProviders.LoadData;
 
 import java.util.HashMap;
 import java.util.Map;

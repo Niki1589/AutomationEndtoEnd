@@ -1,11 +1,10 @@
-package com.rms.automation.merge;
+package com.rms.automation.TCRunner;
 
 import com.rms.automation.PATEApi.PATETests;
-import com.rms.automation.Upload.UploadRDM;
 import com.rms.automation.batchApi.BatchTests;
 import com.rms.automation.climateChange.ClimateChangeTests;
 import com.rms.automation.currencyConverterApi.CurrencyConverter;
-import com.rms.automation.edm.LoadData;
+import com.rms.automation.dataProviders.LoadData;
 import com.rms.automation.exportApi.export;
 import com.rms.automation.mriImportApi.MRIImportTests;
 import com.rms.automation.renameAnalysisApi.RenameAnalysis;
@@ -13,24 +12,20 @@ import com.rms.automation.Upload.UploadEDM;
 import com.rms.automation.utils.Utils;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
-
 import java.util.Map;
 
-//import static automation.mriImport.MRIImportTests.portfolioId_created;
+public class TCRunner {
 
-public class SingleInputClass {
-
-    //public static String caseNumber="";
     @DataProvider(name = "loadFromExcel",parallel = true)
     public Object[] provider() throws Exception {
         return LoadData.readCaseTCFromLocalExcel();
     }
 
     @Test(dataProvider = "loadFromExcel")
-    public void executeSingleInputExcel(Map<String, String> tc) throws Exception {
+    public void execute(Map<String, String> tc) throws Exception {
 
       Thread thread = new Thread(() -> {
-            uploadOrImportEdm(tc);
+            runSelectively(tc);
       });
 
      thread.start();
@@ -38,28 +33,20 @@ public class SingleInputClass {
 
     }
 
-    public void uploadOrImportEdm(Map<String, String> tc) {
+    public void runSelectively(Map<String, String> tc) {
         if (tc != null) {
             try {
-
                 if (Utils.isTrue(tc.get("IF_TEST_CASE_RUN"))) {
                     System.out.println("Test Case No: " + tc.get("TEST_CASE_NO"));
                     if (Utils.isTrue(tc.get("EXP_IS_RUN_UPLOAD_IMPORT"))) {
                         switch (tc.get("EXP_IF_UPLOAD_OR_IMPORT").toUpperCase()) {
                             case "IMPORT":
                                 MRIImportTests mriImportTests = new MRIImportTests();
-                                if (tc.get("EXP_IF_CREATE_EDM").equalsIgnoreCase("YES")) {
-                                    mriImportTests.MRIImport(tc, true);
-                                } else {
-                                    mriImportTests.MRIImport(tc, false);
-                                }
+                                Boolean isCreateEDM = tc.get("EXP_IF_CREATE_EDM").equalsIgnoreCase("YES");
+                                mriImportTests.MRIImport(tc, isCreateEDM);
                                 break;
-
                             case "UPLOAD":
-
-                                UploadEDM uploadEDM = new UploadEDM();
-                                uploadEDM.executeUploadEdm(tc);
-
+                                UploadEDM.executeUploadEdm(tc);
                                 break;
 
                             case "DOWNSTREAM":
@@ -85,8 +72,7 @@ public class SingleInputClass {
                     } else {
                         String portfolioId = tc.get("EXP_EXISTING_PORTFOLIO_ID");
                         String dataSourceName = tc.get("EXP_EDM_DATASOURCE_NAME");
-                        BatchTests batchTests = new BatchTests();
-                        batchTests.batchAPI(tc, portfolioId, dataSourceName);
+                        BatchTests.batchAPI(tc, portfolioId, dataSourceName);
                     }
                 }
             } catch (Exception exception) {

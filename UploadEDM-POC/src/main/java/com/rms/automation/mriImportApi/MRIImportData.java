@@ -1,4 +1,4 @@
-package com.rms.automation.edm;
+package com.rms.automation.mriImportApi;
 
 public class MRIImportData {
 

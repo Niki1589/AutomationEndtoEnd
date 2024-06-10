@@ -1,9 +1,9 @@
 package com.rms.automation.JobsApi;
 
-import com.rms.automation.bal.EndPointManager;
+import com.rms.automation.apiManager.EndPointManager;
 import com.rms.automation.constants.AutomationConstants;
-import com.rms.automation.edm.ApiUtil;
-import com.rms.automation.edm.LoadData;
+import com.rms.automation.apiManager.ApiUtil;
+import com.rms.automation.dataProviders.LoadData;
 import com.rms.core.qe.common.RestApiHelper;
 import io.restassured.response.Response;
 

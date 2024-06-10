@@ -2,8 +2,8 @@ package com.rms.automation.currencyConverterApi;
 
 import com.rms.automation.JobsApi.JobsApi;
 import com.rms.automation.constants.AutomationConstants;
-import com.rms.automation.edm.ApiUtil;
-import com.rms.automation.edm.LoadData;
+import com.rms.automation.apiManager.ApiUtil;
+import com.rms.automation.dataProviders.LoadData;
 import io.restassured.response.Response;
 
 import java.util.HashMap;

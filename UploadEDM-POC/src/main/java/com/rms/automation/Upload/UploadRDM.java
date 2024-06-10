@@ -1,11 +1,10 @@
 package com.rms.automation.Upload;
 
 import com.rms.automation.JobsApi.JobsApi;
-import com.rms.automation.batchApi.BatchTests;
 import com.rms.automation.constants.AutomationConstants;
-import com.rms.automation.edm.ApiUtil;
-import com.rms.automation.edm.LoadData;
-import com.rms.automation.edm.TestCase;
+import com.rms.automation.apiManager.ApiUtil;
+import com.rms.automation.dataProviders.LoadData;
+import com.rms.automation.dataProviders.TestCase;
 import io.restassured.response.Response;
 import org.apache.commons.lang.RandomStringUtils;
 
@@ -13,7 +12,7 @@ import java.util.Map;
 
 public class UploadRDM extends TestCase {
 
-    public static void executeUploadRdm(Map<String, String> tc) throws NullPointerException, Exception {
+    public static void executeUploadRdm(Map<String, String> tc) throws RuntimeException {
 
         int actualresponse;
         String fileName = tc.get("IMPR_ANALYSIS_FROM_RDM_FILE_NAME");
@@ -33,27 +32,26 @@ public class UploadRDM extends TestCase {
             actualresponse = submitJobResponse.getStatusCode();
             if (actualresponse==202)
             {
-            System.out.println("UploadRDM Response: " + actualresponse);
-            String locationHdr = submitJobResponse.getHeader("Location");
-            String jobId = locationHdr.substring(locationHdr.lastIndexOf('/') + 1);
-            String workflowId = locationHdr.substring(locationHdr.lastIndexOf('/') + 1);
-            System.out.println("workflowId: " + workflowId);
+                System.out.println("UploadRDM Response: " + actualresponse);
+                String locationHdr = submitJobResponse.getHeader("Location");
+                String jobId = locationHdr.substring(locationHdr.lastIndexOf('/') + 1);
+                String workflowId = locationHdr.substring(locationHdr.lastIndexOf('/') + 1);
+                System.out.println("workflowId: " + workflowId);
 
-            String msg = JobsApi.waitForJobToComplete(workflowId, token,"Upload RDM");
-            System.out.println("wait for job msg: " + msg);
-            if(msg.equalsIgnoreCase(AutomationConstants.JOB_STATUS_FINISHED) && (!jobId.isEmpty()))
-            {
-                LoadData.UpdateTCInLocalExcel(tc.get("INDEX"),"IMPR_ANALYSIS_FROM_RDM_JOB_ID", jobId);
-
+                String msg = JobsApi.waitForJobToComplete(workflowId, token,"Upload RDM");
+                System.out.println("wait for job msg: " + msg);
+                if(msg.equalsIgnoreCase(AutomationConstants.JOB_STATUS_FINISHED) && (!jobId.isEmpty()))
+                {
+                    LoadData.UpdateTCInLocalExcel(tc.get("INDEX"),"IMPR_ANALYSIS_FROM_RDM_JOB_ID", jobId);
+                }
             }
-        }
-        else {
-            String msg = submitJobResponse.getBody().jsonPath().get("message");
-            System.out.println("ExportFile Message: " + msg);
-        }
+            else {
+                String msg = submitJobResponse.getBody().jsonPath().get("message");
+                System.out.println("ExportFile Message: " + msg);
+            }
 
-
-    } catch (Exception e) {
+    }
+        catch (Exception e) {
             throw new RuntimeException(e);
         }
 

@@ -1,9 +1,9 @@
 package com.rms.automation.batchApi;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.rms.automation.edm.ApiUtil;
-import com.rms.automation.edm.LoadData;
-import com.rms.automation.merge.jsonMapper.Perils;
+import com.rms.automation.apiManager.ApiUtil;
+import com.rms.automation.dataProviders.LoadData;
+import com.rms.automation.TCRunner.jsonMapper.Perils;
 import com.rms.automation.utils.Utils;
 import io.restassured.response.Response;
 import org.apache.commons.lang.RandomStringUtils;

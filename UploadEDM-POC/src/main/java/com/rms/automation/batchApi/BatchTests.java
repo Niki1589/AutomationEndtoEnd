@@ -4,36 +4,32 @@ import com.rms.automation.PATEApi.PATETests;
 import com.rms.automation.Upload.UploadRDM;
 import com.rms.automation.climateChange.ClimateChangeTests;
 import com.rms.automation.currencyConverterApi.CurrencyConverter;
-import com.rms.automation.edm.ApiUtil;
-import com.rms.automation.edm.LoadData;
+import com.rms.automation.apiManager.ApiUtil;
+import com.rms.automation.dataProviders.LoadData;
 import com.rms.automation.exportApi.FileExportTests;
 import com.rms.automation.exportApi.RDMExport.RdmExportTests;
-import com.rms.automation.merge.jsonMapper.Perils;
+import com.rms.automation.TCRunner.jsonMapper.Perils;
 import com.rms.automation.renameAnalysisApi.RenameAnalysis;
 import com.rms.automation.utils.Utils;
 import com.google.gson.*;
 import io.restassured.response.Response;
-import java.lang.reflect.Field;
 import java.util.*;
 
 public class BatchTests {
 
-  // public static String referenceAnalysisId ="";
     public static void batchAPI(Map<String, String> tc,String portfolioId,String dataSourceName) throws Exception {
 
         String analysisId = "";
         String token = ApiUtil.getSmlToken(LoadData.config.getUsername(), LoadData.config.getPassword(), LoadData.config.getTenant(), "accessToken");
-
         Perils perils = Perils.extractPerilFromTC(tc);
 
         try {
             if (perils.getIfModelRun().equalsIgnoreCase("YES")) {
 
                 System.out.println("***** Running Batch Api Tests ********");
-
                 String modelProfileId = ModelProfileAPI.getModelProfileApi(perils, tc, token);
-
                 System.out.println(dataSourceName + " ************* " + portfolioId);
+
                 if (dataSourceName == null) {
                     throw new Exception("DataSourcename is null or empty, please provide a valid dataSourceName");
                 }
@@ -41,12 +37,12 @@ public class BatchTests {
                     throw new Exception("PortfolioId is null or empty, please provide a valid portflioId");
                 }
 
-            Object payloadObject = getPayloadBatchApi(perils.getPortfolioId(), dataSourceName, modelProfileId, Utils.isTrue(tc.get("GEO_IS_GEOCODE")), perils);
-                    System.out.println("After Batch payload");
-                    Response batchResponse = ApiUtil.batchAPI(token, payloadObject);
-                    String hdr = batchResponse.getHeader("Location");
-                    String jobId = hdr.substring(hdr.lastIndexOf('/') + 1);
-                    System.out.println(batchResponse.getStatusCode() + "  :Batch Status: jobId:" + jobId);
+                Object payloadObject = getPayloadBatchApi(perils.getPortfolioId(), dataSourceName, modelProfileId, Utils.isTrue(tc.get("GEO_IS_GEOCODE")), perils);
+                System.out.println("After Batch payload");
+                Response batchResponse = ApiUtil.batchAPI(token, payloadObject);
+                String hdr = batchResponse.getHeader("Location");
+                String jobId = hdr.substring(hdr.lastIndexOf('/') + 1);
+                System.out.println(batchResponse.getStatusCode() + "  :Batch Status: jobId:" + jobId);
 
                 String msg = null;
                 try {
@@ -81,7 +77,6 @@ public class BatchTests {
     }
 
     private static void executeDownStreamWorkflows(Map<String, String> tc, String analysisId) throws Exception {
-      //  String caseNo = tc.get("TEST_CASE_NO");
 
         if (Utils.isTrue(tc.get("REX_IF_RDM_EXPORT"))) {
             RdmExportTests.rdmExport(tc, analysisId);
@@ -105,60 +100,6 @@ public class BatchTests {
             ClimateChangeTests.climateChange(tc, analysisId);
         }
 
-        //        for (String key : tc.keySet()) {
-//            switch (key) {
-//                case "REX_IF_RDM_EXPORT":
-//                    if (Utils.isTrue(tc.get(key))) {
-//                       // export.exportType(tc, analysisId);
-//                        RdmExportTests.rdmExport(tc,analysisId);
-//                    }
-//                    break;
-//
-//                case "REX_IF_FILE_EXPORT":
-//                    if (Utils.isTrue(tc.get(key))) {
-//                       // export.exportType(tc, analysisId);
-//                        FileExportTests.fileExport(tc,analysisId);
-//                    }
-//                    break;
-//
-//                case "IF_IMPR_ANALYSIS_FROM_RDM":
-//                    if (Utils.isTrue(tc.get(key))) {
-//                        UploadRDM.executeUploadRdm(tc);
-//                    }
-//                    break;
-//
-//                case "CCU_IS_CONVERT_CURRENCY":
-//                    if (Utils.isTrue(tc.get(key))) {
-//                        CurrencyConverter.convert(tc, analysisId);
-//                    }
-//                    break;
-//                case "RNM_IS_RENAME_ANALYSIS":
-//                    if (Utils.isTrue(tc.get(key))) {
-//                        RenameAnalysis.rename(tc, analysisId);
-//                    }
-//                    break;
-//                case "IS_PATE":
-//                    if (Utils.isTrue(tc.get(key))) {
-//                        PATETests.executePATETests(caseNo, analysisId);
-//                    }
-//                    break;
-//                case "CCG_IS_CLIMATE_CHANGE":
-//                    if (Utils.isTrue(tc.get(key))) {
-//                        ClimateChangeTests.climateChange(tc, analysisId);
-//                    }
-//                    break;
-//
-//                case "IS_GROUPING":
-//                    if (Utils.isTrue(tc.get(key))) {
-//
-//                        AnalysisGroupingTests.execute();
-//                    }
-//                    break;
-//
-//
-//
-//            }
-//        }
     }
 
     public static Object getPayloadBatchApi(
@@ -168,7 +109,7 @@ public class BatchTests {
             Boolean isGeoCoded,
             Perils perils
     ) {
-        Gson gson = new Gson(); //To convert JSON to Java object, we use GSON library from google
+        Gson gson = new Gson();
 
         String perilName = perils.getPeril().replace(" ", "_");
         String batchName = perilName+"_BACTH";
@@ -280,38 +221,7 @@ public class BatchTests {
                 "]\n"+
                 "}";
 
-
-
-
-        System.out.println("Payload Batch API");
-                System.out.println(payloadInString);
         return gson.fromJson(payloadInString, Object.class);
     }
 
-    // Custom toMap function to convert model and it's fields to hashmap
-    // This will also convert nested fields that are models to hashmap
-    public static Object toMap(Object mainObj) throws IllegalAccessException {
-        Map<String, Object> map = new HashMap<>();
-        try {
-            // Iterating over each field of mainObj
-            for (Field field : mainObj.getClass().getDeclaredFields()) {
-                if (field != null) {
-                    // Accessing value of field from mainObj storing it to Object cause we don't know the type of field
-                    Object ob = field.get(mainObj);
-                    if (ob != null) {
-                        // checking if ob is a model to convert to hashmap
-                        if (!ob.getClass().isPrimitive() && !ob.getClass().isArray() && !ob.getClass().getName().startsWith("java")) {
-                            ob = toMap(ob);
-                        }
-
-                        // stroing values to hashmap
-                        map.put( field.getName(), ob );
-                    }
-                }
-            }
-        } catch (Exception ex) {
-            System.out.println("Exception while converting to map = "+ex.getMessage());
-        }
-        return map;
-    }
 }

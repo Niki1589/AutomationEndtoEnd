@@ -2,12 +2,10 @@ package com.rms.automation.mriImportApi;
 import com.rms.automation.JobsApi.JobsApi;
 import com.rms.automation.batchApi.BatchTests;
 import com.rms.automation.constants.AutomationConstants;
-import com.rms.automation.edm.ApiUtil;
-import com.rms.automation.edm.LoadData;
-import com.rms.automation.edm.MRIImportData;
+import com.rms.automation.apiManager.ApiUtil;
+import com.rms.automation.dataProviders.LoadData;
 import com.rms.automation.utils.Utils;
 import io.restassured.response.Response;
-import org.apache.commons.lang.RandomStringUtils;
 
 import java.io.File;
 import java.util.HashMap;
@@ -111,10 +109,7 @@ public class MRIImportTests {
         if(msg.equalsIgnoreCase(AutomationConstants.JOB_STATUS_FINISHED ) && (!mriJobId.isEmpty()))
         {
             LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "EXP_MRI_IMPORT_JOBID", mriJobId);
-            //    LoadData.UpdateTCInLocalCSV(tc.get("index"), "ConvertCurrencyNewAnalysisId", String.valueOf(newAnalysisIdConvertCurrency));
-
         }
-
 
         MRIImportData mriImportData = new MRIImportData();
         mriImportData.setDataSource(dataSource);
@@ -122,8 +117,7 @@ public class MRIImportTests {
         LoadData.mriImportData = mriImportData;
 
         //Making call to Batch API
-        BatchTests batchTests = new BatchTests();
-        batchTests.batchAPI(tc,portfolioId,dataSource);
+        BatchTests.batchAPI(tc,portfolioId,dataSource);
 
     }
 
@@ -186,18 +180,18 @@ public class MRIImportTests {
         Response res = ApiUtil.findEdmByName(token, dataSourceName);
         Boolean isEdmExists = !res.getBody().jsonPath().getMap("$").get("searchTotalMatch").equals(0);
         if (isEdmExists) {
-            throw new Exception("EDM "+dataSourceName+" already exists");
+            throw new Exception("EDM " + dataSourceName + " already exists");
         }
 
         List<String> ids = ApiUtil.getGroupIds(token, shareWith);
-        System.out.println(dataSourceName+" Group Ids: "+ids.toString());
+        System.out.println(dataSourceName + " Group Ids: " + ids.toString());
 
         Response response = ApiUtil.createEdm(dataSourceName, databaseStorage, serverName, ids, token);
-        System.out.println("CreateEDM Status: "+ response.getStatusCode());
+        System.out.println("CreateEDM Status: " + response.getStatusCode());
         if (response.getStatusCode() == AutomationConstants.STATUS_ACCEPTED) {
             String locationHdr = response.getHeader("Location");
             String jobId = locationHdr.substring(locationHdr.lastIndexOf('/') + 1);
-            System.out.println("createedm_wf_id: "+ jobId );
+            System.out.println("createedm_wf_id: " + jobId);
 
             if (jobId == null) {
                 throw new Exception("JobId is null");
@@ -209,15 +203,12 @@ public class MRIImportTests {
             } else {
                 throw new Exception("CreateEDM Failed");
             }
-        }
-        else {
+        } else {
             String msg = response.getBody().jsonPath().get("message");
-            System.out.println("CreateEDM Message: "+ msg);
+            System.out.println("CreateEDM Message: " + msg);
             throw new Exception("CreateEDM Failed");
         }
 
     }
-
-
 
 }

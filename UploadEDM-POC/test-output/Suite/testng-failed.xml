@@ -3,7 +3,7 @@
 <suite name="Failed suite [Suite]" guice-stage="DEVELOPMENT">
   <test thread-count="5" name="Test(failed)">
     <classes>
-      <class name="com.rms.automation.merge.SingleInputClass">
+      <class name="com.rms.automation.TCRunner.TCRunner">
         <methods>
           <include name="executeSingleInputCsv"/>
         </methods>

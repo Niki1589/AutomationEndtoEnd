@@ -2,23 +2,13 @@ package com.rms.automation.grouping;
 
 import com.google.gson.Gson;
 import com.rms.automation.JobsApi.JobsApi;
-import com.rms.automation.PATEApi.PATETests;
-import com.rms.automation.Upload.UploadRDM;
-import com.rms.automation.batchApi.ModelProfileAPI;
-import com.rms.automation.climateChange.ClimateChangeTests;
 import com.rms.automation.constants.AutomationConstants;
-import com.rms.automation.currencyConverterApi.CurrencyConverter;
-import com.rms.automation.edm.ApiUtil;
-import com.rms.automation.edm.LoadData;
-import com.rms.automation.exportApi.export;
-import com.rms.automation.merge.jsonMapper.Perils;
-import com.rms.automation.renameAnalysisApi.RenameAnalysis;
+import com.rms.automation.apiManager.ApiUtil;
+import com.rms.automation.dataProviders.LoadData;
 import com.rms.automation.utils.Utils;
 import io.restassured.response.Response;
-import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.Collectors;
 

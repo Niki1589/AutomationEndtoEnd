@@ -6,7 +6,7 @@
     <groups>
     </groups>
     <test started-at="2024-03-03T09:02:40 PST" name="Test" finished-at="2024-03-03T09:02:40 PST" duration-ms="119">
-      <class name="com.rms.automation.merge.SingleInputClass">
+      <class name="com.rms.automation.TCRunner.TCRunner">
         <test-method signature="executeSingleInputCsv(java.util.Map)[pri:0, instance:automation.merge.SingleInputClass@6e20b53a]" started-at="2024-03-03T09:02:40 PST" name="executeSingleInputCsv" data-provider="loadFromCSV" finished-at="2024-03-03T09:02:40 PST" duration-ms="1" status="PASS">
           <params>
             <param index="0">

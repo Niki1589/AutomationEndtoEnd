@@ -2,15 +2,15 @@ package com.rms.automation.PATEApi;
 
 import com.rms.automation.JobsApi.JobsApi;
 import com.rms.automation.constants.AutomationConstants;
-import com.rms.automation.edm.ApiUtil;
-import com.rms.automation.edm.LoadData;
+import com.rms.automation.apiManager.ApiUtil;
+import com.rms.automation.dataProviders.LoadData;
 import io.restassured.response.Response;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.rms.automation.edm.ApiUtil.getTreatyIdByAnalysisId;
+import static com.rms.automation.apiManager.ApiUtil.getTreatyIdByAnalysisId;
 
 public class PATETests {
     public static void executePATETests(String caseNo, String analysisId) throws Exception {

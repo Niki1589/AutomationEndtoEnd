@@ -1,4 +1,4 @@
-package com.rms.automation.edm;
+package com.rms.automation.dataProviders;
 
 public class TestCase {
 
@@ -39,7 +39,5 @@ public class TestCase {
     public void setFileExt(String fileExt) {
         this.fileExt = fileExt;
     }
-
-
 
 }

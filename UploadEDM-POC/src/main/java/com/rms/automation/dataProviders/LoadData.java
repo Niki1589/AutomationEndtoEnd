@@ -1,17 +1,16 @@
-package com.rms.automation.edm;
+package com.rms.automation.dataProviders;
 
 
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
-import com.opencsv.CSVWriter;
+import com.rms.automation.edm.Config;
+import com.rms.automation.mriImportApi.MRIImportData;
 import com.rms.automation.utils.Utils;
-import org.apache.poi.hssf.usermodel.HSSFWorkbookFactory;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbookFactory;
 
 import java.io.*;
 import java.util.*;
@@ -21,7 +20,7 @@ public class LoadData {
     private static String configPath;
     public static Config config = new Config();
 
-    public static MRIImportData  mriImportData;
+    public static MRIImportData mriImportData;
 
     static {
         configPath = System.getenv("configPath");

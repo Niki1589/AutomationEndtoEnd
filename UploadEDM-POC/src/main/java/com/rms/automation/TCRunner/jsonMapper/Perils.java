@@ -1,6 +1,6 @@
-package com.rms.automation.merge.jsonMapper;
+package com.rms.automation.TCRunner.jsonMapper;
 
-import com.rms.automation.edm.LoadData;
+import com.rms.automation.dataProviders.LoadData;
 import com.rms.automation.utils.Utils;
 
 import java.io.IOException;
