@@ -3,11 +3,11 @@
 <suite name="Failed suite [Suite]" guice-stage="DEVELOPMENT">
   <test thread-count="5" name="Test(failed)">
     <classes>
-      <class name="automation.merge.SingleInputClass">
+      <class name="com.rms.automation.merge.SingleInputClass">
         <methods>
           <include name="executeSingleInputCsv"/>
         </methods>
-      </class> <!-- automation.merge.SingleInputClass -->
+      </class> <!-- merge.com.rms.automation.SingleInputClass -->
     </classes>
   </test> <!-- Test(failed) -->
 </suite> <!-- Failed suite [Suite] -->
