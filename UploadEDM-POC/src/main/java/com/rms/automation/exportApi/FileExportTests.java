@@ -1,5 +1,7 @@
 package com.rms.automation.exportApi;
 
+import com.rms.automation.LossValidation.EPLossValidation;
+import com.rms.automation.LossValidation.StatsLossValidation;
 import com.rms.automation.constants.AutomationConstants;
 import com.rms.automation.JobsApi.JobsApi;
 import com.rms.automation.edm.ApiUtil;
@@ -7,6 +9,10 @@ import com.rms.automation.edm.LoadData;
 import com.rms.automation.utils.Utils;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -14,6 +20,7 @@ import java.util.Map;
 
 public class FileExportTests {
 
+    public static String localPath ="";
     public static void fileExport(Map<String, String> tc, String analysisId) throws Exception {
         System.out.println("***** Running FILE Export API ********");
 
@@ -75,12 +82,26 @@ public class FileExportTests {
                 Map<String, Object> jobResponseMap = jsonPath.getMap("$");
                 Map<String, Object> summaryMap = (Map<String, Object>) jobResponseMap.get("summary");
 
-                String s3Link = String.valueOf(summaryMap.get("downloadLink"));
-                String fileName = s3Link.substring(s3Link.lastIndexOf("/") + 1, s3Link.indexOf("?"));
-                String localPath = "/Users/Nikita.Arora/Documents/UploadEdmPoc/A002_SMOKE_EUWS/ActualResults/" + fileName;
-                Utils.downloadFile(s3Link, localPath);
+                String downloadLink = String.valueOf(summaryMap.get("downloadLink"));
+                String fileName = downloadLink.substring(downloadLink.lastIndexOf("/") + 1, downloadLink.indexOf("?"));
+                 localPath = tc.get("FILE_EXPORT_PATH") + fileName;
+              //  String WorkflowId=String.valueOf(summaryMap.get("workflowId"));
+
+              //  String actualResultsFileName=WorkflowId +"_"+ fileName+"_Losses";
+                Utils.downloadFile(downloadLink, localPath);
 
                 LoadData.UpdateTCInLocalExcel(tc.get("INDEX"),"FILE_EXPORT_JOBID", jobId);
+
+                // To check if actual results file is not empty and has valid data , then populate the complete path of actual results in excel file.
+                Path filePath = Paths.get(localPath);
+                if (Files.exists(filePath)) {
+                    LoadData.UpdateTCInLocalExcel(tc.get("INDEX"),"ACTUALRESULTS_PATH", localPath);
+                    EPLossValidation.EPLossValidation(tc);
+                    StatsLossValidation.StatsLossValidation(tc);
+                } else {
+                    System.out.println("File does not exist");
+                }
+
             }
         }
         else {

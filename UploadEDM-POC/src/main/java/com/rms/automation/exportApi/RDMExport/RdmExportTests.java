@@ -12,6 +12,9 @@ import java.util.*;
 
 public class RdmExportTests {
 
+    public static String fileName;
+    public static String localPath;
+
     public static void rdmExport(Map<String, String> tc, String analysisId) throws Exception {
         RDMModel rdm = RDMMapper.map(tc, analysisId);
         String index = tc.get("INDEX");
@@ -43,7 +46,7 @@ public class RdmExportTests {
                 if (jobId == null) {
                     throw new Exception("JobId is null");
                 }
-                String msg =   msg = JobsApi.waitForJobToComplete(jobId, token, "Export to RDM API");
+                String msg = JobsApi.waitForJobToComplete(jobId, token, "Export to RDM API");
                 System.out.println("wait for job msg: " + msg);
                 if(msg.equalsIgnoreCase(AutomationConstants.JOB_STATUS_FINISHED) && (!jobId.isEmpty())) {
                     Response jobDetails = JobsApi.getJobDetailsByJobId(token, jobId);
@@ -51,10 +54,10 @@ public class RdmExportTests {
                     Map<String, Object> jobResponseMap = jsonPath.getMap("$");
                     Map<String, Object> summaryMap = (Map<String, Object>) jobResponseMap.get("summary");
 
-                    String s3Link = String.valueOf(summaryMap.get("downloadLink"));
-                    String fileName = s3Link.substring(s3Link.lastIndexOf("/") + 1, s3Link.indexOf("?"));
-                    String localPath = "/Users/Nikita.Arora/Documents/UploadEdmPoc/A002_SMOKE_EUWS/RDM/" + fileName;
-                    Utils.downloadFile(s3Link, localPath);
+                  String rdmLink = String.valueOf(summaryMap.get("downloadLink"));
+                  fileName = rdmLink.substring(rdmLink.lastIndexOf("/") + 1, rdmLink.indexOf("?"));
+                  localPath = "/Users/Nikita.Arora/Documents/UploadEdmPoc/A002_SMOKE_EUWS/ActualResults/RDM/" + fileName;
+                    Utils.downloadFile(rdmLink, localPath);
 
                     if (tc.get("REX_EXPORT_HD_LOSSES_AS").equalsIgnoreCase(String.valueOf(REX_EXPORT_HD_LOSSES_AS_ENUM.PLT))) {
 

@@ -2,10 +2,10 @@ package com.rms.automation.utils;
 
 import org.apache.poi.ss.usermodel.*;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -13,6 +13,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -139,6 +141,72 @@ public class Utils {
             return false;
         }
         return true; // The string is valid
+    }
+
+    public static Double parseToDouble(String str, String name, String pr) {
+        try {
+            if (str != null && !str.isEmpty()) {
+                return Double.valueOf(str);
+            } else {
+                throw new Exception("Error");
+            }
+        } catch (Exception ex) {
+            System.out.println("Wrong "+name+" at "+pr);
+        }
+        return null;
+    }
+
+    public static void unzip(String zipFilePath) throws IOException {
+        File zipFile = new File(zipFilePath);
+        String destDir = zipFile.getParent(); // Extract to the same directory as the zip file
+
+        try (ZipInputStream zipIn = new ZipInputStream(new FileInputStream(zipFile))) {
+            ZipEntry entry = zipIn.getNextEntry();
+
+            // Iterate over all entries in the zip file
+            while (entry != null) {
+                String filePath = destDir + File.separator + entry.getName();
+
+                // Handle directories separately
+                if (entry.isDirectory()) {
+                    File dir = new File(filePath);
+                    dir.mkdirs(); // Create directory if not exists
+                } else {
+                    // Ensure parent directories exist
+                    File parentDir = new File(filePath).getParentFile();
+                    if (!parentDir.exists()) {
+                        parentDir.mkdirs();
+                    }
+
+                    // Extract file
+                    extractFile(zipIn, filePath);
+                }
+
+                zipIn.closeEntry();
+                entry = zipIn.getNextEntry();
+            }
+        }
+
+    }
+    private static void extractFile(ZipInputStream zipIn, String filePath) throws IOException {
+        try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(filePath))) {
+            byte[] bytesIn = new byte[4096];
+            int read;
+            while ((read = zipIn.read(bytesIn)) != -1) {
+                bos.write(bytesIn, 0, read);
+            }
+        }
+    }
+
+    public static Boolean isDirExists(String dir) {
+        try {
+            Path dirPath = Paths.get(dir);
+            if (Files.exists(dirPath) && Files.isDirectory(dirPath)) return true;
+            System.out.println("Dir "+dir+" Does not exists");
+        } catch (Exception ex) {
+            System.out.println("Dir "+dir+" Does not exists");
+        }
+        return false;
     }
 
 }
