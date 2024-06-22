@@ -108,8 +108,9 @@ public class JobsApi {
         return newAnalysisId;
     }
 
-    public static String waitForJobToComplete(String workflowId, String authToken, String jobName) throws Exception {
+    public static JobResult waitForJobToComplete(String workflowId, String authToken, String jobName) throws Exception {
         String status = "";
+        String message = "";
         try {
             Response jobGetJobDetailsResponse = JobsApi.getJobDetailsByJobId(authToken, workflowId);
             for (int i = 0; i < AutomationConstants.timeoutRequests * 4; i++) {
@@ -121,9 +122,17 @@ public class JobsApi {
                             String.format(
                                     "Getting  job status: Response: %s, JobId: %s , JobName: "+jobName+", Status: %s",
                                     jobGetJobDetailsResponse.getStatusCode(), workflowId, status));
-                    if ((status.equalsIgnoreCase(AutomationConstants.WORKFLOW_STATUS_CANCELED))
-                            || (status.equalsIgnoreCase(AutomationConstants.WORKFLOW_STATUS_FAILED))
-                            || (status.equalsIgnoreCase(AutomationConstants.WORKFLOW_STATUS_SUCCEEDED))) {
+                    if ((status.equalsIgnoreCase(AutomationConstants.WORKFLOW_STATUS_CANCELED))) {
+                        message = "Job cancelled";
+                        break;
+                    } else if ( (status.equalsIgnoreCase(AutomationConstants.WORKFLOW_STATUS_FAILED))) {
+                        if (responseMap.get("summary") != null) {
+                            Map summary = (Map) responseMap.get("summary");
+                            message = (String) summary.get("error");
+                        }
+                        break;
+                    } else if ((status.equalsIgnoreCase(AutomationConstants.WORKFLOW_STATUS_SUCCEEDED))) {
+                        message = "The "+jobName+" ran successfully on RM. Job ID -  "+workflowId;
                         break;
                     }
                 } else if (jobGetJobDetailsResponse.getStatusCode() == 401) {
@@ -131,6 +140,7 @@ public class JobsApi {
                 }
                 else {
                     status = String.valueOf(jobGetJobDetailsResponse.getStatusCode());
+                    message = "Failed to check Status: "+status;
                     System.out.println("Error while checking job status: " + status);
                 }
 
@@ -140,17 +150,38 @@ public class JobsApi {
             if ((status.equalsIgnoreCase(AutomationConstants.WORKFLOW_STATUS_RUNNING))
                     || (status.equalsIgnoreCase(AutomationConstants.WORKFLOW_STATUS_QUEUED))) {
                 Double waitSeconds = Double.valueOf(AutomationConstants.interval) * Double.valueOf(AutomationConstants.timeoutRequests) / 1000;
-                status = "Job not finished. Still " + status + " after " + waitSeconds + " seconds.";
+                message = "Job not finished. Still " + status + " after " + waitSeconds + " seconds.";
             }
         } catch (Exception ex) {
-            status = "Exception in waitForJobToComplete() " + ex;
-            System.out.println(status);
-            throw ex;
+            status = AutomationConstants.WORKFLOW_STATUS_FAILED;
+            message = "Failed: " + ex.getMessage();
+            System.out.println(message);
         }
-        return status;
+        JobResult jobResult = new JobResult();
+        jobResult.setMessage(message);
+        jobResult.setStatus(status);
+        return jobResult;
     }
+
     public static String waitForJobToComplete(String workflowId, String authToken) throws Exception{
-        return waitForJobToComplete(workflowId, authToken, "");
+        JobResult jobResult = waitForJobToComplete(workflowId, authToken, "");
+        return jobResult.getStatus();
+    }
+
+    public static String waitForJobToComplete(String workflowId, String authToken, String jobName, String columnName, String rowIndex) throws Exception {
+
+        JobResult jobResult = new JobResult();
+        try {
+            jobResult = waitForJobToComplete(workflowId, authToken, jobName);
+        } catch (Exception e) {
+            LoadData.UpdateTCInLocalExcel(rowIndex, columnName, "Failed: "+e.getMessage());
+            System.out.println("Error in waitForJobToComplete : " + e.getMessage());
+            return AutomationConstants.WORKFLOW_STATUS_FAILED;
+        }
+
+        LoadData.UpdateTCInLocalExcel(rowIndex, columnName, jobResult.getMessage());
+
+        return jobResult.getStatus();
     }
 
     public static Boolean checkJobStatus(String workflowId, String authToken) {

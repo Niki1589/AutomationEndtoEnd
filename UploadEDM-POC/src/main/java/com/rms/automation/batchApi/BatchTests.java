@@ -3,6 +3,7 @@ import com.rms.automation.JobsApi.JobsApi;
 import com.rms.automation.PATEApi.PATETests;
 import com.rms.automation.Upload.UploadRDM;
 import com.rms.automation.climateChange.ClimateChangeTests;
+import com.rms.automation.constants.AutomationConstants;
 import com.rms.automation.currencyConverterApi.CurrencyConverter;
 import com.rms.automation.edm.ApiUtil;
 import com.rms.automation.edm.LoadData;
@@ -49,12 +50,7 @@ public class BatchTests {
                     System.out.println(batchResponse.getStatusCode() + "  :Batch Status: jobId:" + jobId);
 
                 String msg = null;
-                try {
-                    msg = JobsApi.waitForJobToComplete(jobId, token, "Batch API");
-                } catch (Exception e) {
-                    System.out.println("Error in waitForJobToComplete : " + e.getMessage());
-                    throw new RuntimeException(e);
-                }
+                msg = JobsApi.waitForJobToComplete(jobId, token, "Batch API", "MRN_JOB_STATUS", tc.get("INDEX"));
                 System.out.println("wait for job msg: " + msg);
                 System.out.println("***** Finished Batch Api Tests");
                 System.out.println("***** Finished till " + perils.getPeril());

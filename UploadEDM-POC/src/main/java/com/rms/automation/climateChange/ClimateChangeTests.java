@@ -61,12 +61,12 @@ public class ClimateChangeTests {
                             if (jobId == null) {
                                 throw new Exception("JobId is null");
                             }
-                            String msg = JobsApi.waitForJobToComplete(jobId, token, "Climate Change API");
-                            ;
+                            String msg = JobsApi.waitForJobToComplete(jobId, token, "Climate Change API",
+                                    "CCG_CLIMATE_CHANGE_JOB_STATUS", tc.get("INDEX"));
+
                             System.out.println("wait for job msg: " + msg);
                             if (msg.equalsIgnoreCase(AutomationConstants.JOB_STATUS_FINISHED) && (!jobId.isEmpty())) {
                                 LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "CCG_CLIMATE_CHANGE_JOBID", jobId);
-                                //    LoadData.UpdateTCInLocalCSV(tc.get("index"), "ConvertCurrencyNewAnalysisId", String.valueOf(newAnalysisIdConvertCurrency));
                             }
                         } else {
                             String msg = response.getBody().jsonPath().get("message");

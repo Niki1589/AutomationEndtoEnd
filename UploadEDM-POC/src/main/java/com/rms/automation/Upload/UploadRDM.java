@@ -44,7 +44,8 @@ public class UploadRDM extends TestCase {
                     String workflowId = locationHdr.substring(locationHdr.lastIndexOf('/') + 1);
                     System.out.println("workflowId: " + workflowId);
 
-                    String msg = JobsApi.waitForJobToComplete(workflowId, token, "Upload RDM");
+                    String msg = JobsApi.waitForJobToComplete(jobId, token, "Upload RDM API",
+                            "IMPR_ANALYSIS_JOB_STATUS", tc.get("INDEX"));
                     System.out.println("wait for job msg: " + msg);
                     if (msg.equalsIgnoreCase(AutomationConstants.JOB_STATUS_FINISHED) && (!jobId.isEmpty())) {
                         LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "IMPR_ANALYSIS_FROM_RDM_JOB_ID", jobId);
@@ -52,10 +53,8 @@ public class UploadRDM extends TestCase {
                     }
                 } else {
                     String msg = submitJobResponse.getBody().jsonPath().get("message");
-                    System.out.println("ExportFile Message: " + msg);
+                    System.out.println("Upload RDM To RM: " + msg);
                 }
-
-
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

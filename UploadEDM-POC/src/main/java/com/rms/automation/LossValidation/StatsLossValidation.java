@@ -1,15 +1,13 @@
 package com.rms.automation.LossValidation;
 
+import com.rms.automation.exportApi.FileExportTests;
 import com.rms.automation.utils.Utils;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import java.io.BufferedReader;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -18,7 +16,7 @@ import java.util.stream.Stream;
 
 public class StatsLossValidation {
 
-    public static void StatsLossValidation(Map<String, String> tc) throws Exception {
+    public static Boolean StatsLossValidation(String baselinePathPortfolio, String actualPathPortfolio, String outputPath) throws Exception {
 
         List<String> folders = new ArrayList<>();
         folders.add("FA");
@@ -29,33 +27,37 @@ public class StatsLossValidation {
         folders.add("RP");
         folders.add("SS");
         folders.add("WX");
-//
-//        String baselinePathPortfolio = "/Users/Nikita.Arora/Documents/UploadEdmPoc/A002_SMOKE_EUWS/Baselines/STATS/Portfolio/";
-//        String actualPathPortfolio = "/Users/Nikita.Arora/Documents/UploadEdmPoc/A002_SMOKE_EUWS/ActualResults/CSV/ActualResultsData/STATS/Portfolio/";
-//        String outputPath = "/Users/Nikita.Arora/Documents/UploadEdmPoc/A002_SMOKE_EUWS/Comparison/STATSResults.xlsx";
 
-
-        String baselinePathPortfolio = tc.get("BASELINE_PATH");
-        String actualPathPortfolio = tc.get("ACTUALRESULTS_PATH");
-        String outputPath = tc.get("STATS_LOSSVALIDATION_PATH");
+        String baselinePathPortfolioSTATS = String.format(baselinePathPortfolio, "STATS");
+        String actualPathPortfolioSTATS = String.format(actualPathPortfolio, "STATS");
+        String outPathSTATS = String.format(outputPath, "STATS_Results");
 
         try {
             List<List<String>> rows = new ArrayList<>();
+            Boolean isAllPass = true;
             for (String folder: folders) {
-                List<Map<String, String>> baselineData = readCSV(baselinePathPortfolio + folder);
-                List<Map<String, String>> actualData = readCSV(actualPathPortfolio + folder);
-
-                if (baselineData != null && actualData != null) {
-                    List<String> compareData = compareData(baselineData, actualData, folder);
-                    rows.add(compareData);
+                if( Utils.isDirExists(baselinePathPortfolioSTATS + folder) && Utils.isDirExists(actualPathPortfolioSTATS + folder) ) {
+                    List<Map<String, String>> baselineData = readCSV(baselinePathPortfolioSTATS + folder);
+                    List<Map<String, String>> actualData = readCSV(actualPathPortfolioSTATS + folder);
+                    if (baselineData != null && actualData != null) {
+                        ValidationResult validationResult = compareData(baselineData, actualData, folder);
+                        rows.add(validationResult.resultRow);
+                        if (!validationResult.isAllPass) {
+                            isAllPass = false;
+                        }
+                    }
                 }
             }
 
-            writeResultsToExcel(rows, outputPath);
-            System.out.println("Comparison of Statistics completed and results written to Excel.");
+            writeResultsToExcel(rows, outPathSTATS);
+            System.out.println("Comparison of STATS completed and results written to Excel.");
+            return isAllPass;
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        return false;
+
     }
 
     private static List<Map<String, String>> readCSV(String folderPath) throws IOException {
@@ -75,7 +77,11 @@ public class StatsLossValidation {
                     String[] values = line.split(",");
                     Map<String, String> row = new HashMap<>();
                     for (int i = 0; i < headerss.length; i++) {
-                        row.put(headerss[i], values[i]);
+                        String key = headerss[i];
+                        String value = values[i];
+                        key = key.replace("\"", "");
+                        value = value.replace("\"", "");
+                        row.put(key, value);
                     }
                     data.add(row);
                 }
@@ -90,24 +96,24 @@ public class StatsLossValidation {
         return null;
     }
 
-    private static List<String> compareData(List<Map<String, String>> baselineData, List<Map<String, String>> actualData,String folder) {
+    private static ValidationResult compareData(List<Map<String, String>> baselineData, List<Map<String, String>> actualData,String folder) {
         try {
 
             Map<String, String> baselineRow = baselineData.get(0);
             Map<String, String> actualRow = actualData.get(0);
 
             List<String> row = new ArrayList<>();
+            Boolean isAllPass = true;
 
-            String baselineAAL = baselineRow.get("\"AAL\"");
-            String baselineStd = baselineRow.get("\"Std\"");
-            String baselineCV = baselineRow.get("\"CV\"");
+            String baselineAAL = baselineRow.get("AAL");
+            String baselineStd = baselineRow.get("Std");
+            String baselineCV = baselineRow.get("CV");
 
-            String actualAAL = actualRow.get("\"AAL\"");
-            String actualStd = actualRow.get("\"Std\"");
-            String actualCV = actualRow.get("\"CV\"");
+            String actualAAL = actualRow.get("AAL");
+            String actualStd = actualRow.get("Std");
+            String actualCV = actualRow.get("CV");
 
             // Baseline
-            row.add("testcasenumber");
             row.add(folder);
             row.add(baselineAAL);
             row.add(baselineStd);
@@ -118,7 +124,6 @@ public class StatsLossValidation {
             row.add("");
 
             // Actual
-            row.add("testcasenumber");
             row.add(folder);
             row.add(actualAAL);
             row.add(actualStd);
@@ -130,11 +135,24 @@ public class StatsLossValidation {
 
             // Actual
             row.add(folder);
-            row.add(checkDiff(baselineAAL, actualAAL, "AAL", folder));
-            row.add(checkDiff(baselineStd, actualStd, "Std", folder));
-            row.add(checkDiff(baselineCV, actualCV, "CV", folder));
 
-            return row;
+            List<String> AALRows = checkDiff(baselineAAL, actualAAL, "AAL", folder);
+            List<String> StdRows = checkDiff(baselineAAL, actualAAL, "Std", folder);
+            List<String> CVRows = checkDiff(baselineAAL, actualAAL, "CV", folder);
+
+            row.addAll(AALRows);
+            row.addAll(StdRows);
+            row.addAll(CVRows);
+
+            if (AALRows.get(1).equals("Fail") || StdRows.get(1).equals("Fail") || CVRows.get(1).equals("Fail"))  {
+                isAllPass = false;
+            }
+
+            ValidationResult validationResult = new ValidationResult();
+            validationResult.resultRow = row;
+            validationResult.isAllPass = isAllPass;
+            return validationResult;
+
         } catch (Exception ex) {
             ex.printStackTrace();
             return null;
@@ -149,7 +167,7 @@ public class StatsLossValidation {
         List<String> sectionNames = new ArrayList<>();
 
         // Baseline
-        sectionNames.add("Baseline");
+        sectionNames.add("Baseline Data");
         sectionNames.add("");
         sectionNames.add("");
         sectionNames.add("");
@@ -160,7 +178,7 @@ public class StatsLossValidation {
         sectionNames.add("");
 
         // Actual
-        sectionNames.add("Actual");
+        sectionNames.add("Actual Data");
         sectionNames.add("");
         sectionNames.add("");
         sectionNames.add("");
@@ -179,18 +197,16 @@ public class StatsLossValidation {
         List<String> headers = new ArrayList<>();
 
         // Baseline
-        headers.add("testcasenumber");
         headers.add("perspcode");
-        headers.add("Pure Premium");
-        headers.add("Standard Deviation");
-        headers.add("Coefficient of Variation");
+        headers.add("AAL");
+        headers.add("STD");
+        headers.add("CV");
 
         // Two empty cells between Baseline and Actual
         headers.add("");
         headers.add("");
 
         // Actual
-        headers.add("testcasenumber");
         headers.add("perspcode");
         headers.add("Pure Premium");
         headers.add("Standard Deviation");
@@ -202,9 +218,12 @@ public class StatsLossValidation {
 
         // Result
         headers.add("perspcode");
-        headers.add("Pure Premium");
-        headers.add("Standard Deviation");
-        headers.add("Coefficient of Variation");
+        headers.add("AAL-Diff");
+        headers.add("AAL");
+        headers.add("STD-Diff");
+        headers.add("STD");
+        headers.add("CV-Diff");
+        headers.add("CV");
 
         results.add(sectionNames);
         results.add(headers);
@@ -230,7 +249,9 @@ public class StatsLossValidation {
         workbook.close();
     }
 
-    private  static String checkDiff(String baseline, String actual, String name, String pr) {
+    private  static List<String> checkDiff(String baseline, String actual, String name, String pr) {
+
+        List<String> rows = new ArrayList<>();
 
         Double baseline_ = Utils.parseToDouble(baseline, name, pr);
         Double actual_ = Utils.parseToDouble(actual, name, pr);
@@ -240,11 +261,19 @@ public class StatsLossValidation {
             difference = Math.abs(baseline_ - actual_);
         }
 
-        if (difference != null && !(difference > 1)) {
-            return "Pass";
+        if (difference != null) {
+            rows.add(difference+"");
         } else {
-            return "Fail";
+            rows.add("");
         }
+
+        if (difference != null && !(difference > 1)) {
+            rows.add("Pass");
+        } else {
+            rows.add("Fail");
+        }
+
+        return rows;
 
     }
 

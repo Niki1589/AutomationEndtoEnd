@@ -35,7 +35,8 @@ public class CurrencyConverter {
             if (jobId == null) {
                 throw new Exception("JobId is null");
             }
-            String msg = JobsApi.waitForJobToComplete(jobId, token, "Convert Currency API");;
+            String msg = JobsApi.waitForJobToComplete(jobId, token, "Convert Currency API",
+                    "CCU_CONVERT_CURRENCY_JOB_STATUS", tc.get("INDEX"));
             System.out.println("wait for job msg: " + msg);
             newAnalysisIdConvertCurrency = JobsApi.getnewAnalysisIDByJobId(jobId, token);
             if(msg.equalsIgnoreCase(AutomationConstants.JOB_STATUS_FINISHED ) && (!jobId.isEmpty()))

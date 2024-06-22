@@ -46,7 +46,10 @@ public class RdmExportTests {
                 if (jobId == null) {
                     throw new Exception("JobId is null");
                 }
-                String msg = JobsApi.waitForJobToComplete(jobId, token, "Export to RDM API");
+
+                String columnName = "RDM_EXPORT_JOB_STATUS_"+exportHdLossesAs.getValue();
+                String msg = JobsApi.waitForJobToComplete(jobId, token, "Export to RDM API",
+                        columnName, tc.get("INDEX"));
                 System.out.println("wait for job msg: " + msg);
                 if(msg.equalsIgnoreCase(AutomationConstants.JOB_STATUS_FINISHED) && (!jobId.isEmpty())) {
                     Response jobDetails = JobsApi.getJobDetailsByJobId(token, jobId);
@@ -63,7 +66,13 @@ public class RdmExportTests {
 
                         LoadData.UpdateTCInLocalExcel(index, "IMPR_ANALYSIS_FROM_RDM_FILE_NAME", fileName);
                         LoadData.UpdateTCInLocalExcel(index, "IMPR_ANALYSIS_FROM_RDM_FILE_PATH", localPath);
-                        LoadData.UpdateTCInLocalExcel(index, "RDM_EXPORT_JOBID", jobId);
+                        LoadData.UpdateTCInLocalExcel(index, "RDM_EXPORT_JOBID_PLT", jobId);
+                    }
+                    else if (tc.get("REX_EXPORT_HD_LOSSES_AS").equalsIgnoreCase(String.valueOf(REX_EXPORT_HD_LOSSES_AS_ENUM.ELT)))
+                    {
+                        LoadData.UpdateTCInLocalExcel(index, "RDM_EXPORT_JOBID_ELT", jobId);
+
+
                     }
                 }
             }
@@ -92,7 +101,9 @@ public class RdmExportTests {
                 if (jobId == null) {
                     throw new Exception("JobId is null");
                 }
-                String msg = JobsApi.waitForJobToComplete(jobId, token, "Export to RDM API");
+                String columnName = "RDM_EXPORT_JOB_STATUS_"+exportHdLossesAs.getValue();
+                String msg = JobsApi.waitForJobToComplete(jobId, token, "Export to RDM API",
+                        columnName, tc.get("INDEX"));
                 System.out.println("wait for job msg: " + msg);
                 if(msg.equalsIgnoreCase(AutomationConstants.JOB_STATUS_FINISHED) && (!jobId.isEmpty()))
                 {

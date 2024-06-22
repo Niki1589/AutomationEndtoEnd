@@ -1,6 +1,7 @@
 package com.rms.automation.grouping;
 
 import com.google.gson.Gson;
+import com.rms.automation.JobsApi.JobResult;
 import com.rms.automation.JobsApi.JobsApi;
 import com.rms.automation.PATEApi.PATETests;
 import com.rms.automation.Upload.UploadRDM;
@@ -81,20 +82,19 @@ public class AnalysisGroupingTests {
                 String jobId = hdr.substring(hdr.lastIndexOf('/') + 1);
                 String msg = null;
                 try {
-                    msg = JobsApi.waitForJobToComplete(jobId, token, "Analysis Grouping API");
+                    JobResult jobResult = JobsApi.waitForJobToComplete(jobId, token, "Analysis Grouping API");
+                    msg = jobResult.getStatus();
                     System.out.println("wait for job msg: " + msg);
                     if (msg.equalsIgnoreCase(AutomationConstants.JOB_STATUS_FINISHED) && (!jobId.isEmpty())) {
+                        LoadData.UpdateTCInGroupingExcel(tc.get("index"), "jobstatus_group", jobResult.getMessage());
                         LoadData.UpdateTCInGroupingExcel(tc.get("index"), "jobId_group", jobId);
                         String analysisId_Grouping = String.valueOf(getAnalysisIDByJobId_Pate(jobId,token));
 
-                        if(analysisId_Grouping!=null)
-                        {
+                        if(analysisId_Grouping!=null) {
                             LoadData.UpdateTCInGroupingExcel(tc.get("index"), "analysisId_group", analysisId_Grouping);
-
                         }
-
-
-
+                    } else if (msg.equalsIgnoreCase(AutomationConstants.WORKFLOW_STATUS_FAILED)) {
+                        LoadData.UpdateTCInGroupingExcel(tc.get("index"), "jobstatus_group", jobResult.getMessage());
                     }
                 } catch (Exception e) {
                     System.out.println("Error in waitForJobToComplete : " + e.getMessage());

@@ -152,7 +152,8 @@ public class PATETests {
                     if (jobId == null) {
                         throw new Exception("JobId is null");
                     }
-                    String msg =  JobsApi.waitForJobToComplete(jobId, token, "Pate API");
+                    String msg = JobsApi.waitForJobToComplete(jobId, token, "Pate API",
+                            "IS_PATE_JOB_STATUS", tc.get("index"));
                     System.out.println("wait for job msg: " + msg);
                     analysisId_pate = String.valueOf(JobsApi.getAnalysisIDByJobId_Pate(jobId, token));
 

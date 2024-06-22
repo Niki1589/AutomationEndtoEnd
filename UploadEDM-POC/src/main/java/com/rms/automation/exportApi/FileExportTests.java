@@ -1,6 +1,7 @@
 package com.rms.automation.exportApi;
 
 import com.rms.automation.LossValidation.EPLossValidation;
+import com.rms.automation.LossValidation.LossValidation;
 import com.rms.automation.LossValidation.StatsLossValidation;
 import com.rms.automation.constants.AutomationConstants;
 import com.rms.automation.JobsApi.JobsApi;
@@ -73,7 +74,8 @@ public class FileExportTests {
             if (jobId == null) {
                 throw new Exception("JobId is null");
             }
-            String msg =  JobsApi.waitForJobToComplete(jobId, token, "Export to file API");
+            String msg =  JobsApi.waitForJobToComplete(jobId, token, "Export to file API",
+                    "FILE_EXPORT_JOB_STATUS", tc.get("INDEX"));
             System.out.println("wait for job msg: " + msg);
             if(msg.equalsIgnoreCase(AutomationConstants.JOB_STATUS_FINISHED) && (!jobId.isEmpty()))
             {
@@ -96,8 +98,9 @@ public class FileExportTests {
                 Path filePath = Paths.get(localPath);
                 if (Files.exists(filePath)) {
                     LoadData.UpdateTCInLocalExcel(tc.get("INDEX"),"ACTUALRESULTS_PATH", localPath);
-                    EPLossValidation.EPLossValidation(tc);
-                    StatsLossValidation.StatsLossValidation(tc);
+
+                    LossValidation.run(tc);
+
                 } else {
                     System.out.println("File does not exist");
                 }

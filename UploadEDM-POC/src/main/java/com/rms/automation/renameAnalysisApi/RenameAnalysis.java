@@ -28,7 +28,8 @@ public class RenameAnalysis {
             if (jobId == null) {
                 throw new Exception("JobId is null");
             }
-            String msg = JobsApi.waitForJobToComplete(jobId, token, "Rename Analysis API");
+            String msg = JobsApi.waitForJobToComplete(jobId, token, "Rename Analysis API",
+                    "RNM_RENAME_ANALYSIS_JOB_STATUS", tc.get("INDEX"));
             System.out.println("wait for job msg: " + msg);
             if(msg.equalsIgnoreCase(AutomationConstants.JOB_STATUS_FINISHED) &&(!jobId.isEmpty()))
             {

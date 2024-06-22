@@ -18,14 +18,13 @@ public class MRIImportTests {
 
     public void MRIImport(Map<String, String> tc, Boolean isCreateEDM) throws Exception {
 
-        System.out.println("************** Running MRIImport ********* " );
+        System.out.println("************** Running MRIImport ********* ");
         String token = ApiUtil.getSmlToken(LoadData.config.getUsername(), LoadData.config.getPassword(), LoadData.config.getTenant(), "accessToken");
         String dataSource = null;
-        if(isCreateEDM == true) {
+        if (isCreateEDM == true) {
             System.out.println("creating edm.");
             dataSource = createEDM(tc, token);
-        }
-        else {
+        } else {
             System.out.println("using existing edm.");
             dataSource = tc.get("EXP_EDM_DATASOURCE_NAME");
         }
@@ -33,6 +32,7 @@ public class MRIImportTests {
         MRIImport(token, dataSource, tc, "MRI Import");
 
     }
+
     public static void MRIImport(String token, String dataSource, Map<String, String> tc, String jobType) throws Exception {
 
         if (dataSource == null) {
@@ -46,9 +46,9 @@ public class MRIImportTests {
         String portfolioNumber = tc.get("EXP_PORTFOLIO_NUMBER");
         String portfolioName = tc.get("EXP_PORTFOLIO_NAME");
         String description = tc.get("EXP_IMPORT_DESCRP");
-        System.out.println(" portfolioNumber= "+portfolioNumber);
-        System.out.println(" portfolioName= "+portfolioName);
-        System.out.println(" description= "+description);
+        System.out.println(" portfolioNumber= " + portfolioNumber);
+        System.out.println(" portfolioName= " + portfolioName);
+        System.out.println(" description= " + description);
 
         String portfolioId = null;
         if (Utils.isTrue(tc.get("EXP_IS_CREATE_PORTFOLIO"))) {
@@ -59,15 +59,13 @@ public class MRIImportTests {
             }
             String locationHdr = portfolioRes.getHeader("Location");
             portfolioId = locationHdr.substring(locationHdr.lastIndexOf('/') + 1);
-           int portfolioId_created= Integer.parseInt(portfolioId);
+            int portfolioId_created = Integer.parseInt(portfolioId);
 
-           if(portfolioId_created!= -1)
-            {
+            if (portfolioId_created != -1) {
                 LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "EXP_IS_CREATE_PORTFOLIO", "NO");
                 LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "EXP_EXISTING_PORTFOLIO_ID", String.valueOf(portfolioId_created));
             }
-        } else
-        {
+        } else {
             portfolioId = tc.get("EXP_EXISTING_PORTFOLIO_ID");
         }
         //Upload Account file
@@ -78,12 +76,12 @@ public class MRIImportTests {
         // Upload location file
         String locationFile = tc.get("EXP_LOC_FILE_NAME");
         String locFilepath = tc.get("EXP_LOC_FILE_PATH");
-        String locationFileID =  uploadMriFiles(bucketID, locFilepath, "location", locationFile, token);
+        String locationFileID = uploadMriFiles(bucketID, locFilepath, "location", locationFile, token);
 
         //Upload Mapping file
         String mapFileName = tc.get("EXP_MAPPING_FILE_NAME");
         String mapFilePath = tc.get("EXP_MAPPING_FILE_PATH");
-        String mappingFileID =  uploadMriFiles(bucketID, mapFilePath, "mapping", mapFileName, token);
+        String mappingFileID = uploadMriFiles(bucketID, mapFilePath, "mapping", mapFileName, token);
 
         Map<String, Object> payload = new HashMap<>();
         payload.put("accountsFileId", accountFileID);
@@ -102,14 +100,15 @@ public class MRIImportTests {
         Response submitMRIJobRes = ApiUtil.submitMRIJob(token, payload);
         String mrilocationHdr = submitMRIJobRes.getHeader("Location");
         String mriJobId = mrilocationHdr.substring(mrilocationHdr.lastIndexOf('/') + 1);
-        System.out.println(submitMRIJobRes.getStatusCode()+"  :SubmitMriJob Status: mriJobUd:"+mriJobId);
+        System.out.println(submitMRIJobRes.getStatusCode() + "  :SubmitMriJob Status: mriJobUd:" + mriJobId);
 
-        String msg = JobsApi.waitForJobToComplete( mriJobId, token, jobType );
-        System.out.println("wait for job msg: "+msg );
-        System.out.println("************** Completed MRIImport " );
+        String msg = JobsApi.waitForJobToComplete(mriJobId, token, jobType, "MRIIMPORT_JOB_STATUS", tc.get("INDEX"));
+        System.out.println("wait for job msg: " + msg);
+        System.out.println("************** Completed MRIImport ");
 
-        if(msg.equalsIgnoreCase(AutomationConstants.JOB_STATUS_FINISHED ) && (!mriJobId.isEmpty()))
-        {
+        LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "EXP_MRI_IMPORT_JOBID", mriJobId);
+
+        if (msg.equalsIgnoreCase(AutomationConstants.JOB_STATUS_FINISHED) && (!mriJobId.isEmpty())) {
             LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "EXP_MRI_IMPORT_JOBID", mriJobId);
             //    LoadData.UpdateTCInLocalCSV(tc.get("index"), "ConvertCurrencyNewAnalysisId", String.valueOf(newAnalysisIdConvertCurrency));
 
@@ -123,7 +122,7 @@ public class MRIImportTests {
 
         //Making call to Batch API
         BatchTests batchTests = new BatchTests();
-        batchTests.batchAPI(tc,portfolioId,dataSource);
+        batchTests.batchAPI(tc, portfolioId, dataSource);
 
     }
 
@@ -141,7 +140,7 @@ public class MRIImportTests {
         if (response.getStatusCode() == AutomationConstants.STATUS_CREATED) {
             String locationHdr = response.getHeader("Location");
             bucketID = locationHdr.substring(locationHdr.lastIndexOf('/') + 1);
-            System.out.println("bucketID: "+ bucketID );
+            System.out.println("bucketID: " + bucketID);
             return bucketID;
         }
         return null;
@@ -157,7 +156,7 @@ public class MRIImportTests {
                 throw new Exception("File error.");
             }
             long fileSize = file.length();
-            System.out.println("File size is = "+fileSize);
+            System.out.println("File size is = " + fileSize);
             fileId = ApiUtil.uploadFile(authToken, bucketId, filepath, fileType, fileName, fileSize);
         } catch (Exception e) {
             e.printStackTrace();
@@ -186,18 +185,22 @@ public class MRIImportTests {
         Response res = ApiUtil.findEdmByName(token, dataSourceName);
         Boolean isEdmExists = !res.getBody().jsonPath().getMap("$").get("searchTotalMatch").equals(0);
         if (isEdmExists) {
-            throw new Exception("EDM "+dataSourceName+" already exists");
+            throw new Exception("EDM " + dataSourceName + " already exists");
         }
 
         List<String> ids = ApiUtil.getGroupIds(token, shareWith);
-        System.out.println(dataSourceName+" Group Ids: "+ids.toString());
+        System.out.println(dataSourceName + " Group Ids: " + ids.toString());
 
         Response response = ApiUtil.createEdm(dataSourceName, databaseStorage, serverName, ids, token);
-        System.out.println("CreateEDM Status: "+ response.getStatusCode());
+        System.out.println("CreateEDM Status: " + response.getStatusCode());
         if (response.getStatusCode() == AutomationConstants.STATUS_ACCEPTED) {
             String locationHdr = response.getHeader("Location");
             String jobId = locationHdr.substring(locationHdr.lastIndexOf('/') + 1);
-            System.out.println("createedm_wf_id: "+ jobId );
+            System.out.println("createedm_wf_id: " + jobId);
+
+            String msg = JobsApi.waitForJobToComplete(jobId, token, "Create EDM API", "CREATEEDM_JOB_STATUS", tc.get("INDEX"));
+            System.out.println("waitforjob msg: " + msg);
+
 
             if (jobId == null) {
                 throw new Exception("JobId is null");
@@ -209,15 +212,12 @@ public class MRIImportTests {
             } else {
                 throw new Exception("CreateEDM Failed");
             }
-        }
-        else {
+        } else {
             String msg = response.getBody().jsonPath().get("message");
-            System.out.println("CreateEDM Message: "+ msg);
+            System.out.println("CreateEDM Message: " + msg);
             throw new Exception("CreateEDM Failed");
         }
 
     }
-
-
-
 }
+

@@ -53,16 +53,16 @@ public class UploadEDM extends TestCase {
             String workflowId = locationHdr.substring(locationHdr.lastIndexOf('/') + 1);
             System.out.println("workflowId: " + workflowId);
 
-            String msg = JobsApi.waitForJobToComplete(workflowId, token,"Upload EDM");
+            String msg = JobsApi.waitForJobToComplete(jobId, token, "Upload EDM API",
+                    "UPLOAD_EDM_JOB_STATUS", tc.get("INDEX"));
             System.out.println("waitforjob msg: " + msg);
 
             if(actualresponse== AutomationConstants.STATUS_ACCEPTED &&(msg.equalsIgnoreCase(AutomationConstants.JOB_STATUS_FINISHED ) && (!jobId.isEmpty())))
             {
                 if (dataSourceName != "") {
-                  //  LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "EXP_EDM_DATASOURCE_NAME", dataSourceName);
-                    LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "EXP_UPLOAD_EDM_JOBID", jobId);
-                }
+                    LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "EXP_UPLOAD_EDM_JOBID", jobId);}
             }
+
 
             String portfolioId = null;
         //   String portfolioNumber = tc.get("portfolioNumber");
