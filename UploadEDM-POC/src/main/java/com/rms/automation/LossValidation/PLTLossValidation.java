@@ -18,6 +18,9 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveTask;
 import java.util.stream.Stream;
 
+import java.time.Duration;
+import java.time.Instant;
+
 public class PLTLossValidation {
     public static Boolean PLTLossValidation(String baselinePathPortfolio, String actualPathPortfolio, String outputPath) throws Exception {
 
@@ -32,9 +35,12 @@ public class PLTLossValidation {
         folders.add("SS");
         folders.add("WX");
 
-        String baselinePathPortfolioPLT = String.format(baselinePathPortfolio, "PLT");
-        String actualPathPortfolioPLT = String.format(actualPathPortfolio, "PLT");
-        String outPathPLT = String.format(outputPath, "PLT_Results");
+//        String baselinePathPortfolioPLT = String.format(baselinePathPortfolio,"PLT");
+//        String actualPathPortfolioPLT = String.format(actualPathPortfolio,"PLT");
+
+        String baselinePathPortfolioPLT = baselinePathPortfolio + "PLT/Portfolio/";
+        String actualPathPortfolioPLT = actualPathPortfolio + "/PLT/Portfolio/";
+        String outPathPLT = String.format(outputPath, "PLT_Portfolio_Results");
 
         List<List<String>> rows = new ArrayList<>();
         Boolean isAllPass = true;
@@ -43,12 +49,29 @@ public class PLTLossValidation {
             for (String folder: folders) {
                 if( Utils.isDirExists(baselinePathPortfolioPLT + folder) && Utils.isDirExists(actualPathPortfolioPLT + folder) ) {
                     System.out.println("baselinePathPortfolioPLT + folder Reading");
-                    List<Map<String, String>> baselineData = readCSV(baselinePathPortfolioPLT + folder);
-                    List<Map<String, String>> actualData = readCSV(actualPathPortfolioPLT + folder);
+
+                    Instant start = Instant.now();
+                    Map<String, Map<String, String>> baselineData = readCSV(baselinePathPortfolioPLT + folder);
+                    Instant end = Instant.now();
+                    Duration duration = Duration.between(start, end);
+                    System.out.println("baselineDataDur took " + formatDuration(duration));
+
+                    start = Instant.now();
+                    Map<String, Map<String, String>> actualData = readCSV(actualPathPortfolioPLT + folder);
+                    end = Instant.now();
+                    duration = Duration.between(start, end);
+                    System.out.println("actual took " + formatDuration(duration));
+
                     System.out.println("Reading Done + folder Reading");
                     if (baselineData != null && actualData != null) {
                         System.out.println("Comparing");
+
+                        start = Instant.now();
                         ValidationResult validationResult = compareData(baselineData, actualData, folder);
+                        end = Instant.now();
+                        duration = Duration.between(start, end);
+                        System.out.println(folder+" compareData took " + formatDuration(duration));
+
                         System.out.println("Done COmparing");
                         rows.addAll(validationResult.resultRows);
                         if (!validationResult.isAllPass) isAllPass = false;
@@ -66,7 +89,7 @@ public class PLTLossValidation {
         return false;
     }
 
-    private static List<Map<String, String>> readCSV(String folderPath) throws IOException {
+    private static Map<String, Map<String, String>> readCSV(String folderPath) throws IOException {
         try (Stream<Path> files = Files.list(Paths.get(folderPath))) {
             Optional<Path> firstCsvFile = files
                     .filter(Files::isRegularFile)
@@ -74,7 +97,7 @@ public class PLTLossValidation {
                     .findFirst();
 
             if (firstCsvFile.isPresent()) {
-                List<Map<String, String>> data = new ArrayList<>();
+                Map<String, Map<String, String>> data = new HashMap<>();
                 BufferedReader br = new BufferedReader(new FileReader(firstCsvFile.get().toFile()));
                 String headersLine = br.readLine();
                 String[] headerss = headersLine.split(",");
@@ -89,7 +112,9 @@ public class PLTLossValidation {
                         value = value.replace("\"", "");
                         row.put(key, value);
                     }
-                    data.add(row);
+                    String eid = row.get("EventId");
+                    String pid = row.get("PeriodId");
+                    data.put(eid+"-"+pid,row);
                 }
                 br.close();
                 return data;
@@ -295,140 +320,94 @@ public class PLTLossValidation {
         workbook.close();
     }
 
-
-    private static ValidationResult compareData(List<Map<String, String>> baselineData, List<Map<String, String>> actualData, String folder) {
+    private static ValidationResult compareData(Map<String, Map<String, String>> baselineData, Map<String, Map<String, String>> actualData,String folder) {
         try {
-            int availableProcessors = Runtime.getRuntime().availableProcessors();
-            ForkJoinPool forkJoinPool = new ForkJoinPool(availableProcessors);
-            CompareTask compareTask = new CompareTask(baselineData, actualData, folder, 0, baselineData.size());
-            ValidationResult validationResult = forkJoinPool.invoke(compareTask);
-            forkJoinPool.shutdown();
-            return validationResult;
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return null;
-        }
-    }
-
-    private static class CompareTask extends RecursiveTask<ValidationResult> {
-        private static final int THRESHOLD = 100;
-        private List<Map<String, String>> baselineData;
-        private List<Map<String, String>> actualData;
-        private String folder;
-        private int start;
-        private int end;
-
-        public CompareTask(List<Map<String, String>> baselineData, List<Map<String, String>> actualData, String folder, int start, int end) {
-            this.baselineData = baselineData;
-            this.actualData = actualData;
-            this.folder = folder;
-            this.start = start;
-            this.end = end;
-        }
-
-        @Override
-        protected ValidationResult compute() {
-            if (end - start <= THRESHOLD) {
-                return compareDataSegment(baselineData.subList(start, end), actualData, folder);
-            } else {
-                int mid = (start + end) / 2;
-                CompareTask leftTask = new CompareTask(baselineData, actualData, folder, start, mid);
-                CompareTask rightTask = new CompareTask(baselineData, actualData, folder, mid, end);
-                invokeAll(leftTask, rightTask);
-                ValidationResult leftResult = leftTask.join();
-                ValidationResult rightResult = rightTask.join();
-                return mergeResults(leftResult, rightResult);
-            }
-        }
-
-        private ValidationResult compareDataSegment(List<Map<String, String>> baselineSegment, List<Map<String, String>> actualData, String folder) {
             List<List<String>> results = new ArrayList<>();
             Boolean isAllPass = true;
 
-            for (Map<String, String> baselineRow : baselineSegment) {
-                for (Map<String, String> actualRow : actualData) {
-                    String baselineEventId = baselineRow.get("EventId");
-                    String baselinePeriodId = baselineRow.get("PeriodId");
-                    String baselineEIDPID = baselineEventId + "-" + baselinePeriodId;
+            int index = 1;
+            for (Map.Entry<String, Map<String, String>> baselineEntry : baselineData.entrySet())
+            {
+                System.out.println("On Index : "+(index++));
+                Map<String, String> actualRow = actualData.get(baselineEntry.getKey());
+                Map<String, String> baselineRow = baselineEntry.getValue();
 
-                    String actualEID = actualRow.get("EventId");
-                    String actualPID = actualRow.get("PeriodId");
-                    String actualEIDPID = actualEID + "-" + actualPID;
+                String baselineEventId = baselineRow.get("EventId");
+                String baselinePeriodId = baselineRow.get("PeriodId");
+                String baselineEIDPID = baselineEntry.getKey();
 
-                    boolean isMTRPMatches = baselineEIDPID.equals(actualEIDPID);
+                String actualEID = actualRow.get("EventId");
+                String actualPID = actualRow.get("PeriodId");
+                String actualEIDPID = baselineEntry.getKey();
 
-                    if (isMTRPMatches) {
-                        System.out.println("Comparing " + baselineEIDPID);
-                        List<String> row = new ArrayList<>();
+                List<String> row = new ArrayList<>();
 
-                        String baselineLoss = baselineRow.get("Loss");
-                        String actualLoss = actualRow.get("Loss");
+                String baselineLoss = baselineRow.get("Loss");
+                String actualLoss = actualRow.get("Loss");
 
-                        // Baseline
-                        row.add(folder);
-                        row.add(baselineEventId);
-                        row.add(baselinePeriodId);
-                        row.add(baselineLoss);
+                // Baseline
+                row.add(folder);
+                row.add(baselineEventId);
+                row.add(baselinePeriodId);
+                row.add(baselineLoss);
 
-                        // Two empty cells between Baseline and Actual
-                        row.add("");
-                        row.add("");
+                // Two empty cells between Baseline and Actual
+                row.add("");
+                row.add("");
 
-                        // Actual
-                        row.add(folder);
-                        row.add(actualEID);
-                        row.add(actualPID);
-                        row.add(actualLoss);
+                // Actual
+                row.add(folder);
+                row.add(actualEID);
+                row.add(actualPID);
+                row.add(actualLoss);
 
-                        // Two empty cells between Actual and Results
-                        row.add("");
-                        row.add("");
+                // Two empty cells between Actual and Results
+                row.add("");
+                row.add("");
 
-                        // Result
-                        row.add(folder);
-                        row.add(actualEID);
-                        row.add(actualPID);
+                // Result
+                row.add(folder);
+                row.add(actualEID);
+                row.add(actualPID);
 
-                        Double baselineLoss_ = null;
-                        Double actualLoss_ = null;
+                Double baselineLoss_ = null;
+                Double actualLoss_ = null;
 
-                        try {
-                            if (baselineLoss != null && !baselineLoss.isEmpty()) {
-                                baselineLoss_ = Double.valueOf(baselineLoss);
-                            } else {
-                                throw new Exception("Error");
-                            }
-                        } catch (Exception ex) {
-                            System.out.println("Wrong baselineLoss_ at " + baselineEIDPID);
-                        }
-
-                        try {
-                            if (actualLoss != null && !actualLoss.isEmpty()) {
-                                actualLoss_ = Double.valueOf(actualLoss);
-                            } else {
-                                throw new Exception("Error");
-                            }
-                        } catch (Exception ex) {
-                            System.out.println("Wrong actualLoss_ at " + actualEIDPID);
-                        }
-
-                        Double difference = null;
-                        if (baselineLoss_ != null && actualLoss_ != null) {
-                            difference = Math.abs(baselineLoss_ - actualLoss_);
-                        }
-
-                        row.add(difference + "");
-
-                        if (difference != null && !(difference > 1)) {
-                            row.add("Pass");
-                        } else {
-                            isAllPass = false;
-                            row.add("Fail");
-                        }
-
-                        results.add(row);
+                try {
+                    if (baselineLoss != null && !baselineLoss.isEmpty()) {
+                        baselineLoss_ = Double.valueOf(baselineLoss);
+                    } else {
+                        throw new Exception("Error");
                     }
+                } catch (Exception ex) {
+                    System.out.println("Wrong baselineLoss_ at "+baselineEIDPID);
                 }
+
+                try {
+                    if (actualLoss != null && !actualLoss.isEmpty()) {
+                        actualLoss_ = Double.valueOf(actualLoss);
+                    } else {
+                        throw new Exception("Error");
+                    }
+                } catch (Exception ex) {
+                    System.out.println("Wrong actualLoss_ at "+actualEIDPID);
+                }
+
+                Double difference = null;
+                if (baselineLoss_ != null && actualLoss_ != null) {
+                    difference = Math.abs(baselineLoss_ - actualLoss_);
+                }
+
+                row.add(difference+"");
+
+                if (difference != null && !(difference > 1)) {
+                    row.add("Pass");
+                } else {
+                    isAllPass = false;
+                    row.add("Fail");
+                }
+
+                results.add(row);
             }
             System.out.println("Comparing Done");
 
@@ -436,16 +415,21 @@ public class PLTLossValidation {
             validationResult.resultRows = results;
             validationResult.isAllPass = isAllPass;
             return validationResult;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return null;
         }
+    }
 
-        private ValidationResult mergeResults(ValidationResult leftResult, ValidationResult rightResult) {
-            ValidationResult mergedResult = new ValidationResult();
-            mergedResult.resultRows = new ArrayList<>();
-            mergedResult.resultRows.addAll(leftResult.resultRows);
-            mergedResult.resultRows.addAll(rightResult.resultRows);
-            mergedResult.isAllPass = leftResult.isAllPass && rightResult.isAllPass;
-            return mergedResult;
-        }
+    public static String formatDuration(Duration duration) {
+        long seconds = duration.getSeconds();
+        long absSeconds = Math.abs(seconds);
+        String positive = String.format(
+                "%d:%02d:%02d",
+                absSeconds / 3600,
+                (absSeconds % 3600) / 60,
+                absSeconds % 60);
+        return seconds < 0 ? "-" + positive : positive;
     }
 
 

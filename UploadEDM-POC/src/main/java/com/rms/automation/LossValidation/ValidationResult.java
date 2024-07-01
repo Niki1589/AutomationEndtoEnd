@@ -4,9 +4,9 @@ import java.util.List;
 
 public class ValidationResult {
 
-    List<List<String>> resultRows;
-    List<String> resultRow;
-    Boolean isAllPass = false;
+    public List<List<String>> resultRows;
+    public List<String> resultRow;
+    public Boolean isAllPass = false;
 
 
 

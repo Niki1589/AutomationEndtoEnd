@@ -9,10 +9,9 @@ import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -208,5 +207,43 @@ public class Utils {
         }
         return false;
     }
+
+
+    public static List<Map<String, String>> readCSV(String folderPath) throws IOException {
+        try (Stream<Path> files = Files.list(Paths.get(folderPath))) {
+            Optional<Path> firstCsvFile = files
+                    .filter(Files::isRegularFile)
+                    .filter(path -> path.getFileName().toString().endsWith(".csv"))
+                    .findFirst();
+
+            if (firstCsvFile.isPresent()) {
+                List<Map<String, String>> data = new ArrayList<>();
+                BufferedReader br = new BufferedReader(new FileReader(firstCsvFile.get().toFile()));
+                String headersLine = br.readLine();
+                String[] headerss = headersLine.split(",");
+                String line;
+                while ((line = br.readLine()) != null) {
+                    String[] values = line.split(",");
+                    Map<String, String> row = new HashMap<>();
+                    for (int i = 0; i < headerss.length; i++) {
+                        String key = headerss[i];
+                        String value = values[i];
+                        key = key.replace("\"", "");
+                        value = value.replace("\"", "");
+                        row.put(key, value);
+                    }
+                    data.add(row);
+                }
+                br.close();
+                return data;
+            } else {
+                System.out.println("No CSV files starting with 'csv' found in the folder.");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
 
 }

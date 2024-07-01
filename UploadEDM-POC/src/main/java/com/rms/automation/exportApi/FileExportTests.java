@@ -1,8 +1,6 @@
 package com.rms.automation.exportApi;
 
-import com.rms.automation.LossValidation.EPLossValidation;
 import com.rms.automation.LossValidation.LossValidation;
-import com.rms.automation.LossValidation.StatsLossValidation;
 import com.rms.automation.constants.AutomationConstants;
 import com.rms.automation.JobsApi.JobsApi;
 import com.rms.automation.edm.ApiUtil;
@@ -23,6 +21,9 @@ public class FileExportTests {
 
     public static String localPath ="";
     public static void fileExport(Map<String, String> tc, String analysisId) throws Exception {
+        fileExport(tc, analysisId, "", "");
+    }
+    public static void fileExport(Map<String, String> tc, String analysisId, String specificFolder, String specificJobIDColumn) throws Exception {
         System.out.println("***** Running FILE Export API ********");
 
         int anlsId= Integer.parseInt(analysisId);
@@ -52,7 +53,7 @@ public class FileExportTests {
             Map<String, Object> lossDetails = new HashMap<>();
             lossDetails.put("lossType", "EP");
             lossDetails.put("outputLevels",downloadSettings.getOutputLevels_EPMetric().split(","));
-            lossDetails.put("perspectives", downloadSettings.getperspectives_StatsMetric().split(","));
+            lossDetails.put("perspectives", downloadSettings.getPerspectives_EPMetric().split(","));
             lossDetailsList.add(lossDetails);
         }
         if (Utils.isTrue(downloadSettings.getIsLossTablesMetric())) {
@@ -86,21 +87,23 @@ public class FileExportTests {
 
                 String downloadLink = String.valueOf(summaryMap.get("downloadLink"));
                 String fileName = downloadLink.substring(downloadLink.lastIndexOf("/") + 1, downloadLink.indexOf("?"));
-                 localPath = tc.get("FILE_EXPORT_PATH") + fileName;
+                 localPath = tc.get("FILE_EXPORT_PATH") + specificFolder + fileName;
               //  String WorkflowId=String.valueOf(summaryMap.get("workflowId"));
 
               //  String actualResultsFileName=WorkflowId +"_"+ fileName+"_Losses";
                 Utils.downloadFile(downloadLink, localPath);
 
-                LoadData.UpdateTCInLocalExcel(tc.get("INDEX"),"FILE_EXPORT_JOBID", jobId);
+                String fileExportColumnName = "FILE_EXPORT_JOBID";
+                if (specificJobIDColumn != null && specificJobIDColumn.length() > 0) {
+                    fileExportColumnName = specificJobIDColumn;
+                }
+                LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), fileExportColumnName, jobId);
 
                 // To check if actual results file is not empty and has valid data , then populate the complete path of actual results in excel file.
                 Path filePath = Paths.get(localPath);
                 if (Files.exists(filePath)) {
                     LoadData.UpdateTCInLocalExcel(tc.get("INDEX"),"ACTUALRESULTS_PATH", localPath);
-
                     LossValidation.run(tc);
-
                 } else {
                     System.out.println("File does not exist");
                 }

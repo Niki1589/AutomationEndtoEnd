@@ -1,21 +1,21 @@
-package com.rms.automation.LossValidation;
+package com.rms.automation.LossValidation.ep.ep_losses;
 
-import com.rms.automation.exportApi.FileExportTests;
+import com.rms.automation.LossValidation.ValidationResult;
+import com.rms.automation.exportApi.Download_Settings;
 import com.rms.automation.utils.Utils;
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
-import java.io.*;
-import java.util.stream.Stream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
-public class EPLossValidation {
-    public static Boolean EPLossValidation(String baselinePathPortfolio, String actualPathPortfolio, String outputPath) throws Exception {
+public class EPPortlofioLossValidation {
+    public static Boolean runPortfolioLossValidationEP(String baselinePathEP, String actualPathEP, String outputPath, Download_Settings downloadSettings) throws Exception {
 
         ///Folders to read from Portfolio
         List<String> folders = new ArrayList<>();
@@ -28,9 +28,9 @@ public class EPLossValidation {
         folders.add("SS");
         folders.add("WX");
 
-        String baselinePathPortfolioEP = String.format(baselinePathPortfolio, "EP");
-        String actualPathPortfolioEP = String.format(actualPathPortfolio, "EP");
-        String outPathEP = String.format(outputPath, "EP_Results");
+        String baselinePathPortfolioEP = baselinePathEP + "/Portfolio/";
+        String actualPathPortfolioEP = actualPathEP + "/Portfolio/";
+        String outPathEP = String.format(outputPath, "EP_Portfolio_Results");
 
         List<List<String>> rows = new ArrayList<>();
         Boolean isAllPass = true;
@@ -38,8 +38,8 @@ public class EPLossValidation {
         try {
             for (String folder: folders) {
                 if( Utils.isDirExists(baselinePathPortfolioEP + folder) && Utils.isDirExists(actualPathPortfolioEP + folder) ) {
-                    List<Map<String, String>> baselineData = readCSV(baselinePathPortfolioEP + folder);
-                    List<Map<String, String>> actualData = readCSV(actualPathPortfolioEP + folder);
+                    List<Map<String, String>> baselineData = Utils.readCSV(baselinePathPortfolioEP + folder);
+                    List<Map<String, String>> actualData = Utils.readCSV(actualPathPortfolioEP + folder);
                     if (baselineData != null && actualData != null) {
                         ValidationResult validationResult = compareData(baselineData, actualData, folder);
                         rows.addAll(validationResult.resultRows);
@@ -49,48 +49,11 @@ public class EPLossValidation {
             }
 
             writeResultsToExcel(rows, outPathEP);
-            System.out.println("EP Comparison completed and results written to Excel.");
             return isAllPass;
         } catch (IOException e) {
             e.printStackTrace();
         }
         return false;
-    }
-
-    private static List<Map<String, String>> readCSV(String folderPath) throws IOException {
-        try (Stream<Path> files = Files.list(Paths.get(folderPath))) {
-            Optional<Path> firstCsvFile = files
-                    .filter(Files::isRegularFile)
-                    .filter(path -> path.getFileName().toString().endsWith(".csv"))
-                    .findFirst();
-
-            if (firstCsvFile.isPresent()) {
-                List<Map<String, String>> data = new ArrayList<>();
-                BufferedReader br = new BufferedReader(new FileReader(firstCsvFile.get().toFile()));
-                String headersLine = br.readLine();
-                String[] headerss = headersLine.split(",");
-                String line;
-                while ((line = br.readLine()) != null) {
-                    String[] values = line.split(",");
-                    Map<String, String> row = new HashMap<>();
-                    for (int i = 0; i < headerss.length; i++) {
-                        String key = headerss[i];
-                        String value = values[i];
-                        key = key.replace("\"", "");
-                        value = value.replace("\"", "");
-                        row.put(key, value);
-                    }
-                    data.add(row);
-                }
-                br.close();
-                return data;
-            } else {
-                System.out.println("No CSV files starting with 'csv' found in the folder.");
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
     }
 
     private static ValidationResult compareData(List<Map<String, String>> baselineData, List<Map<String, String>> actualData,String folder) {
@@ -252,7 +215,7 @@ public class EPLossValidation {
         headers.add("");
         headers.add("");
 
-        // Actual
+        // Results
         headers.add("perspcode");
         headers.add("metrictype");
         headers.add("returnperiod");

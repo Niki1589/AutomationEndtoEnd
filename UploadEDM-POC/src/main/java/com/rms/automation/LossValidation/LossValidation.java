@@ -1,46 +1,57 @@
 package com.rms.automation.LossValidation;
 
+import com.rms.automation.LossValidation.ep.ep_losses.EPLossValidation;
+import com.rms.automation.LossValidation.ep.stats_losses.STATSLossValidation;
 import com.rms.automation.edm.LoadData;
+import com.rms.automation.exportApi.Download_Settings;
 import com.rms.automation.exportApi.FileExportTests;
 import com.rms.automation.utils.Utils;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 public class LossValidation {
 
     public static void run(Map<String, String> tc) throws Exception {
 
-        String baselinePathPortfolio = "";
-        String actualPathPortfolio = "";
-        String outputPath = "";
+        Download_Settings downloadSettings = Download_Settings.parse(tc.get("DOWNLOAD_SETTINGS_FILE"));
 
-        String zipFilePath = FileExportTests.localPath; // Path to your zip file
-        baselinePathPortfolio = tc.get("BASELINE_PATH") +"%s"+ File.separator + "Portfolio"+File.separator;
-        actualPathPortfolio = zipFilePath.replace(".zip", "") + File.separator + "%s" +File.separator+"Portfolio"+File.separator;
-        outputPath = tc.get("LOSSVALIDATION_Results_PATH")+"%s.xlsx";
+        String zipFilePath = FileExportTests.localPath;
+        String baselinePath = tc.get("BASELINE_PATH");
+        String actualPath = zipFilePath.replace(".zip", "");
+        String outputPath = tc.get("LOSSVALIDATION_Results_PATH") + "%s.xlsx";
+
+        Boolean isAllEPPass=false;
+        Boolean isAllStatsPass=false;
+        Boolean isAllPLTPass =false;
 
         try {
             Utils.unzip(zipFilePath);
-            Boolean isAllEPPass = EPLossValidation.EPLossValidation(baselinePathPortfolio, actualPathPortfolio, outputPath);
-            Boolean isAllStatsPass = StatsLossValidation.StatsLossValidation(baselinePathPortfolio, actualPathPortfolio, outputPath);
-            Boolean isAllPLTPass = PLTLossValidation.PLTLossValidation(baselinePathPortfolio, actualPathPortfolio, outputPath);
+
+            if (Utils.isTrue(downloadSettings.getIsEPMetric()))
+            {
+                 isAllEPPass = EPLossValidation.run(baselinePath, actualPath, outputPath, downloadSettings);
+            }
+            if(Utils.isTrue(downloadSettings.getIsStatsMetric()))
+            {
+                 isAllStatsPass = STATSLossValidation.run(baselinePath, actualPath, outputPath);
+            }
+            if(Utils.isTrue(downloadSettings.getIsLossTablesMetric())) {
+
+                isAllPLTPass = PLTLossValidation.PLTLossValidation(baselinePath, actualPath, outputPath);
+            }
 
             if (isAllStatsPass && isAllEPPass && isAllPLTPass) {
                 //all pass
                 LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "ISLOSSVALIDATION", "EP, STATS and PLT numbers are matching");
             } else {
                 //fail
-                LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "ISLOSSVALIDATION", "There is mismtach in numbers,please check comparison sheet");
+                LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "ISLOSSVALIDATION", "There is a mismatch in numbers,please check comparison sheet");
             }
         } catch (IOException e) {
             System.out.println("Loss Validation Failed "+e.getMessage());
         }
 
     }
-
 
 }

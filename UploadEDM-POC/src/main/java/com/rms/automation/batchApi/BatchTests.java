@@ -266,6 +266,9 @@ public class BatchTests {
                 "\"id\":"+portfolioId+",\n"+
                 "\"modelProfileId\":"+ModelProfileId+",\n"+
                 "\"outputProfileId\":"+perils.getOutputProfileId()+",\n"+
+//                "\"treaties\":"+(perils.getTreaties().split(","))+",\n"+
+//                "\"treaties\":\""+perils.getTreaties()+"\",\n"+
+//                "\"treatiesName\":\""+perils.getTreatiesName() +"\",\n"+
                 "\"treaties\":["+perils.getTreaties()+"],\n"+
                 "\"treatiesName\":["+ perils.getTreatiesName() +"],\n"+
                 "\"tagIds\":[]\n"+

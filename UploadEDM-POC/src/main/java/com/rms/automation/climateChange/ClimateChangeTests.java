@@ -4,6 +4,8 @@ import com.rms.automation.JobsApi.JobsApi;
 import com.rms.automation.constants.AutomationConstants;
 import com.rms.automation.edm.ApiUtil;
 import com.rms.automation.edm.LoadData;
+import com.rms.automation.exportApi.FileExportTests;
+import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
 
 import java.util.HashMap;
@@ -66,6 +68,14 @@ public class ClimateChangeTests {
 
                             System.out.println("wait for job msg: " + msg);
                             if (msg.equalsIgnoreCase(AutomationConstants.JOB_STATUS_FINISHED) && (!jobId.isEmpty())) {
+                                Response jobDetails = JobsApi.getJobDetailsByJobId(token, jobId);
+                                JsonPath jsonPath = jobDetails.jsonPath();
+                                Map<String, Object> jobResponseMap = jsonPath.getMap("$");
+                                Map<String, Object> summaryMap = (Map<String, Object>) jobResponseMap.get("summary");
+
+                                String ccAnalysisId = String.valueOf(summaryMap.get("climateChangeAnalysisId"));
+                                FileExportTests.fileExport(tc, ccAnalysisId, "CC/", "CCG_FILE_EXPORT_JOB_ID");
+
                                 LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "CCG_CLIMATE_CHANGE_JOBID", jobId);
                             }
                         } else {
@@ -82,7 +92,7 @@ public class ClimateChangeTests {
 
             // Handle completed tasks
             int completedTasks = 0;
-            while (completedTasks <= (rcpScenarioList.size() * timeHorizonList.size())) {
+            while (completedTasks < (rcpScenarioList.size() * timeHorizonList.size())) {
                 try {
                     Future<String> future = completionService.take(); // Wait for task completion
                     String result = future.get(); // Get task result
