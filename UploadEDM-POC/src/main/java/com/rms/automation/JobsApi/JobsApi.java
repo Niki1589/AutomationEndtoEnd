@@ -132,7 +132,7 @@ public class JobsApi {
                         }
                         break;
                     } else if ((status.equalsIgnoreCase(AutomationConstants.WORKFLOW_STATUS_SUCCEEDED))) {
-                        message = "The "+jobName+" ran successfully on RM. Job ID -  "+workflowId;
+                        message = "Success";
                         break;
                     }
                 } else if (jobGetJobDetailsResponse.getStatusCode() == 401) {

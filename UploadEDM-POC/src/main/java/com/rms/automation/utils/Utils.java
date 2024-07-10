@@ -1,5 +1,10 @@
 package com.rms.automation.utils;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.parquet.example.data.Group;
+import org.apache.parquet.hadoop.ParquetReader;
+import org.apache.parquet.hadoop.example.GroupReadSupport;
+import org.apache.parquet.schema.Type;
 import org.apache.poi.ss.usermodel.*;
 
 import java.io.*;
@@ -244,6 +249,97 @@ public class Utils {
         }
         return null;
     }
+    public static List<Map<String, String>> readParquet(String folderPath) throws IOException {
+        List<Map<String, String>> data = new ArrayList<>();
+        List<String> listOfFields = new ArrayList<>();
 
+        try (Stream<Path> files = Files.list(Paths.get(folderPath))) {
+            files
+                    .filter(Files::isRegularFile)
+                    .filter(path -> path.getFileName().toString().endsWith(".parquet"))
+                    .forEach(file -> {
+                        Configuration conf = new Configuration();
+                        org.apache.hadoop.fs.Path path = new org.apache.hadoop.fs.Path(file.toFile().getPath());
+
+                        try (ParquetReader<Group> reader = ParquetReader.builder(new GroupReadSupport(), path)
+                                .withConf(conf)
+                                .build()) {
+
+                            // Read and write rows
+                            Group group;
+                            while ((group = reader.read()) != null) {
+
+                                if (group != null && listOfFields.size() == 0) {
+                                    List<Type> types = group.asGroup().getType().getFields();
+                                    for (Type type : types) {
+                                        listOfFields.add(type.getName());
+                                    }
+                                }
+
+                                int colIndex = 0;
+                                Map<String, String> row = new HashMap<>();
+                                for (String field : listOfFields) {
+                                    String value = group.getValueToString(colIndex++, 0);
+                                    row.put(field, value);
+                                }
+                                data.add(row);
+
+                            }
+
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    });
+        }
+
+        return data;
+    }
+//    public static List<Map<String, String>> readParquet(String folderPath) throws IOException {
+//        try (Stream<Path> files = Files.list(Paths.get(folderPath))) {
+//            Optional<Path> firstFile = files
+//                    .filter(Files::isRegularFile)
+//                    .filter(path -> path.getFileName().toString().endsWith(".parquet"))
+//                    .findFirst();
+//
+//            if (firstFile.isPresent()) {
+//
+//                Configuration conf = new Configuration();
+//                org.apache.hadoop.fs.Path path = new org.apache.hadoop.fs.Path(firstFile.get().toFile().getPath());
+//
+//                List<Map<String, String>> data = new ArrayList<>();
+//                List<String> listOfFields = new ArrayList<>();
+//
+//                try (ParquetReader<Group> reader = ParquetReader.builder(new GroupReadSupport(), path)
+//                        .withConf(conf)
+//                        .build()) {
+//
+//                    // Read and write rows
+//                    Group group;
+//                    while ((group = reader.read()) != null) {
+//
+//                        if (group != null && listOfFields.size() == 0) {
+//                            List<Type> types = group.asGroup().getType().getFields();
+//                            for (Type type : types) {
+//                                listOfFields.add(type.getName());
+//                            }
+//                        }
+//
+//                        int colIndex = 0;
+//                        Map<String, String> row = new HashMap<>();
+//                        for (String field : listOfFields) {
+//                            String value = group.getValueToString(colIndex++, 0);
+//                            row.put(field, value);
+//                        }
+//                        data.add(row);
+//
+//                    }
+//
+//                }
+//
+//                return data;
+//            }
+//        }
+//        return null;
+//    }
 
 }

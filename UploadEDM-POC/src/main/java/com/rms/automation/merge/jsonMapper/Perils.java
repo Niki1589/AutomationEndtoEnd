@@ -55,6 +55,17 @@ public class Perils {
     }
     String eventIds;
 
+//    public List<String> getEventIds() {
+//        return eventIds;
+//    }
+//
+//    public void setEventIds(List<String> eventIds) {
+//        this.eventIds = eventIds;
+//    }
+//
+//    List<String> eventIds;
+
+
     String vendor;
     Boolean run1dOnly;
     List<String> specialtyModels;
@@ -662,6 +673,7 @@ public class Perils {
     //    perils.setIncludeBespokeDefence(tc.get("includeBespokeDefence").equalsIgnoreCase("YES"));
     //    perils.setDefenceOn(tc.get("defenceOn").equalsIgnoreCase("YES"));
         perils.setSubPerils(List.of(tc.get("MPF_SUB_PERILS").split(",")));
+      //  perils.setEventIds(List.of(tc.get("MPF_EVENT_IDS").split(",")));
         perils.setSecondaryPerils(List.of(tc.get("MPF_SECONDARY_PERILS").split(",")));
         perils.setPolicyCoverages(List.of(tc.get("MPF_POLICY_COVERAGES").split(",")));
         perils.setVendor(tc.get("MPF_VENDOR"));
@@ -688,7 +700,6 @@ public class Perils {
         } else {
             perils.setGeoHazLayers(List.of());
         }
-
         String eventIds=tc.get("MPF_EVENT_IDS");
         if(eventIds!=null && eventIds !="")
         {
@@ -755,7 +766,7 @@ public class Perils {
             perils.setTreatiesName("");
         }
 
-        perils.setApplyContractDatesOn(Utils.isTrue(tc.get("MPF_IS_APPLY_CONTRACT_DATES_ON")));
+        perils.setApplyContractDatesOn(!Utils.isTrue(tc.get("MPF_IGNORE_CONTRACT_DATES")));
         if (perils.getApplyContractDatesOn()) {
             String date = tc.get("MPF_REPORTING_WINDOW_START_YEAR");
             if (date != null && date.length() > 0) {

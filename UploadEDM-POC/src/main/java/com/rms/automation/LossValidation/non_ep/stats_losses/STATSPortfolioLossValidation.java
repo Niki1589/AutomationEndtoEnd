@@ -1,22 +1,17 @@
-package com.rms.automation.LossValidation.ep.stats_losses;
+package com.rms.automation.LossValidation.non_ep.stats_losses;
 
 import com.rms.automation.LossValidation.ValidationResult;
-import com.rms.automation.exportApi.Download_Settings;
 import com.rms.automation.utils.Utils;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import java.io.BufferedReader;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
-import java.util.stream.Stream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class STATSPortfolioLossValidation {
 
@@ -33,7 +28,7 @@ public class STATSPortfolioLossValidation {
         folders.add("WX");
 
         String baselinePathPortfolioStats = baselinePathStats + "/Portfolio/";
-        String actualPathPortfolioStats = actualPathStats + "/Portfolio/";
+        String actualPathPortfolioStats = actualPathStats +"/Portfolio/" ;
         String outPathStats = String.format(outputPath, "Stats_Portfolio_Results");
 
         List<List<String>> rows = new ArrayList<>();
@@ -59,56 +54,78 @@ public class STATSPortfolioLossValidation {
         }
         return false;
     }
+
     private static ValidationResult compareData(List<Map<String, String>> baselineData, List<Map<String, String>> actualData,String folder) {
         try {
 
-            Map<String, String> baselineRow = baselineData.get(0);
-            Map<String, String> actualRow = actualData.get(0);
-
-            List<String> row = new ArrayList<>();
+            List<List<String>> results = new ArrayList<>();
             Boolean isAllPass = true;
+            List<String> row = new ArrayList<>();
+            for (Map<String, String> baselineRow : baselineData) {
 
-            String baselineAAL = baselineRow.get("AAL");
-            String baselineStd = baselineRow.get("Std");
-            String baselineCV = baselineRow.get("CV");
+                String baselineEventId = baselineRow.get("EventId");
 
-            String actualAAL = actualRow.get("AAL");
-            String actualStd = actualRow.get("Std");
-            String actualCV = actualRow.get("CV");
+                for (Map<String, String> actualRow : actualData) {
 
-            // Baseline
-            row.add(folder);
-            row.add(baselineAAL);
-            row.add(baselineStd);
-            row.add(baselineCV);
+                    String actualEventId = actualRow.get("EventId");
 
-            // Two empty cells between Baseline and Actual
-            row.add("");
-            row.add("");
+                    boolean isMatches = baselineEventId.equals(actualEventId);
 
-            // Actual
-            row.add(folder);
-            row.add(actualAAL);
-            row.add(actualStd);
-            row.add(actualCV);
+                    if (isMatches) {
 
-            // Two empty cells between Actual and Results
-            row.add("");
-            row.add("");
+                        String baselineAAL = baselineRow.get("Mean");
+                        String baselineStd = baselineRow.get("StdDev");
+                        String baselineCV = baselineRow.get("CV");
 
-            // Actual
-            row.add(folder);
+                        String actualAAL = actualRow.get("Mean");
+                        String actualStd = actualRow.get("StdDev");
+                        String actualCV = actualRow.get("CV");
 
-            List<String> AALRows = checkDiff(baselineAAL, actualAAL, "AAL", folder);
-            List<String> StdRows = checkDiff(baselineStd, actualStd, "Std", folder);
-            List<String> CVRows = checkDiff(baselineCV, actualCV, "CV", folder);
+                        // Baseline
+                        row.add(folder);
+                        row.add(baselineEventId);
+                        row.add(baselineAAL);
+                        row.add(baselineStd);
+                        row.add(baselineCV);
 
-            row.addAll(AALRows);
-            row.addAll(StdRows);
-            row.addAll(CVRows);
+                        // Two empty cells between Baseline and Actual
+                        row.add("");
+                        row.add("");
 
-            if (AALRows.get(1).equals("Fail") || StdRows.get(1).equals("Fail") || CVRows.get(1).equals("Fail"))  {
-                isAllPass = false;
+                        // Actual
+                        row.add(folder);
+                        row.add(actualEventId);
+                        row.add(actualAAL);
+                        row.add(actualStd);
+                        row.add(actualCV);
+
+                        // Two empty cells between Actual and Results
+                        row.add("");
+                        row.add("");
+
+                        // Actual
+                        row.add(folder);
+
+                        row.add(actualEventId);
+                        List<String> AALRows = checkDiff(baselineAAL, actualAAL, "AAL", folder);
+                        List<String> StdRows = checkDiff(baselineAAL, actualAAL, "Std", folder);
+                        List<String> CVRows = checkDiff(baselineAAL, actualAAL, "CV", folder);
+
+                        row.addAll(AALRows);
+                        row.addAll(StdRows);
+                        row.addAll(CVRows);
+
+                        if (AALRows.get(1).equals("Fail") || StdRows.get(1).equals("Fail") || CVRows.get(1).equals("Fail")) {
+                            isAllPass = false;
+                        }
+
+                        ValidationResult validationResult = new ValidationResult();
+                        validationResult.resultRow = row;
+                        validationResult.isAllPass = isAllPass;
+                        return validationResult;
+
+                    }
+                }
             }
 
             ValidationResult validationResult = new ValidationResult();
@@ -116,13 +133,13 @@ public class STATSPortfolioLossValidation {
             validationResult.isAllPass = isAllPass;
             return validationResult;
 
-        } catch (Exception ex) {
+        }catch (Exception ex) {
             ex.printStackTrace();
             return null;
         }
     }
 
-    private static void writeResultsToExcel(List<List<String>> rows, String filStatsath) throws IOException, IOException {
+    private static void writeResultsToExcel(List<List<String>> rows, String filePath) throws IOException, IOException {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Results");
 
@@ -156,13 +173,17 @@ public class STATSPortfolioLossValidation {
         sectionNames.add("");
         sectionNames.add("");
         sectionNames.add("");
+        sectionNames.add("");
+        sectionNames.add("");
+        sectionNames.add("");
+        sectionNames.add("");
+        sectionNames.add("");
+        sectionNames.add("");
 
         List<String> headers = new ArrayList<>();
 
-
-        //EventId, Mean, Stddev,CV
         // Baseline
-        headers.add("perspcode");
+        headers.add("perscode");
         headers.add("EventId");
         headers.add("Mean");
         headers.add("StdDev");
@@ -173,8 +194,7 @@ public class STATSPortfolioLossValidation {
         headers.add("");
 
         // Actual
-
-        headers.add("perspcode");
+        headers.add("perscode");
         headers.add("EventId");
         headers.add("Mean");
         headers.add("StdDev");
@@ -185,15 +205,14 @@ public class STATSPortfolioLossValidation {
         headers.add("");
 
         // Result
-        headers.add("perspcode");
+        headers.add("perscode");
         headers.add("EventId");
-        headers.add("Mean");
+        headers.add("AAL");
         headers.add("AAL-Diff");
-        headers.add("StdDev");
-        headers.add("STD-Diff");
         headers.add("STD");
-        headers.add("CV-Diff");
+        headers.add("STD-Diff");
         headers.add("CV");
+        headers.add("CV-Diff");
 
         results.add(sectionNames);
         results.add(headers);
@@ -213,7 +232,7 @@ public class STATSPortfolioLossValidation {
             }
         }
 
-        FileOutputStream fileOut = new FileOutputStream(filStatsath);
+        FileOutputStream fileOut = new FileOutputStream(filePath);
         workbook.write(fileOut);
         fileOut.close();
         workbook.close();

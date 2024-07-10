@@ -13,6 +13,7 @@ import com.rms.automation.merge.jsonMapper.Perils;
 import com.rms.automation.renameAnalysisApi.RenameAnalysis;
 import com.rms.automation.utils.Utils;
 import com.google.gson.*;
+import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
 import java.lang.reflect.Field;
 import java.util.*;
@@ -23,17 +24,20 @@ public class BatchTests {
     public static void batchAPI(Map<String, String> tc,String portfolioId,String dataSourceName) throws Exception {
 
         String analysisId = "";
+        String modelProfileIdRM="";
         String token = ApiUtil.getSmlToken(LoadData.config.getUsername(), LoadData.config.getPassword(), LoadData.config.getTenant(), "accessToken");
 
         Perils perils = Perils.extractPerilFromTC(tc);
 
         try {
+
+            String modelProfileId = ModelProfileAPI.getModelProfileApi(perils, tc, token);
+
+                //Code to check if Model Profile API exists on the UI
+
             if (perils.getIfModelRun().equalsIgnoreCase("YES")) {
 
-                System.out.println("***** Running Batch Api Tests ********");
-
-                String modelProfileId = ModelProfileAPI.getModelProfileApi(perils, tc, token);
-
+                System.out.println("Running Batch API");
                 System.out.println(dataSourceName + " ************* " + portfolioId);
                 if (dataSourceName == null) {
                     throw new Exception("DataSourcename is null or empty, please provide a valid dataSourceName");
@@ -42,12 +46,13 @@ public class BatchTests {
                     throw new Exception("PortfolioId is null or empty, please provide a valid portflioId");
                 }
 
-            Object payloadObject = getPayloadBatchApi(perils.getPortfolioId(), dataSourceName, modelProfileId, Utils.isTrue(tc.get("GEO_IS_GEOCODE")), perils);
+                Object payloadObject = getPayloadBatchApi(perils.getPortfolioId(), dataSourceName, modelProfileId, Utils.isTrue(tc.get("GEO_IS_GEOCODE")), perils);
                     System.out.println("After Batch payload");
                     Response batchResponse = ApiUtil.batchAPI(token, payloadObject);
                     String hdr = batchResponse.getHeader("Location");
                     String jobId = hdr.substring(hdr.lastIndexOf('/') + 1);
                     System.out.println(batchResponse.getStatusCode() + "  :Batch Status: jobId:" + jobId);
+                    LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "MRN_BATCH_JOB_ID", jobId);
 
                 String msg = null;
                 msg = JobsApi.waitForJobToComplete(jobId, token, "Batch API", "MRN_JOB_STATUS", tc.get("INDEX"));
@@ -69,7 +74,9 @@ public class BatchTests {
                 // Perform downstream workflows - RDM Export, File Export, Convert Currency , Rename Analysis, Pate
                 executeDownStreamWorkflows(tc, analysisId);
             }
-        } catch (Exception e) {
+        } catch (Exception e)
+
+        {
             System.out.println("Error in Code = " + e.getMessage());
             e.printStackTrace();
             throw e;
@@ -100,61 +107,6 @@ public class BatchTests {
         if (Utils.isTrue(tc.get("CCG_IS_CLIMATE_CHANGE"))) {
             ClimateChangeTests.climateChange(tc, analysisId);
         }
-
-        //        for (String key : tc.keySet()) {
-//            switch (key) {
-//                case "REX_IF_RDM_EXPORT":
-//                    if (Utils.isTrue(tc.get(key))) {
-//                       // export.exportType(tc, analysisId);
-//                        RdmExportTests.rdmExport(tc,analysisId);
-//                    }
-//                    break;
-//
-//                case "REX_IF_FILE_EXPORT":
-//                    if (Utils.isTrue(tc.get(key))) {
-//                       // export.exportType(tc, analysisId);
-//                        FileExportTests.fileExport(tc,analysisId);
-//                    }
-//                    break;
-//
-//                case "IF_IMPR_ANALYSIS_FROM_RDM":
-//                    if (Utils.isTrue(tc.get(key))) {
-//                        UploadRDM.executeUploadRdm(tc);
-//                    }
-//                    break;
-//
-//                case "CCU_IS_CONVERT_CURRENCY":
-//                    if (Utils.isTrue(tc.get(key))) {
-//                        CurrencyConverter.convert(tc, analysisId);
-//                    }
-//                    break;
-//                case "RNM_IS_RENAME_ANALYSIS":
-//                    if (Utils.isTrue(tc.get(key))) {
-//                        RenameAnalysis.rename(tc, analysisId);
-//                    }
-//                    break;
-//                case "IS_PATE":
-//                    if (Utils.isTrue(tc.get(key))) {
-//                        PATETests.executePATETests(caseNo, analysisId);
-//                    }
-//                    break;
-//                case "CCG_IS_CLIMATE_CHANGE":
-//                    if (Utils.isTrue(tc.get(key))) {
-//                        ClimateChangeTests.climateChange(tc, analysisId);
-//                    }
-//                    break;
-//
-//                case "IS_GROUPING":
-//                    if (Utils.isTrue(tc.get(key))) {
-//
-//                        AnalysisGroupingTests.execute();
-//                    }
-//                    break;
-//
-//
-//
-//            }
-//        }
     }
 
     public static Object getPayloadBatchApi(

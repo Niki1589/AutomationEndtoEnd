@@ -248,15 +248,6 @@ public class ApiUtil {
 
     public static Response getAnalysisNameByAnalysisId(String authToken, String analysisId)
     {
-//        String api =EndPointManager.apiendpoints.get("analysisName") +"id+IN+("+analysisId +")&sort=id+DESC";
-//        String url = EndPointManager.baseUrl + api;
-//        RestApiHelper restApiHelper =
-//                new RestApiHelper(
-//                        authToken, url, "application/json", false);
-//        Response response = restApiHelper.submitGet();
-//        return response;
-
-//https://api-euw1.rms-npe.com/riskmodeler/v2/analyses?limit=200&offset=0&q=id+IN+(124516)&sort=id+DESC
 
         String baseUrl = "https://api-euw1.rms-npe.com/riskmodeler/v2/analyses";
 
@@ -267,10 +258,6 @@ public class ApiUtil {
                 .get();
 
         return response;
-
-
-
-
     }
     public static Response getGroups(String authToken) {
         String api = EndPointManager.apiendpoints.get("getGroups");
@@ -405,6 +392,9 @@ public class ApiUtil {
            Response response = apiHelper.submitPost(payload);
             return response;
     }
+
+
+
 
     public static Response renameAnalysisApi(Map<String, Object> payload, String analysisId, String token) throws Exception {
         String api = String.format(EndPointManager.apiendpoints.get("renameAnalysis"), analysisId);
@@ -609,6 +599,16 @@ public class ApiUtil {
                 perils.getPeril(), perils.getVersion(), perils.getVendor(), perils.getInsuranceType(), perils.getAnalysisMode(),perils.getFire(),
                 perils.getCoverage(),perils.getProperty());
         System.out.println("---------ProfileTemplate payload for " + perils.getPeril() + " = " + api);
+        String url = EndPointManager.baseUrl + api;
+        RestApiHelper restApiHelper =
+                new RestApiHelper(
+                        authToken, url, "application/json", false);
+        return restApiHelper.submitGet();
+    }
+
+    public static Response getAllHDModelProfiles(String authToken) {
+
+        String api = String.format(EndPointManager.apiendpoints.get("getHDModelProfile"));
         String url = EndPointManager.baseUrl + api;
         RestApiHelper restApiHelper =
                 new RestApiHelper(

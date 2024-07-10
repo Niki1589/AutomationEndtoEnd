@@ -35,8 +35,6 @@ public class PLTLossValidation {
         folders.add("SS");
         folders.add("WX");
 
-//        String baselinePathPortfolioPLT = String.format(baselinePathPortfolio,"PLT");
-//        String actualPathPortfolioPLT = String.format(actualPathPortfolio,"PLT");
 
         String baselinePathPortfolioPLT = baselinePathPortfolio + "PLT/Portfolio/";
         String actualPathPortfolioPLT = actualPathPortfolio + "/PLT/Portfolio/";
@@ -127,110 +125,6 @@ public class PLTLossValidation {
         return null;
     }
 
-//    private static ValidationResult compareData(List<Map<String, String>> baselineData, List<Map<String, String>> actualData,String folder) {
-//        try {
-//            List<List<String>> results = new ArrayList<>();
-//            Boolean isAllPass = true;
-//
-//            for (Map<String, String> baselineRow : baselineData)
-//            {
-//                for (Map<String, String> actualRow : actualData) {
-//
-//                    String baselineEventId = baselineRow.get("EventId");
-//                    String baselinePeriodId = baselineRow.get("PeriodId");
-//                    String baselineEIDPID = baselineEventId+"-"+baselinePeriodId;
-//
-//                    String actualEID = actualRow.get("EventId");
-//                    String actualPID = actualRow.get("PeriodId");
-//                    String actualEIDPID = actualEID+"-"+actualPID;
-//
-//                    boolean isMTRPMatches = baselineEIDPID.equals(actualEIDPID);
-//
-//                    if (isMTRPMatches) {
-//                        System.out.println("Comparing "+baselineEIDPID);
-//                        List<String> row = new ArrayList<>();
-//
-//                        String baselineLoss = baselineRow.get("Loss");
-//                        String actualLoss = actualRow.get("Loss");
-//
-//                        // Baseline
-//                        row.add(folder);
-//                        row.add(baselineEventId);
-//                        row.add(baselinePeriodId);
-//                        row.add(baselineLoss);
-//
-//                        // Two empty cells between Baseline and Actual
-//                        row.add("");
-//                        row.add("");
-//
-//                        // Actual
-//                        row.add(folder);
-//                        row.add(actualEID);
-//                        row.add(actualPID);
-//                        row.add(actualLoss);
-//
-//                        // Two empty cells between Actual and Results
-//                        row.add("");
-//                        row.add("");
-//
-//                        // Result
-//                        row.add(folder);
-//                        row.add(actualEID);
-//                        row.add(actualPID);
-//
-//                        Double baselineLoss_ = null;
-//                        Double actualLoss_ = null;
-//
-//                        try {
-//                            if (baselineLoss != null && !baselineLoss.isEmpty()) {
-//                                baselineLoss_ = Double.valueOf(baselineLoss);
-//                            } else {
-//                                throw new Exception("Error");
-//                            }
-//                        } catch (Exception ex) {
-//                            System.out.println("Wrong baselineLoss_ at "+baselineEIDPID);
-//                        }
-//
-//                        try {
-//                            if (actualLoss != null && !actualLoss.isEmpty()) {
-//                                actualLoss_ = Double.valueOf(actualLoss);
-//                            } else {
-//                                throw new Exception("Error");
-//                            }
-//                        } catch (Exception ex) {
-//                            System.out.println("Wrong actualLoss_ at "+actualEIDPID);
-//                        }
-//
-//                        Double difference = null;
-//                        if (baselineLoss_ != null && actualLoss_ != null) {
-//                            difference = Math.abs(baselineLoss_ - actualLoss_);
-//                        }
-//
-//                        row.add(difference+"");
-//
-//                        if (difference != null && !(difference > 1)) {
-//                            row.add("Pass");
-//                        } else {
-//                            isAllPass = false;
-//                            row.add("Fail");
-//                        }
-//
-//                        results.add(row);
-//
-//                    }
-//                }
-//            }
-//            System.out.println("Comparing Done");
-//
-//            ValidationResult validationResult = new ValidationResult();
-//            validationResult.resultRows = results;
-//            validationResult.isAllPass = isAllPass;
-//            return validationResult;
-//        } catch (Exception ex) {
-//            ex.printStackTrace();
-//            return null;
-//        }
-//    }
 
     private static void writeResultsToExcel(List<List<String>> rows, String filePath) throws IOException, IOException {
         Workbook workbook = new XSSFWorkbook();
@@ -328,7 +222,7 @@ public class PLTLossValidation {
             int index = 1;
             for (Map.Entry<String, Map<String, String>> baselineEntry : baselineData.entrySet())
             {
-                System.out.println("On Index : "+(index++));
+               // System.out.println("On Index : "+(index++));
                 Map<String, String> actualRow = actualData.get(baselineEntry.getKey());
                 Map<String, String> baselineRow = baselineEntry.getValue();
 
