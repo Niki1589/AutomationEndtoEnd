@@ -29,7 +29,6 @@ public class AnalysisGroupingTests {
 
     @Test
     public static void execute() throws Exception {
-
         List<Map<String, String>> dataList = LoadData.readCaseTCFromLocalExcel_grouping();
         Object[] testCases = LoadData.readCaseTCFromLocalExcel();
 
@@ -70,10 +69,7 @@ public class AnalysisGroupingTests {
     }
 
     private static void runGrouping(Map<String, String> tc,Object payloadObject) throws Exception {
-
-
-        String token = ApiUtil.getSmlToken(LoadData.config.getUsername(), LoadData.config.getPassword(), LoadData.config.getTenant(), "accessToken");
-
+        String token = ApiUtil.getSmlToken(tc);
         try {
                 System.out.println("***** Running Analysis Grouping API ********");
 

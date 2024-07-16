@@ -26,7 +26,7 @@ public class UploadEDM extends TestCase {
 
         try {
 
-            String token = ApiUtil.getSmlToken(LoadData.config.getUsername(), LoadData.config.getPassword(), LoadData.config.getTenant(), "accessToken");
+            String token = ApiUtil.getSmlToken(tc);
 
             String dataSourceName =tc.get("EXP_EDM_DATASOURCE_NAME");
 

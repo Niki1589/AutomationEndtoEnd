@@ -15,7 +15,7 @@ public class CurrencyConverter {
         int newAnalysisIdConvertCurrency=0;
         System.out.println("***** Running Currency Converter API ********");
 
-        String token = ApiUtil.getSmlToken(LoadData.config.getUsername(), LoadData.config.getPassword(), LoadData.config.getTenant(), "accessToken");
+        String token = ApiUtil.getSmlToken(tc);
 
         Map<String, Object> currency = new HashMap<>();
         currency.put("code", tc.get("CCU_CURRENCY"));

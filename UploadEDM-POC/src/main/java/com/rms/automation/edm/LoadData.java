@@ -345,10 +345,7 @@ public class LoadData {
             return false;
         }
     }
-
-
-
-    public static List<String> GroupingColumns = Arrays.asList("index","is_grouping","Group_TestCase","CandidateAnalysis_TestCases","name", "description", "numOfSimulations", "propagateDetailedLosses", "simulationWindowStart", "simulationWindowEnd", "reportingWindowStart", "code", "scheme", "vintage", "asOfDate", "regionPerilSimulationSet","jobId_group","analysisId_group","jobstatus_group");
+    public static List<String> GroupingColumns = Arrays.asList("index","is_grouping","Group_TestCase","CandidateAnalysis_TestCases","name","USERNAME","PASSWORD","TENANT","description", "numOfSimulations", "propagateDetailedLosses", "simulationWindowStart", "simulationWindowEnd", "reportingWindowStart", "code", "scheme", "vintage", "asOfDate", "regionPerilSimulationSet","jobId_group","analysisId_group","jobstatus_group");
     public static List<Map<String, String>> readCaseTCFromLocalExcel_grouping() throws Exception {
         List<Map<String, String>> dataList = new ArrayList<>();
         try {

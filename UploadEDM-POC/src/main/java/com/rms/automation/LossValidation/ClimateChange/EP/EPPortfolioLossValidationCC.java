@@ -1,4 +1,4 @@
-package com.rms.automation.LossValidation.ep.ep_losses;
+package com.rms.automation.LossValidation.ClimateChange.EP;
 
 import com.rms.automation.LossValidation.ValidationResult;
 import com.rms.automation.exportApi.Download_Settings;
@@ -14,8 +14,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class EPPortlofioLossValidation {
-    public static Boolean runPortfolioLossValidationEP(String baselinePathEPCC, String actualPathEPCC, String outputPathCC, Download_Settings downloadSettings) throws Exception {
+public class EPPortfolioLossValidationCC {
+
+    public static Boolean runPortfolioLossValidationEP(String baselinePathEP, String actualPathEP, String outputPath, Download_Settings downloadSettings) throws Exception {
 
         ///Folders to read from Portfolio
         List<String> folders = new ArrayList<>();
@@ -28,11 +29,9 @@ public class EPPortlofioLossValidation {
         folders.add("SS");
         folders.add("WX");
 
-        String baselinePathPortfolioEP = baselinePathEPCC + "/Portfolio/";
-        String actualPathPortfolioEP = actualPathEPCC + "/Portfolio/";
-        String outPathEPCC = String.format(outputPathCC, "EP_Portfolio_Results");
-
-
+        String baselinePathPortfolioEP = baselinePathEP + "/Portfolio/";
+        String actualPathPortfolioEP = actualPathEP + "/Portfolio/";
+        String outPathEP = String.format(outputPath, "EP_Portfolio_Results_CC");
 
         List<List<String>> rows = new ArrayList<>();
         Boolean isAllPass = true;
@@ -50,7 +49,7 @@ public class EPPortlofioLossValidation {
                 }
             }
 
-            writeResultsToExcel(rows, outPathEPCC);
+            writeResultsToExcel(rows, outPathEP);
             return isAllPass;
         } catch (IOException e) {
             e.printStackTrace();
@@ -199,7 +198,7 @@ public class EPPortlofioLossValidation {
 
         // Baseline
         headers.add("perspcode");
-        headers.add("EPType");
+        headers.add("metrictype");
         headers.add("returnperiod");
         headers.add("loss");
 
@@ -209,7 +208,7 @@ public class EPPortlofioLossValidation {
 
         // Actual
         headers.add("perspcode");
-        headers.add("EPType");
+        headers.add("metrictype");
         headers.add("returnperiod");
         headers.add("loss");
 
@@ -219,7 +218,7 @@ public class EPPortlofioLossValidation {
 
         // Results
         headers.add("perspcode");
-        headers.add("EPType");
+        headers.add("metrictype");
         headers.add("returnperiod");
         headers.add("difference");
         headers.add("loss");

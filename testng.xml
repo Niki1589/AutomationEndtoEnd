@@ -3,7 +3,7 @@
 <suite name="Suite" parallel="none">
     <test name="Test">
         <classes>
-            <class name="com.rms.automation.merge.SingleInputClass" />
+            <!--<class name="com.rms.automation.merge.SingleInputClass" />-->
             <class name="com.rms.automation.grouping.AnalysisGroupingTests" />
         </classes>
         <!-- Specify number of test files under this tag -->

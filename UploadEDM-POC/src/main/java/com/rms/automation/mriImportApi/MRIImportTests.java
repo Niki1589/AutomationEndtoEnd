@@ -19,7 +19,7 @@ public class MRIImportTests {
     public void MRIImport(Map<String, String> tc, Boolean isCreateEDM) throws Exception {
 
         System.out.println("************** Running MRIImport ********* ");
-        String token = ApiUtil.getSmlToken(LoadData.config.getUsername(), LoadData.config.getPassword(), LoadData.config.getTenant(), "accessToken");
+        String token = ApiUtil.getSmlToken(tc);
         String dataSource = null;
         if (isCreateEDM == true) {
             System.out.println("creating edm.");

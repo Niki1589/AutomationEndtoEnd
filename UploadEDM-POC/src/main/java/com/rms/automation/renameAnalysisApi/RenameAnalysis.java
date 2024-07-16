@@ -14,7 +14,7 @@ public class RenameAnalysis {
     public static void rename(Map<String, String> tc, String analysisId) throws Exception {
         System.out.println("***** Running Rename Analysis API ********");
 
-        String token = ApiUtil.getSmlToken(LoadData.config.getUsername(), LoadData.config.getPassword(), LoadData.config.getTenant(), "accessToken");
+        String token = ApiUtil.getSmlToken(tc);
 
         Map<String, Object> payload = new HashMap<>();
         payload.put("newAnalysisName", tc.get("RNM_NEW_ANALYSIS_NAME"));

@@ -22,7 +22,7 @@ public class RdmExportTests {
     }
     public static void execute(Map<String, String> tc,RDMModel rdm, REX_EXPORT_HD_LOSSES_AS_ENUM exportHdLossesAs, String index) throws Exception {
         System.out.println("***** Running RDM Export API ********");
-        String token = ApiUtil.getSmlToken(LoadData.config.getUsername(), LoadData.config.getPassword(), LoadData.config.getTenant(), "accessToken");
+        String token = ApiUtil.getSmlToken(tc);
 
         if (REX_RDM_LOCATION_ENUM.PLATFORM.equals(rdm.getREX_RDM_LOCATION())) {
             Response response = ApiUtil.exportRDMToPlatform(

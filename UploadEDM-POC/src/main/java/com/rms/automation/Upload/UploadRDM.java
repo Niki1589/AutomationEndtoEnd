@@ -31,7 +31,7 @@ public class UploadRDM extends TestCase {
                     fileName + "_" + RandomStringUtils.randomNumeric(5) + "." + fileExt;
             try {
 
-                String token = ApiUtil.getSmlToken(LoadData.config.getUsername(), LoadData.config.getPassword(), LoadData.config.getTenant(), "accessToken");
+                String token = ApiUtil.getSmlToken(tc);
                 Boolean status = ApiUtil.fileMultiPartUpload(token, dbType, filePath, fileExt, rdmName);
                 String payload = "{\"rdmName\":\"" + rdmName + "\",\"uploadId\":\"" + ApiUtil.getRmsUploadId() + "\",\"share\":\"false\",\"groups\":[]}";
                 System.out.println("Status of fileMultiPartUpload: " + status);

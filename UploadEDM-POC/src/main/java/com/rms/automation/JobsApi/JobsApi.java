@@ -136,7 +136,11 @@ public class JobsApi {
                         break;
                     }
                 } else if (jobGetJobDetailsResponse.getStatusCode() == 401) {
-                    authToken = ApiUtil.getSmlToken(LoadData.config.getUsername(), LoadData.config.getPassword(), LoadData.config.getTenant(), "accessToken");
+                    //authToken = ApiUtil.getSmlToken(tc);
+                    status = String.valueOf(jobGetJobDetailsResponse.getStatusCode());
+                    message = "Failed to check Status: "+status;
+                    System.out.println("Error while checking job status: " + status);
+
                 }
                 else {
                     status = String.valueOf(jobGetJobDetailsResponse.getStatusCode());

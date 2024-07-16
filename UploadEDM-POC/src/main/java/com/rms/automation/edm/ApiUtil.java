@@ -42,10 +42,18 @@ public class ApiUtil {
         return payload;
     }
 
-    public static String getSmlToken(String user, String password, String tenantName, String tokenType) throws Exception {
+    public static String getSmlToken(Map<String, String> tc) throws Exception {
+        String user = tc.get("USERNAME");
+        String password = tc.get("PASSWORD");
+        String tenantName = tc.get("TENANT");
+        return getSmlToken(user, password, tenantName);
+    }
+
+    public static String getSmlToken(String user, String password, String tenantName) throws Exception {
         RetryUtil retryRequest = new RetryUtil(5);
         String uri = EndPointManager.baseUrl+EndPointManager.apiendpoints.get("authorize");
         String payload = createAuthPayload(user, password, tenantName);
+        String tokenType = "accessToken";
         RestApiHelper apiHelper = new RestApiHelper("", uri, "application/json");
         Response response = apiHelper.submitPostWithoutToken(payload);
         if (response.getStatusCode() == AutomationConstants.STATUS_OK) {
@@ -59,6 +67,7 @@ public class ApiUtil {
             throw new Exception("Auth api failed to generate token " + var10002 + " with status code" + response.getStatusCode());
         }
     }
+
 
     public static Boolean fileMultiPartUpload(
             String authToken, String dbType, String filePath, String fileExt, String fileName)

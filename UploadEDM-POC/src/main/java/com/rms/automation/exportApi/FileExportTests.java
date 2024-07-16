@@ -24,10 +24,11 @@ public class FileExportTests {
 
     public static String localPath ="";
     private static int[] analysis_Id;
+    public static List<String> jobIds = new ArrayList<>();
     public static void fileExport(Map<String, String> tc, String analysisId) throws Exception {
-        fileExport(tc, analysisId,"","");
+        fileExport(tc, analysisId,"");
     }
-    public static void fileExport(Map<String, String> tc, String analysisId,String specificFolder, String specificJobIDColumn) throws Exception {
+    public static void fileExport(Map<String, String> tc, String analysisId, String specificJobIDColumn) throws Exception {
         System.out.println("***** Running FILE Export API ********");
         if(analysisId!=null && !analysisId.isEmpty())
         {
@@ -36,7 +37,7 @@ public class FileExportTests {
                 int anlsId= Integer.parseInt(analysisId);
                 analysis_Id = new int[]{(anlsId)};
                 String exportFormat = tc.get("EXPORT_FORMAT_FILE");
-                String token = ApiUtil.getSmlToken(LoadData.config.getUsername(), LoadData.config.getPassword(), LoadData.config.getTenant(), "accessToken");
+                String token = ApiUtil.getSmlToken(tc);
 
         Map<String, Object> payload = new HashMap<>();
         payload.put("analysisIds", analysis_Id );
@@ -84,6 +85,8 @@ public class FileExportTests {
             if (jobId == null) {
                 throw new Exception("JobId is null");
             }
+
+            jobIds.add(jobId);
             String msg =  JobsApi.waitForJobToComplete(jobId, token, "Export to file API",
                     "FILE_EXPORT_JOB_STATUS", tc.get("INDEX"));
             System.out.println("wait for job msg: " + msg);
@@ -137,7 +140,7 @@ public class FileExportTests {
                     System.err.println("Failed to create folders: " + e.getMessage());
                 }
 
-                 localPath = subFolderPath +"/"+ fileName;
+                localPath = subFolderPath +"/"+ fileName;
 
                 Utils.downloadFile(downloadLink, localPath);
 
@@ -145,7 +148,43 @@ public class FileExportTests {
                 if (specificJobIDColumn != null && specificJobIDColumn.length() > 0) {
                     fileExportColumnName = specificJobIDColumn;
                 }
-                LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), fileExportColumnName, jobId);
+
+                //  LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), fileExportColumnName, jobId);
+
+                if(fileExportColumnName.equals("CCG_FILE_EXPORT_JOB_ID")) {
+                    if (jobIds.size() > 1) {
+                        // Create a StringBuilder to concatenate IDs
+                        StringBuilder sb = new StringBuilder();
+
+                        // Iterate through jobIds and append each ID to the StringBuilder
+                        for (String id : jobIds) {
+                            sb.append(id).append(",");
+                        }
+
+                        // Remove the trailing comma if there are IDs present
+                        if (sb.length() > 0) {
+                            sb.deleteCharAt(sb.length() - 1);
+                        }
+
+                        // Convert StringBuilder to a comma-separated string of IDs
+                        String commaSeparatedIds = sb.toString();
+
+                        // Call LoadData.UpdateTCInLocalExcel with the comma-separated IDs
+                        LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "CCG_FILE_EXPORT_JOB_ID", commaSeparatedIds);
+                    } else if (jobIds.size() == 1) {
+
+                        LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "CCG_FILE_EXPORT_JOB_ID", jobIds.get(0));
+                    } else {
+                        System.out.println("Please check the Job Id and try again");
+                    }
+                }
+
+                else
+                {
+                    LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), fileExportColumnName, jobId);
+                }
+
+
 
                 // To check if actual results file is not empty and has valid data , then populate the complete path of actual results in excel file.
                 Path filePath = Paths.get(localPath);

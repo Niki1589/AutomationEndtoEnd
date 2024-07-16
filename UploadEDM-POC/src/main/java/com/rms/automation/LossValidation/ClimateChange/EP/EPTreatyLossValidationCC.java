@@ -1,7 +1,6 @@
-package com.rms.automation.LossValidation.ep.ep_losses;
+package com.rms.automation.LossValidation.ClimateChange.EP;
 
 import com.rms.automation.LossValidation.ValidationResult;
-import com.rms.automation.exportApi.Download_Settings;
 import com.rms.automation.utils.Utils;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -14,34 +13,26 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class EPPortlofioLossValidation {
-    public static Boolean runPortfolioLossValidationEP(String baselinePathEPCC, String actualPathEPCC, String outputPathCC, Download_Settings downloadSettings) throws Exception {
+public class EPTreatyLossValidationCC {
+    public static Boolean runTreatyLossValidationEPCC(String baselinePathEP, String actualPathEP, String outputPath) throws Exception {
 
         ///Folders to read from Portfolio
         List<String> folders = new ArrayList<>();
-        folders.add("FA");
-        folders.add("GR");
-        folders.add("GU");
-        folders.add("QS");
-        folders.add("RL");
-        folders.add("RP");
-        folders.add("SS");
-        folders.add("WX");
+        folders.add("SU");
+        folders.add("TY");
 
-        String baselinePathPortfolioEP = baselinePathEPCC + "/Portfolio/";
-        String actualPathPortfolioEP = actualPathEPCC + "/Portfolio/";
-        String outPathEPCC = String.format(outputPathCC, "EP_Portfolio_Results");
-
-
+        String baselinePathTreatyEP = baselinePathEP + "/Treaty/";
+        String actualPathTreatyEP = actualPathEP + "/Treaty/";
+        String outPathEP = String.format(outputPath, "EP_Treaty_Results_CC");
 
         List<List<String>> rows = new ArrayList<>();
         Boolean isAllPass = true;
 
         try {
             for (String folder: folders) {
-                if( Utils.isDirExists(baselinePathPortfolioEP + folder) && Utils.isDirExists(actualPathPortfolioEP + folder) ) {
-                    List<Map<String, String>> baselineData = Utils.readCSV(baselinePathPortfolioEP + folder);
-                    List<Map<String, String>> actualData = Utils.readCSV(actualPathPortfolioEP + folder);
+                if( Utils.isDirExists(baselinePathTreatyEP + folder) && Utils.isDirExists(actualPathTreatyEP + folder) ) {
+                    List<Map<String, String>> baselineData = Utils.readCSV(baselinePathTreatyEP + folder);
+                    List<Map<String, String>> actualData = Utils.readCSV(actualPathTreatyEP + folder);
                     if (baselineData != null && actualData != null) {
                         ValidationResult validationResult = compareData(baselineData, actualData, folder);
                         rows.addAll(validationResult.resultRows);
@@ -50,13 +41,14 @@ public class EPPortlofioLossValidation {
                 }
             }
 
-            writeResultsToExcel(rows, outPathEPCC);
+            writeResultsToExcel(rows, outPathEP);
             return isAllPass;
         } catch (IOException e) {
             e.printStackTrace();
         }
         return false;
     }
+
 
     private static ValidationResult compareData(List<Map<String, String>> baselineData, List<Map<String, String>> actualData,String folder) {
         try {
@@ -65,19 +57,26 @@ public class EPPortlofioLossValidation {
 
             for (Map<String, String> baselineRow : baselineData)
             {
+
+                String baselineET = baselineRow.get("EPType");
+                String baselineRP = baselineRow.get("ReturnPeriod");
+                String baselineTID = baselineRow.get("TreatyId");
+                String baselineTNum = baselineRow.get("TreatyNum");
+                String baselineMatcher = baselineET+"-"+baselineRP+"-"+baselineTID+"-"+baselineTNum;
+                String baselineTName = baselineRow.get("TreatyName");
+
                 for (Map<String, String> actualRow : actualData) {
 
-                    String baselineMT = baselineRow.get("EPType");
-                    String baselineRP = baselineRow.get("ReturnPeriod");
-                    String baselineMTRP = baselineMT+"-"+baselineRP;
+                    String actualET = baselineRow.get("EPType");
+                    String actualRP = baselineRow.get("ReturnPeriod");
+                    String actualTID = baselineRow.get("TreatyId");
+                    String actualTNum = baselineRow.get("TreatyNum");
+                    String actualMatcher = actualET+"-"+actualRP+"-"+actualTID+"-"+actualTNum;
+                    String actualTName = baselineRow.get("TreatyName");
 
-                    String actualMT = actualRow.get("EPType");
-                    String actualRP = actualRow.get("ReturnPeriod");
-                    String actualMTRP = actualMT+"-"+actualRP;
+                    boolean isMatches = baselineMatcher.equals(actualMatcher);
 
-                    boolean isMTRPMatches = baselineMTRP.equals(actualMTRP);
-
-                    if (isMTRPMatches) {
+                    if (isMatches) {
                         List<String> row = new ArrayList<>();
 
                         String baselineLoss = baselineRow.get("Loss");
@@ -85,8 +84,11 @@ public class EPPortlofioLossValidation {
 
                         // Baseline
                         row.add(folder);
-                        row.add(baselineMT);
+                        row.add(baselineET);
                         row.add(baselineRP);
+                        row.add(baselineTID);
+                        row.add(baselineTNum);
+                        row.add(baselineTName);
                         row.add(baselineLoss);
 
                         // Two empty cells between Baseline and Actual
@@ -95,18 +97,24 @@ public class EPPortlofioLossValidation {
 
                         // Actual
                         row.add(folder);
-                        row.add(actualMT);
+                        row.add(actualET);
                         row.add(actualRP);
+                        row.add(actualTID);
+                        row.add(actualTNum);
+                        row.add(actualTName);
                         row.add(actualLoss);
 
                         // Two empty cells between Actual and Results
                         row.add("");
                         row.add("");
 
-                        // Actual
+                        // Results
                         row.add(folder);
-                        row.add(actualMT);
+                        row.add(actualET);
                         row.add(actualRP);
+                        row.add(actualTID);
+                        row.add(actualTNum);
+                        row.add(actualTName);
 
                         Double baselineLoss_ = null;
                         Double actualLoss_ = null;
@@ -118,7 +126,7 @@ public class EPPortlofioLossValidation {
                                 throw new Exception("Error");
                             }
                         } catch (Exception ex) {
-                            System.out.println("Wrong baselineLoss_ at "+baselineMT);
+                            System.out.println("Wrong baselineLoss_ at "+baselineMatcher);
                         }
 
                         try {
@@ -128,7 +136,7 @@ public class EPPortlofioLossValidation {
                                 throw new Exception("Error");
                             }
                         } catch (Exception ex) {
-                            System.out.println("Wrong actualLoss_ at "+actualMT);
+                            System.out.println("Wrong actualLoss_ at "+actualMatcher);
                         }
 
                         Double difference = null;
@@ -146,7 +154,7 @@ public class EPPortlofioLossValidation {
                         }
 
                         results.add(row);
-
+                        break;
                     }
                 }
             }
@@ -173,6 +181,8 @@ public class EPPortlofioLossValidation {
         sectionNames.add("");
         sectionNames.add("");
         sectionNames.add("");
+        sectionNames.add("");
+        sectionNames.add("");
 
         // Two empty cells between Baseline and Actual
         sectionNames.add("");
@@ -180,6 +190,8 @@ public class EPPortlofioLossValidation {
 
         // Actual
         sectionNames.add("Actual Data");
+        sectionNames.add("");
+        sectionNames.add("");
         sectionNames.add("");
         sectionNames.add("");
         sectionNames.add("");
@@ -197,11 +209,15 @@ public class EPPortlofioLossValidation {
 
         List<String> headers = new ArrayList<>();
 
+        //EPType	Loss	ReturnPeriod	TreatyId	TreatyName	TreatyNum
         // Baseline
         headers.add("perspcode");
         headers.add("EPType");
-        headers.add("returnperiod");
-        headers.add("loss");
+        headers.add("ReturnPeriod");
+        headers.add("TreatyId");
+        headers.add("TreatyNum");
+        headers.add("TreatyName");
+        headers.add("Loss");
 
         // Two empty cells between Baseline and Actual
         headers.add("");
@@ -210,8 +226,11 @@ public class EPPortlofioLossValidation {
         // Actual
         headers.add("perspcode");
         headers.add("EPType");
-        headers.add("returnperiod");
-        headers.add("loss");
+        headers.add("ReturnPeriod");
+        headers.add("TreatyId");
+        headers.add("TreatyNum");
+        headers.add("TreatyName");
+        headers.add("Loss");
 
         // Two empty cells between Actual and Results
         headers.add("");
@@ -220,7 +239,10 @@ public class EPPortlofioLossValidation {
         // Results
         headers.add("perspcode");
         headers.add("EPType");
-        headers.add("returnperiod");
+        headers.add("ReturnPeriod");
+        headers.add("TreatyId");
+        headers.add("TreatyNum");
+        headers.add("TreatyName");
         headers.add("difference");
         headers.add("loss");
 

@@ -1,4 +1,5 @@
 package com.rms.automation.batchApi;
+import com.amazonaws.services.dynamodbv2.xspec.S;
 import com.rms.automation.JobsApi.JobsApi;
 import com.rms.automation.PATEApi.PATETests;
 import com.rms.automation.Upload.UploadRDM;
@@ -25,10 +26,13 @@ public class BatchTests {
 
         String analysisId = "";
         String modelProfileIdRM="";
-        String token = ApiUtil.getSmlToken(LoadData.config.getUsername(), LoadData.config.getPassword(), LoadData.config.getTenant(), "accessToken");
+        String token = ApiUtil.getSmlToken(tc);
 
         Perils perils = Perils.extractPerilFromTC(tc);
 
+        String username=tc.get("USERNAME");
+        String password=tc.get("PASSWORD");
+        String tenant=tc.get("TENANT");
         try {
 
             String modelProfileId = ModelProfileAPI.getModelProfileApi(perils, tc, token);
@@ -65,14 +69,14 @@ public class BatchTests {
                     LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "MRN_ANALYSIS_ID", analysisId);
                 }
                 // Perform downstream workflows - RDM Export, File Export, Convert Currency , Rename Analysis, Pate, Climate Change
-                executeDownStreamWorkflows(tc, analysisId);
+                executeDownStreamWorkflows(tc, analysisId,username,password,tenant);
             }
 
             else {
                 analysisId = tc.get("MRN_ANALYSIS_ID");
 
                 // Perform downstream workflows - RDM Export, File Export, Convert Currency , Rename Analysis, Pate
-                executeDownStreamWorkflows(tc, analysisId);
+                executeDownStreamWorkflows(tc, analysisId,username,password,tenant);
             }
         } catch (Exception e)
 
@@ -83,7 +87,7 @@ public class BatchTests {
         }
     }
 
-    private static void executeDownStreamWorkflows(Map<String, String> tc, String analysisId) throws Exception {
+    private static void executeDownStreamWorkflows(Map<String, String> tc, String analysisId, String username, String password, String tenant) throws Exception {
       //  String caseNo = tc.get("TEST_CASE_NO");
 
         if (Utils.isTrue(tc.get("REX_IF_RDM_EXPORT"))) {
@@ -102,7 +106,7 @@ public class BatchTests {
             RenameAnalysis.rename(tc, analysisId);
         }
         if (Utils.isTrue(tc.get("IS_PATE"))) {
-            PATETests.executePATETests(tc.get("TEST_CASE_NO"), analysisId);
+            PATETests.executePATETests(tc.get("TEST_CASE_NO"), analysisId,username,password,tenant);
         }
         if (Utils.isTrue(tc.get("CCG_IS_CLIMATE_CHANGE"))) {
             ClimateChangeTests.climateChange(tc, analysisId);

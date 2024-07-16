@@ -13,14 +13,14 @@ import java.util.Map;
 import static com.rms.automation.edm.ApiUtil.getTreatyIdByAnalysisId;
 
 public class PATETests {
-    public static void executePATETests(String caseNo, String analysisId) throws Exception {
+    public static void executePATETests(String caseNo, String analysisId,String username,String password,String tenant) throws Exception {
         List<Map<String, String>> pateList = LoadData.readCaseTCFromLocalExcel_pate(caseNo);
         for ( Map<String, String> tc : pateList) {
-            PATE(tc,analysisId);
+            PATE(tc,analysisId, username,password,tenant);
         }
     }
 
-    private static void PATE(Map<String, String> tc, String analysisIdBatch) throws Exception {
+    private static void PATE(Map<String, String> tc, String analysisIdBatch,String username,String password,String tenant) throws Exception {
         if (tc != null) {
             Map<String, List<Map<String, Object>>> payload = new HashMap<>();
             if (tc.get("ifRun").equalsIgnoreCase("YES")) {
@@ -28,7 +28,7 @@ public class PATETests {
                 String analysisId_pate = analysisIdBatch;
                 System.out.println("***** Running PATE API ********");
 
-                String token = ApiUtil.getSmlToken(LoadData.config.getUsername(), LoadData.config.getPassword(), LoadData.config.getTenant(), "accessToken");
+                String token = ApiUtil.getSmlToken(username,password,tenant);
 
                 String pateOperationType = tc.get("operationType");
 

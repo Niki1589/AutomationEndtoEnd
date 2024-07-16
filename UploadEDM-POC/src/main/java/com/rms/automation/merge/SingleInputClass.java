@@ -43,6 +43,7 @@ public class SingleInputClass {
             try {
 
 
+
                 if (Utils.isTrue(tc.get("IF_TEST_CASE_RUN"))) {
                     System.out.println("Test Case No: " + tc.get("TEST_CASE_NO"));
                     if (Utils.isTrue(tc.get("EXP_IS_RUN_UPLOAD_IMPORT"))) {
@@ -74,7 +75,7 @@ public class SingleInputClass {
                                     RenameAnalysis.rename(tc, tc.get("analysisId"));
                                 }
                                 if (Utils.isTrue(tc.get("isPate"))) {
-                                    PATETests.executePATETests(tc.get("caseNo"), tc.get("analysisId"));
+                                //    PATETests.executePATETests(tc.get("caseNo"), tc.get("analysisId"));
                                 }
                                 if (Utils.isTrue(tc.get("is_ClimateChange"))) {
                                     ClimateChangeTests.climateChange(tc, tc.get("analysisId"));

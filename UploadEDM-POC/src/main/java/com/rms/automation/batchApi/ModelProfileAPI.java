@@ -24,6 +24,8 @@ import java.util.Map;
 
 public class ModelProfileAPI {
 
+    static List<Map<Object, Object>> listOfModelProfiles = new ArrayList<>();
+
     public static String getModelProfileApi(Perils perils, Map<String, String> tc, String token) throws Exception {
         try {
             return createModelProfile(token, tc, perils);
@@ -35,27 +37,51 @@ public class ModelProfileAPI {
     public static String createModelProfile(String token, Map<String, String> tc, Perils perils) throws Exception {
 
         System.out.println("***** Checking if Model Profile exists on the UI or not ********");
+        String mpfid = tc.get("MPF_MFID");
         if( tc.get("MPF_IF_CREATE_MODEL_PROFILE").equalsIgnoreCase("NO")) {
-            String id = tc.get("MPF_MFID");
-            Map<String, Map<Object, Object>> profiles = getModelProfile(token, "id");
-            Map<Object, Object> exists = profiles.get(id);
 
-            // If MPF_IF_CREATE_MODEL_PROFILE is set to NO ,and MPIF mentioned in the excel sheet is present on RM , then pick it from the sheet
+            // If MPF_IF_CREATE_MODEL_PROFILE is set to NO ,and MPFID mentioned in the excel sheet is present on RM , then pick it from the sheet
+
+
+            Map<String, Map<Object, Object>> profiles = getModelProfile(token, "id");
+            Map<Object, Object> exists = profiles.get(mpfid);
+
             if (exists != null) {
-                return id;
+                return mpfid;
             } else {
-                //If Model Profile is not found on RM and MPF_IF_CREATE_MODEL_PROFILE is set to NO
-                throw new NotFoundException("Model Profile with " + id + " not found!");
+
+                //If MPF_IF_CREATE_MODEL_PROFILE is set to NO and  Model Profile ID is not found on RM, then throw an exception
+
+                throw new NotFoundException("Model Profile with " + mpfid + " not found!");
             }
         }
 
-        //If create Model Profile is set to yes, but a MP with same name does not exist on the UI
+        //If create Model Profile is set to YES, but a MP with same name exists on the UI,then update the existing MFID in the excel sheet and do not create another MP with the same name
 
         if(tc.get("MPF_IF_CREATE_MODEL_PROFILE").equalsIgnoreCase("YES")) {
-            String MPName=tc.get("MPF_CREATED_NAME")+"_"+tc.get("MPF_DESCRIPTION");
-            Map<String, Map<Object, Object>> profiles = getModelProfile(token, "name");
-            Map<Object, Object> exists = profiles.get(MPName);
 
+            String MPName=tc.get("MPF_CREATED_NAME")+"_"+tc.get("MPF_DESCRIPTION");
+            String MPId = tc.get("MPF_MFID");
+
+
+            //First, try searching the MP with the given ID, if not found, then search with the name
+
+            Map<Object, Object> exists = null;
+            Map<String, Map<Object, Object>> profilesWithId = getModelProfile(token, "id");
+            exists = profilesWithId.get(MPId);
+
+            if (exists == null) {
+                Map<String, Map<Object, Object>> profilesWithName = getModelProfile(token, "name");
+                exists = profilesWithName.get(MPName) ;
+            }
+
+
+//            //Checking either MPFName or MPFID exists on the RM
+//
+//            Map<Object, Object> exists = profiles.get(MPName);
+//            if (exists == null) {
+//                exists = profiles.get(tc.get("mpfid"));
+//            }
             if (exists != null) {
                 String id = String.valueOf(exists.get("id"));
                 System.out.println("This Model Profile "+MPName+" already exists on the UI, please do not create a duplicate MP, updating the excel with Model Profile Id");
@@ -63,6 +89,8 @@ public class ModelProfileAPI {
                 LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "MPF_MFID",id);
                 throw new RuntimeException("");
             }
+
+            //If create Model Profile is set to YES and Model Profile ID is not found on RM, then create a new MP with the given name and return the ID
 
             String ModelProfile_Name = tc.get("MPF_CREATED_NAME");
             System.out.println("Model profile name : " + ModelProfile_Name);
@@ -483,22 +511,22 @@ public class ModelProfileAPI {
     }
 
     public static Map<String, Map<Object, Object>>  getModelProfile( String token, String keyName) {
-        Response response = ApiUtil.getAllHDModelProfiles(token);
-        if (response.getStatusCode() == AutomationConstants.STATUS_OK) {
 
-            List<Map<Object, Object>> listOfModelProfiles = response.getBody().jsonPath().get("items");
-
-            Map<String, Map<Object, Object>> mapOfModelPorfiles = new HashMap<>();
-            for (Map<Object, Object> item : listOfModelProfiles) {
-                String id = String.valueOf(item.get(keyName));
-                mapOfModelPorfiles.put(id, item);
+        if (listOfModelProfiles.size() == 0) {
+            Response response = ApiUtil.getAllHDModelProfiles(token);
+            if (response.getStatusCode() == AutomationConstants.STATUS_OK) {
+                listOfModelProfiles = response.getBody().jsonPath().get("items");
             }
-
-            return mapOfModelPorfiles;
-
         }
 
-        return  null;
+        Map<String, Map<Object, Object>> mapOfModelPorfiles = new HashMap<>();
+        for (Map<Object, Object> item : listOfModelProfiles) {
+            String id = String.valueOf(item.get(keyName));
+            mapOfModelPorfiles.put(id, item);
+        }
+
+        return mapOfModelPorfiles;
+
     }
 
 }

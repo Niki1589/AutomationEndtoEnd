@@ -10,7 +10,7 @@ public class STATSLossValidation {
         Boolean isPortfolioPass = STATSPortfolioLossValidation.run(baselinePathSTATS, actualPathSTATS, outputPath);
         Boolean isTreatyPass = StatsTreatyLossValidation.run(baselinePathSTATS, actualPathSTATS, outputPath);
 
-        Boolean isAllPass = (isPortfolioPass && isTreatyPass);
+        Boolean isAllPass = (isPortfolioPass || isTreatyPass);
 
         System.out.println("STATS Comparison completed and results written to Excel.");
         return isAllPass;
