@@ -118,7 +118,7 @@ public class Utils {
 
                 // Print progress every second
                 if (elapsedTime > 1000) {
-                    System.out.println("Downloaded " + bytesReadTotal + " of " + contentLength + " bytes (" + progress + "%)");
+                 //   System.out.println("Downloaded " + bytesReadTotal + " of " + contentLength + " bytes (" + progress + "%)");
                     startTime = currentTime;
                 }
             }
@@ -206,7 +206,7 @@ public class Utils {
         try {
             Path dirPath = Paths.get(dir);
             if (Files.exists(dirPath) && Files.isDirectory(dirPath)) return true;
-            System.out.println("Dir "+dir+" Does not exists");
+           // System.out.println("Dir "+dir+" Does not exists");
         } catch (Exception ex) {
             System.out.println("Dir "+dir+" Does not exists");
         }

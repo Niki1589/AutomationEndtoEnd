@@ -8,12 +8,16 @@ import com.rms.automation.utils.Utils;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 public class RdmExportTests {
 
-    public static String fileName;
-    public static String localPath;
+    public static String fileNameRDM;
+    public static String localPathRDM;
 
     public static void rdmExport(Map<String, String> tc, String analysisId) throws Exception {
         RDMModel rdm = RDMMapper.map(tc, analysisId);
@@ -58,14 +62,36 @@ public class RdmExportTests {
                     Map<String, Object> summaryMap = (Map<String, Object>) jobResponseMap.get("summary");
 
                   String rdmLink = String.valueOf(summaryMap.get("downloadLink"));
-                  fileName = rdmLink.substring(rdmLink.lastIndexOf("/") + 1, rdmLink.indexOf("?"));
-                  localPath = "/Users/Nikita.Arora/Documents/UploadEdmPoc/A002_SMOKE_EUWS/ActualResults/RDM/" + fileName;
-                    Utils.downloadFile(rdmLink, localPath);
+                    fileNameRDM = rdmLink.substring(rdmLink.lastIndexOf("/") + 1, rdmLink.indexOf("?"));
+
+                //  Create the folder RDM for the RDM files
+                    String RDMFolderPath = tc.get("FILE_EXPORT_PATH") + "RDM/";
+
+                    // Create a Path object representing the directory
+                    Path RDMFolder = Paths.get(RDMFolderPath);
+
+                    try {
+                        // Check if the base folder already exists
+                        if (Files.exists(RDMFolder)) {
+                            throw new IOException("Comparison folder already exists: " + RDMFolderPath);
+                        }
+
+                        // Attempt to create the directory
+                        Files.createDirectories(RDMFolder);
+                        System.out.println("RDM Folder created successfully.");
+                    } catch (IOException e) {
+                        System.err.println("Failed to create folder: " + e.getMessage());
+                    }
+
+                    localPathRDM = RDMFolderPath + fileNameRDM;
+                    Utils.downloadFile(rdmLink, localPathRDM);
+
+                    //Only PLT type losses can be imported as RDM to RM
 
                     if (tc.get("REX_EXPORT_HD_LOSSES_AS").equalsIgnoreCase(String.valueOf(REX_EXPORT_HD_LOSSES_AS_ENUM.PLT))) {
 
-                        LoadData.UpdateTCInLocalExcel(index, "IMPR_ANALYSIS_FROM_RDM_FILE_NAME", fileName);
-                        LoadData.UpdateTCInLocalExcel(index, "IMPR_ANALYSIS_FROM_RDM_FILE_PATH", localPath);
+                        LoadData.UpdateTCInLocalExcel(index, "IMPR_ANALYSIS_FROM_RDM_FILE_NAME", fileNameRDM);
+                        LoadData.UpdateTCInLocalExcel(index, "IMPR_ANALYSIS_FROM_RDM_FILE_PATH", localPathRDM);
                         LoadData.UpdateTCInLocalExcel(index, "RDM_EXPORT_JOBID_PLT", jobId);
                     }
                     else if (tc.get("REX_EXPORT_HD_LOSSES_AS").equalsIgnoreCase(String.valueOf(REX_EXPORT_HD_LOSSES_AS_ENUM.ELT)))

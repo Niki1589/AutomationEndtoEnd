@@ -1,11 +1,8 @@
 package com.rms.automation.LossValidation.non_ep;
 
-import com.rms.automation.LossValidation.PLTLossValidation;
 import com.rms.automation.LossValidation.ValidationResult;
-import com.rms.automation.LossValidation.ep.ep_losses.EPLossValidation;
-import com.rms.automation.LossValidation.ep.stats_losses.STATSLossValidation;
 import com.rms.automation.LossValidation.non_ep.plt_losses.PLTLossValidationNonEP;
-import com.rms.automation.LossValidation.non_ep.stats_losses.NonEPSTATSLossValidation;
+import com.rms.automation.LossValidation.non_ep.stats_losses.STATSLossValidationNonEP;
 import com.rms.automation.exportApi.Download_Settings;
 import com.rms.automation.utils.Utils;
 
@@ -19,11 +16,11 @@ public class NonEPRun {
 
             if(Utils.isTrue(downloadSettings.getIsStatsMetric()))
             {
-                validationResult.isAllStatsPass = NonEPSTATSLossValidation.run(baselinePath, actualPath, outputPath);
+                validationResult.isAllStatsPass = STATSLossValidationNonEP.run(baselinePath, actualPath, outputPath,downloadSettings);
             }
             if(Utils.isTrue(downloadSettings.getIsLossTablesMetric())) {
 
-                validationResult.isAllPLTPass = PLTLossValidationNonEP.run(baselinePath, actualPath, outputPath);
+                validationResult.isAllPLTPass = PLTLossValidationNonEP.run(baselinePath, actualPath, outputPath,downloadSettings);
             }
         } catch (IOException e) {
             System.out.println("Loss Validation Failed "+e.getMessage());

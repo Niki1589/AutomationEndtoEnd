@@ -13,16 +13,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class PLTTreatyLossValidation {
+public class PLTTreatyLossValidationNonEP {
 
-    public static Boolean runTreatyResults(String baselinePathStats, String actualPathStats, String outputPath) {
+    public static Boolean runTreatyResults(String baselinePathPLT, String actualPathPLT, String outputPath) {
 
         List<String> folders = new ArrayList<>();
         folders.add("SU");
         folders.add("TY");
 
-        String baselinePathPLTTreaty = baselinePathStats + "/Treaty/";
-        String actualPathPLTTreaty = actualPathStats + "/Treaty/";
+        String baselinePathPLTTreaty = baselinePathPLT + "/Treaty/";
+        String actualPathPLTTreaty = actualPathPLT + "/Treaty/";
         String outPathPLTTreaty = String.format(outputPath, "PLT_Treaty_Results_non_ep");
 
         List<List<String>> rows = new ArrayList<>();

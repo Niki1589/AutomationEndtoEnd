@@ -18,11 +18,11 @@ public class UploadRDM extends TestCase {
     public static void executeUploadRdm(Map<String, String> tc) throws NullPointerException, Exception {
 
             int actualresponse;
-             String fileName = tc.get("IMPR_ANALYSIS_FROM_RDM_FILE_NAME");
-           // String fileName = RdmExportTests.fileName;
+            // String fileName = tc.get("IMPR_ANALYSIS_FROM_RDM_FILE_NAME");
+              String fileName = RdmExportTests.fileNameRDM;
 
-              String filePath = tc.get("IMPR_ANALYSIS_FROM_RDM_FILE_PATH");
-           // String filePath = RdmExportTests.localPath;
+             // String filePath = tc.get("IMPR_ANALYSIS_FROM_RDM_FILE_PATH");
+            String filePath = RdmExportTests.localPathRDM;
 
             System.out.println("File path is " + filePath);
             String fileExt = tc.get("IMPR_ANALYSIS_FROM_RDM_FILE_EXT");

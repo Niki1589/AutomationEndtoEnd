@@ -1,5 +1,6 @@
-package com.rms.automation.LossValidation;
+package com.rms.automation.LossValidation.ep.plt_losses;
 
+import com.rms.automation.LossValidation.ValidationResult;
 import com.rms.automation.utils.Utils;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -13,16 +14,14 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.RecursiveTask;
-import java.util.stream.Stream;
-
 import java.time.Duration;
 import java.time.Instant;
+import java.util.*;
+import java.util.stream.Stream;
 
-public class PLTLossValidation {
-    public static Boolean PLTLossValidation(String baselinePathPortfolio, String actualPathPortfolio, String outputPath) throws Exception {
+public class PLTPortfolioLossValidationEP {
+
+    public static Boolean run(String baselinePathPortfolio, String actualPathPortfolio, String outputPath) throws Exception {
 
         ///Folders to read from Portfolio
         List<String> folders = new ArrayList<>();
@@ -46,7 +45,7 @@ public class PLTLossValidation {
         try {
             for (String folder: folders) {
                 if( Utils.isDirExists(baselinePathPortfolioPLT + folder) && Utils.isDirExists(actualPathPortfolioPLT + folder) ) {
-                    System.out.println("baselinePathPortfolioPLT + folder Reading");
+                    System.out.println("baselinePathPortfolio PLT + folder Reading");
 
                     Instant start = Instant.now();
                     Map<String, Map<String, String>> baselineData = readCSV(baselinePathPortfolioPLT + folder);
@@ -79,7 +78,7 @@ public class PLTLossValidation {
 
             System.out.println("Writing to excel");
             writeResultsToExcel(rows, outPathPLT);
-            System.out.println("PLT Comparison completed and results written to Excel.");
+            System.out.println("PLT Comparison completed for EP Portfolio and results written to Excel.");
             return isAllPass;
         } catch (IOException e) {
             e.printStackTrace();
@@ -222,7 +221,7 @@ public class PLTLossValidation {
             int index = 1;
             for (Map.Entry<String, Map<String, String>> baselineEntry : baselineData.entrySet())
             {
-               // System.out.println("On Index : "+(index++));
+                // System.out.println("On Index : "+(index++));
                 Map<String, String> actualRow = actualData.get(baselineEntry.getKey());
                 Map<String, String> baselineRow = baselineEntry.getValue();
 
@@ -325,6 +324,5 @@ public class PLTLossValidation {
                 absSeconds % 60);
         return seconds < 0 ? "-" + positive : positive;
     }
-
 
 }

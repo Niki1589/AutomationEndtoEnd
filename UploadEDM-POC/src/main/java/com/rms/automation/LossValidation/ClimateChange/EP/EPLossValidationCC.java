@@ -1,13 +1,13 @@
-package com.rms.automation.LossValidation.ep.ep_losses;
+package com.rms.automation.LossValidation.ClimateChange.EP;
 
 import com.rms.automation.exportApi.Download_Settings;
 
 import java.io.File;
 
-public class EPLossValidation {
+public class EPLossValidationCC {
     public static Boolean run(String baselinePath, String actualPath, String outputPath, Download_Settings downloadSettings) throws Exception {
 
-        String baselinePathEP = baselinePath + "/EP/EP";
+        String baselinePathEP = baselinePath + "/EP";
         String actualPathEP = actualPath + "/EP";
 
         // Check if baselinePathEP directory exists
@@ -23,23 +23,20 @@ public class EPLossValidation {
         }
 
         Boolean isPortfolioPass = null;
-        if (downloadSettings.getOutputLevels_EPMetric()!=null && downloadSettings.getOutputLevels_EPMetric().equalsIgnoreCase("Portfolio")) {
-
-            // If both directories exist, proceed with loss validations
-            isPortfolioPass = EPPortlofioLossValidation.runPortfolioLossValidationEP(baselinePathEP, actualPathEP, outputPath, downloadSettings);
+        if (downloadSettings.getOutputLevels_EPMetric()!=null && downloadSettings.getOutputLevels_EPMetric().equalsIgnoreCase("Portfolio"))
+        {
+            isPortfolioPass = EPPortfolioLossValidationCC.runPortfolioLossValidationEP(baselinePathEP, actualPathEP, outputPath, downloadSettings);
         }
-
-        Boolean isTreatyPass = null;
+        Boolean isTreatyPass =null;
         if (downloadSettings.getOutputLevels_EPMetric()!=null && downloadSettings.getOutputLevels_EPMetric().equalsIgnoreCase("Treaty")) {
 
-            // If both directories exist, proceed with loss validations
-            isTreatyPass = EPTreatyLossValidation.runTreatyLossValidationEP(baselinePathEP, actualPathEP, outputPath);
-        }
-        // Boolean isTreatyPass = EPTreatyLossValidation.runTreatyLossValidationEP(baselinePathEP, actualPathEP, outputPath);
+                isTreatyPass = EPTreatyLossValidationCC.runTreatyLossValidationEPCC(baselinePathEP, actualPathEP, outputPath);
+            }
 
-        Boolean isAllPass = (isPortfolioPass ==Boolean.TRUE) || (isTreatyPass==Boolean.TRUE);
+        Boolean isAllPass = (isPortfolioPass==Boolean.TRUE )|| (isTreatyPass==Boolean.TRUE);
 
-        System.out.println("EP Comparison for Analysis Type EP completed and results written to Excel.");
+
+        System.out.println("EP Comparison for CC completed and results written to Excel.");
         return isAllPass;
 
     }

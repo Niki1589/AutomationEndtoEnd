@@ -1,4 +1,4 @@
-package com.rms.automation.LossValidation.ep.stats_losses;
+package com.rms.automation.LossValidation.non_ep.plt_losses;
 
 import com.rms.automation.LossValidation.ValidationResult;
 import com.rms.automation.utils.Utils;
@@ -7,35 +7,49 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class StatsTreatyLossValidation {
+public class PLTPortfolioLossValidationNonEP {
+    public static Boolean run(String baselinePathPLT, String actualPathPLT, String outputPath) throws Exception {
 
-    public static Boolean run(String baselinePathStats, String actualPathStats, String outputPath) {
-        
         List<String> folders = new ArrayList<>();
-        folders.add("SU");
-        folders.add("TY");
+        folders.add("FA");
+        folders.add("GR");
+        folders.add("GU");
+        folders.add("QS");
+        folders.add("RL");
+        folders.add("RP");
+        folders.add("SS");
+        folders.add("WX");
 
-        String baselinStatsathTreatyStats = baselinePathStats + "/Treaty/";
-        String actualPathTreatyStats = actualPathStats + "/Treaty/";
+        String baselinePathPortfolioPLT = baselinePathPLT + "/Portfolio/";
+        String actualPathPortfolioPLT = actualPathPLT +"/Portfolio/" ;
+        String outPathStats = String.format(outputPath, "PLT_Portfolio_Results_NonEP");
 
-        //String actualPathTreatyStats ="/Users/Nikita.Arora/Documents/UploadEdmPoc/A002_SMOKE_EUWS/ActualResults/25014915_Testing_EDM_E2E_new3__PORTFOLIO__EUWS_01_Losses/STATS/Treaty/";
+        File baselineDir = new File(baselinePathPortfolioPLT);
+        if (!baselineDir.exists() || !baselineDir.isDirectory()) {
+            throw new Exception("Baseline directory '" + baselinePathPortfolioPLT + "' does not exist or is not a directory.");
+        }
 
-        String outPathStats = String.format(outputPath, "Stats_Treaty_Results");
+        // Check if actualPathEP directory exists
+        File actualDir = new File(actualPathPortfolioPLT);
+        if (!actualDir.exists() || !actualDir.isDirectory()) {
+            throw new Exception("Actual directory '" + actualPathPortfolioPLT + "' does not exist or is not a directory.");
+        }
 
         List<List<String>> rows = new ArrayList<>();
         Boolean isAllPass = true;
 
         try {
             for (String folder: folders) {
-                if( Utils.isDirExists(baselinStatsathTreatyStats + folder) && Utils.isDirExists(actualPathTreatyStats + folder) ) {
-                    List<Map<String, String>> baselineData = Utils.readCSV(baselinStatsathTreatyStats + folder);
-                    List<Map<String, String>> actualData = Utils.readCSV(actualPathTreatyStats + folder);
+                if( Utils.isDirExists(baselinePathPortfolioPLT + folder) && Utils.isDirExists(actualPathPortfolioPLT + folder) ) {
+                    List<Map<String, String>> baselineData = Utils.readParquet(actualPathPortfolioPLT + folder);
+                    List<Map<String, String>> actualData = Utils.readParquet(actualPathPortfolioPLT + folder);
                     if (baselineData != null && actualData != null) {
                         ValidationResult validationResult = compareData(baselineData, actualData, folder);
                         rows.addAll(validationResult.resultRows);
@@ -52,48 +66,37 @@ public class StatsTreatyLossValidation {
         return false;
     }
 
-
     private static ValidationResult compareData(List<Map<String, String>> baselineData, List<Map<String, String>> actualData,String folder) {
+
         try {
             List<List<String>> results = new ArrayList<>();
             Boolean isAllPass = true;
 
             for (Map<String, String> baselineRow : baselineData)
             {
-
-                String baselineTID = baselineRow.get("TreatyId");
-                String baselineTNum = baselineRow.get("TreatyNum");
-                String baselineMatcher = baselineTID+"-"+baselineTNum;
-                String baselineTName = baselineRow.get("TreatyName");
-
                 for (Map<String, String> actualRow : actualData) {
 
-                    String actualTID = baselineRow.get("TreatyId");
-                    String actualTNum = baselineRow.get("TreatyNum");
-                    String actualMatcher = actualTID+"-"+actualTNum;
-                    String actualTName = baselineRow.get("TreatyName");
+                    String baselineSampleId = baselineRow.get("SampleId");
+                    String baselineEventId = baselineRow.get("EventId");
+                    String baselineMTRP = baselineSampleId+"-"+baselineEventId;
 
-                    boolean isMatches = baselineMatcher.equals(actualMatcher);
+                    String actualSampleId = actualRow.get("SampleId");
+                    String actualEventId= actualRow.get("EventId");
+                    String actualMTRP = actualSampleId+"-"+actualEventId;
 
-                    if (isMatches) {
+                    boolean isMTRPMatches = baselineMTRP.equals(actualMTRP);
+
+                    if (isMTRPMatches) {
                         List<String> row = new ArrayList<>();
 
-                        String baselineAAL = baselineRow.get("AAL");
-                        String baselineStd = baselineRow.get("Std");
-                        String baselineCV = baselineRow.get("CV");
-
-                        String actualAAL = actualRow.get("AAL");
-                        String actualStd = actualRow.get("Std");
-                        String actualCV = actualRow.get("CV");
+                        String baselineLoss = baselineRow.get("Loss");
+                        String actualLoss = actualRow.get("Loss");
 
                         // Baseline
                         row.add(folder);
-                        row.add(baselineTID);
-                        row.add(baselineTNum);
-                        row.add(baselineTName);
-                        row.add(baselineAAL);
-                        row.add(baselineStd);
-                        row.add(baselineCV);
+                        row.add(baselineSampleId);
+                        row.add(baselineEventId);
+                        row.add(baselineLoss);
 
                         // Two empty cells between Baseline and Actual
                         row.add("");
@@ -101,37 +104,58 @@ public class StatsTreatyLossValidation {
 
                         // Actual
                         row.add(folder);
-                        row.add(actualTID);
-                        row.add(actualTNum);
-                        row.add(actualTName);
-                        row.add(actualAAL);
-                        row.add(actualStd);
-                        row.add(actualCV);
+                        row.add(actualSampleId);
+                        row.add(actualEventId);
+                        row.add(actualLoss);
 
                         // Two empty cells between Actual and Results
                         row.add("");
                         row.add("");
 
-                        // Results
+                        // Actual
                         row.add(folder);
-                        row.add(actualTID);
-                        row.add(actualTNum);
-                        row.add(actualTName);
+                        row.add(actualSampleId);
+                        row.add(actualEventId);
 
-                        List<String> AALRows = checkDiff(baselineAAL, actualAAL, "AAL", folder);
-                        List<String> StdRows = checkDiff(baselineAAL, actualAAL, "Std", folder);
-                        List<String> CVRows = checkDiff(baselineAAL, actualAAL, "CV", folder);
+                        Double baselineLoss_ = null;
+                        Double actualLoss_ = null;
 
-                        row.addAll(AALRows);
-                        row.addAll(StdRows);
-                        row.addAll(CVRows);
+                        try {
+                            if (baselineLoss != null && !baselineLoss.isEmpty()) {
+                                baselineLoss_ = Double.valueOf(baselineLoss);
+                            } else {
+                                throw new Exception("Error");
+                            }
+                        } catch (Exception ex) {
+                            System.out.println("Wrong baselineLoss_ at "+baselineEventId);
+                        }
 
-                        if (AALRows.get(1).equals("Fail") || StdRows.get(1).equals("Fail") || CVRows.get(1).equals("Fail"))  {
+                        try {
+                            if (actualLoss != null && !actualLoss.isEmpty()) {
+                                actualLoss_ = Double.valueOf(actualLoss);
+                            } else {
+                                throw new Exception("Error");
+                            }
+                        } catch (Exception ex) {
+                            System.out.println("Wrong actualLoss_ at "+actualEventId);
+                        }
+
+                        Double difference = null;
+                        if (baselineLoss_ != null && actualLoss_ != null) {
+                            difference = Math.abs(baselineLoss_ - actualLoss_);
+                        }
+
+                        row.add(difference+"");
+
+                        if (difference != null && !(difference > 1)) {
+                            row.add("Pass");
+                        } else {
                             isAllPass = false;
+                            row.add("Fail");
                         }
 
                         results.add(row);
-                        break;
+
                     }
                 }
             }
@@ -143,9 +167,10 @@ public class StatsTreatyLossValidation {
             ex.printStackTrace();
             return null;
         }
+
     }
 
-    private static void writeResultsToExcel(List<List<String>> rows, String filStatsath) throws IOException {
+    private static void writeResultsToExcel(List<List<String>> rows, String filePath) throws IOException, IOException {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Results");
 
@@ -158,8 +183,7 @@ public class StatsTreatyLossValidation {
         sectionNames.add("");
         sectionNames.add("");
         sectionNames.add("");
-        sectionNames.add("");
-        sectionNames.add("");
+
 
         // Two empty cells between Baseline and Actual
         sectionNames.add("");
@@ -171,8 +195,8 @@ public class StatsTreatyLossValidation {
         sectionNames.add("");
         sectionNames.add("");
         sectionNames.add("");
-        sectionNames.add("");
-        sectionNames.add("");
+
+
 
         // Two empty cells between Actual and Results
         sectionNames.add("");
@@ -183,53 +207,45 @@ public class StatsTreatyLossValidation {
         sectionNames.add("");
         sectionNames.add("");
         sectionNames.add("");
+        sectionNames.add("");
 
         List<String> headers = new ArrayList<>();
 
-        //AAL	Std	CV	TreatyId	TreatyName	TreatyNum
         // Baseline
-        headers.add("perspcode");
-        headers.add("TreatyId");
-        headers.add("TreatyNum");
-        headers.add("TreatyName");
-        headers.add("AAL");
-        headers.add("Std");
-        headers.add("CV");
+        headers.add("perscode");
+        headers.add("SampleId");
+        headers.add("EventId");
+        headers.add("Loss");
+
 
         // Two empty cells between Baseline and Actual
         headers.add("");
         headers.add("");
 
         // Actual
-        headers.add("perspcode");
-        headers.add("TreatyId");
-        headers.add("TreatyNum");
-        headers.add("TreatyName");
-        headers.add("AAL");
-        headers.add("Std");
-        headers.add("CV");
+        headers.add("perscode");
+        headers.add("SampleId");
+        headers.add("EventId");
+        headers.add("Loss");;
 
         // Two empty cells between Actual and Results
         headers.add("");
         headers.add("");
 
-        // Results
-        headers.add("perspcode");
-        headers.add("TreatyId");
-        headers.add("TreatyNum");
-        headers.add("TreatyName");
-        headers.add("AAL-Diff");
-        headers.add("AAL");
-        headers.add("STD-Diff");
-        headers.add("STD");
-        headers.add("CV-Diff");
-        headers.add("CV");
+        // Result
+        headers.add("perscode");
+        headers.add("SampleId");
+        headers.add("EventId");
+        headers.add("difference");
+        headers.add("loss");
+
 
         results.add(sectionNames);
         results.add(headers);
 
         results.addAll(rows);
 
+        // Write the data rows
         // Write the data rows
         int rowNum = 0;
         for (List<String> resultRow : results) {
@@ -243,11 +259,12 @@ public class StatsTreatyLossValidation {
             }
         }
 
-        FileOutputStream fileOut = new FileOutputStream(filStatsath);
+        FileOutputStream fileOut = new FileOutputStream(filePath);
         workbook.write(fileOut);
         fileOut.close();
         workbook.close();
     }
+
 
     private  static List<String> checkDiff(String baseline, String actual, String name, String pr) {
 
@@ -276,6 +293,4 @@ public class StatsTreatyLossValidation {
         return rows;
 
     }
-
-
 }

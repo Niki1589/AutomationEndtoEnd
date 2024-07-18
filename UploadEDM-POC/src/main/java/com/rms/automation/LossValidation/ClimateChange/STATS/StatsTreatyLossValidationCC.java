@@ -7,6 +7,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -15,26 +16,37 @@ import java.util.Map;
 
 public class StatsTreatyLossValidationCC {
 
-    public static Boolean run(String baselinePathStats, String actualPathStats, String outputPath) {
+    public static Boolean run(String baselinePathStats, String actualPathStats, String outputPath) throws Exception {
 
         List<String> folders = new ArrayList<>();
         folders.add("SU");
         folders.add("TY");
 
-        String baselinStatsathTreatyStats = baselinePathStats + "/Treaty/";
+        String baselinePathTreatyStats = baselinePathStats + "/Treaty/";
         String actualPathTreatyStats = actualPathStats + "/Treaty/";
-
-        //String actualPathTreatyStats ="/Users/Nikita.Arora/Documents/UploadEdmPoc/A002_SMOKE_EUWS/ActualResults/25014915_Testing_EDM_E2E_new3__PORTFOLIO__EUWS_01_Losses/STATS/Treaty/";
-
         String outPathStats = String.format(outputPath, "Stats_Treaty_Results_CC");
+
+
+        // Check if baselinePathEP directory exists
+        File baselineDir = new File(baselinePathTreatyStats);
+        if (!baselineDir.exists() || !baselineDir.isDirectory()) {
+            throw new Exception("Baseline directory '" + baselinePathTreatyStats + "' does not exist or is not a directory.");
+        }
+
+        // Check if actualPathEP directory exists
+        File actualDir = new File(actualPathTreatyStats);
+        if (!actualDir.exists() || !actualDir.isDirectory()) {
+            throw new Exception("Actual directory '" + actualPathTreatyStats + "' does not exist or is not a directory.");
+        }
+
 
         List<List<String>> rows = new ArrayList<>();
         Boolean isAllPass = true;
 
         try {
             for (String folder: folders) {
-                if( Utils.isDirExists(baselinStatsathTreatyStats + folder) && Utils.isDirExists(actualPathTreatyStats + folder) ) {
-                    List<Map<String, String>> baselineData = Utils.readCSV(baselinStatsathTreatyStats + folder);
+                if( Utils.isDirExists(baselinePathTreatyStats + folder) && Utils.isDirExists(actualPathTreatyStats + folder) ) {
+                    List<Map<String, String>> baselineData = Utils.readCSV(baselinePathTreatyStats + folder);
                     List<Map<String, String>> actualData = Utils.readCSV(actualPathTreatyStats + folder);
                     if (baselineData != null && actualData != null) {
                         ValidationResult validationResult = compareData(baselineData, actualData, folder);

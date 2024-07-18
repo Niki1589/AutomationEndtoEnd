@@ -41,9 +41,7 @@ public class SingleInputClass {
     public void uploadOrImportEdm(Map<String, String> tc) {
         if (tc != null) {
             try {
-
-
-
+            try {
                 if (Utils.isTrue(tc.get("IF_TEST_CASE_RUN"))) {
                     System.out.println("Test Case No: " + tc.get("TEST_CASE_NO"));
                     if (Utils.isTrue(tc.get("EXP_IS_RUN_UPLOAD_IMPORT"))) {
@@ -64,23 +62,23 @@ public class SingleInputClass {
 
                                 break;
 
-                            case "DOWNSTREAM":
-                                if (Utils.isTrue(tc.get("if_rdm_export"))) {
-                                    export.exportType(tc, tc.get("analysisId"));
-                                }
-                                if (Utils.isTrue(tc.get("isConvertCurrency"))) {
-                                    CurrencyConverter.convert(tc, tc.get("analysisId"));
-                                }
-                                if (Utils.isTrue(tc.get("isRenameAnalysis"))) {
-                                    RenameAnalysis.rename(tc, tc.get("analysisId"));
-                                }
-                                if (Utils.isTrue(tc.get("isPate"))) {
-                                //    PATETests.executePATETests(tc.get("caseNo"), tc.get("analysisId"));
-                                }
-                                if (Utils.isTrue(tc.get("is_ClimateChange"))) {
-                                    ClimateChangeTests.climateChange(tc, tc.get("analysisId"));
-                                }
-                                break;
+//                            case "DOWNSTREAM":
+//                                if (Utils.isTrue(tc.get("if_rdm_export"))) {
+//                                    export.exportType(tc, tc.get("analysisId"));
+//                                }
+//                                if (Utils.isTrue(tc.get("isConvertCurrency"))) {
+//                                    CurrencyConverter.convert(tc, tc.get("analysisId"));
+//                                }
+//                                if (Utils.isTrue(tc.get("isRenameAnalysis"))) {
+//                                    RenameAnalysis.rename(tc, tc.get("analysisId"));
+//                                }
+//                                if (Utils.isTrue(tc.get("isPate"))) {
+//                                //    PATETests.executePATETests(tc.get("caseNo"), tc.get("analysisId"));
+//                                }
+//                                if (Utils.isTrue(tc.get("is_ClimateChange"))) {
+//                                    ClimateChangeTests.climateChange(tc, tc.get("analysisId"));
+//                                }
+                            //    break;
                             default:
                                 break;
                         }

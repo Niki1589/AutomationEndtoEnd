@@ -47,11 +47,12 @@ public class ModelProfileAPI {
             Map<Object, Object> exists = profiles.get(mpfid);
 
             if (exists != null) {
+
+                System.out.println("Model Profile with " + mpfid + " exists on the UI, using the same Model Profile ID");
                 return mpfid;
             } else {
 
                 //If MPF_IF_CREATE_MODEL_PROFILE is set to NO and  Model Profile ID is not found on RM, then throw an exception
-
                 throw new NotFoundException("Model Profile with " + mpfid + " not found!");
             }
         }
@@ -63,8 +64,7 @@ public class ModelProfileAPI {
             String MPName=tc.get("MPF_CREATED_NAME")+"_"+tc.get("MPF_DESCRIPTION");
             String MPId = tc.get("MPF_MFID");
 
-
-            //First, try searching the MP with the given ID, if not found, then search with the name
+            //First, try searching the MP with the given MPFID, if not found, then search with the name
 
             Map<Object, Object> exists = null;
             Map<String, Map<Object, Object>> profilesWithId = getModelProfile(token, "id");
@@ -92,29 +92,40 @@ public class ModelProfileAPI {
 
             //If create Model Profile is set to YES and Model Profile ID is not found on RM, then create a new MP with the given name and return the ID
 
-            String ModelProfile_Name = tc.get("MPF_CREATED_NAME");
-            System.out.println("Model profile name : " + ModelProfile_Name);
+            System.out.println("Model profile name : " + MPName);
             String TemplateId = null;
+            String NAEQmodelProfileId=null;
 
             Response res = ApiUtil.getModelProfileTemplate(token, tc, perils);
             TemplateId = res.getBody().jsonPath().get("id") + "";
-            System.out.println("createNAEQProfile running: NAEQ_ModelProfile_Name:" + ModelProfile_Name + " .... TemplateId:" + TemplateId);
-            String payload = ModelProfileAPI.getPayloadCreateModelProfileApi(ModelProfile_Name, tc, perils);
+            System.out.println("createNAEQProfile running: NAEQ_ModelProfile_Name:" + MPName + " .... TemplateId:" + TemplateId);
+            String payload = ModelProfileAPI.getPayloadCreateModelProfileApi(MPName, tc, perils);
             System.out.println("Before Calling ModelProfile API");
+
             Response res1 = ApiUtil.createModelProfile(token, TemplateId, payload);
+
             System.out.println("After Calling ModelProfile API");
+            System.out.println("Model Profile creation Status: " + res1.getStatusCode());
 
-            ArrayList list = res1.getBody().jsonPath().get("links");
-            String link = ((String) ((Map) list.get(0)).get("href"));
-            String NAEQmodelProfileId = link.substring(link.lastIndexOf('/') + 1);
+            if (res1.getStatusCode() == AutomationConstants.STATUS_OK) {
+                System.out.println("Model Profile is created successfully");
+                ArrayList list = res1.getBody().jsonPath().get("links");
+                String link = ((String) ((Map) list.get(0)).get("href"));
+                NAEQmodelProfileId = link.substring(link.lastIndexOf('/') + 1);
+                System.out.println("MP creation finished " + link + " and MPF_ID is " + NAEQmodelProfileId);
+            }
+            else
+            {
+                String msg = res1.getBody().jsonPath().get("message");
 
+                System.out.println("Model Profile could not be created,please check the inputs." +msg);
+            }
 
-            System.out.println("MP creation finished " + link + " and MPF_ID is " + NAEQmodelProfileId);
             int NAEQmodelProfileId_created = Integer.parseInt(NAEQmodelProfileId);
             if (NAEQmodelProfileId_created != -1) {
                 LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "MPF_IF_CREATE_MODEL_PROFILE", "NO");
                 LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "MPF_MFID", String.valueOf(NAEQmodelProfileId_created));
-                LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "MPF_CREATED_NAME", ModelProfile_Name);
+                LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "MPF_CREATED_NAME", MPName);
                 LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "MPF_JOB_STATUS", "Model Profile is created Successfully");
             } else {
                 LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "MPF_JOB_STATUS", "Model Profile could not be created,please check the inputs.");

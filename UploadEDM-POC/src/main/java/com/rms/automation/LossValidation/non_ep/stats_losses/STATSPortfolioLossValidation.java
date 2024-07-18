@@ -29,7 +29,7 @@ public class STATSPortfolioLossValidation {
 
         String baselinePathPortfolioStats = baselinePathStats + "/Portfolio/";
         String actualPathPortfolioStats = actualPathStats +"/Portfolio/" ;
-        String outPathStats = String.format(outputPath, "Stats_Portfolio_Results");
+        String outPathStats = String.format(outputPath, "Stats_Portfolio_Results_Non_EP");
 
         List<List<String>> rows = new ArrayList<>();
         Boolean isAllPass = true;

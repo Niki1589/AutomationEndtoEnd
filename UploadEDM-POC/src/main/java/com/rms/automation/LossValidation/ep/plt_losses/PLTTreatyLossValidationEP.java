@@ -1,4 +1,4 @@
 package com.rms.automation.LossValidation.ep.plt_losses;
 
-public class PLTPortfolioLossValidation {
+public class PLTTreatyLossValidationEP {
 }

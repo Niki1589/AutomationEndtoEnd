@@ -173,8 +173,6 @@ public class ClimateChangeTests {
                 //LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "CCG_FILE_EXPORT_JOB_ID", jobId);
 
             }
-
-
         } else {
 
             System.out.println("This Model is not compatible with Climate Change.Please check the model region code and try again.");

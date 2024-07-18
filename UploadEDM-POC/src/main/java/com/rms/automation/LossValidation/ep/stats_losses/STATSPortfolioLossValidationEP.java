@@ -1,24 +1,17 @@
 package com.rms.automation.LossValidation.ep.stats_losses;
 
 import com.rms.automation.LossValidation.ValidationResult;
-import com.rms.automation.exportApi.Download_Settings;
 import com.rms.automation.utils.Utils;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import java.io.BufferedReader;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
-import java.util.stream.Stream;
 
-public class STATSPortfolioLossValidation {
+public class STATSPortfolioLossValidationEP {
 
     public static Boolean run(String baselinePathStats, String actualPathStats, String outputPath) throws Exception {
 
@@ -34,7 +27,7 @@ public class STATSPortfolioLossValidation {
 
         String baselinePathPortfolioStats = baselinePathStats + "/Portfolio/";
         String actualPathPortfolioStats = actualPathStats + "/Portfolio/";
-        String outPathStats = String.format(outputPath, "Stats_Portfolio_Results");
+        String outPathStats = String.format(outputPath, "Stats_Portfolio_Results_EP");
 
         List<List<String>> rows = new ArrayList<>();
         Boolean isAllPass = true;
@@ -163,9 +156,8 @@ public class STATSPortfolioLossValidation {
         //EventId, Mean, Stddev,CV
         // Baseline
         headers.add("perspcode");
-        headers.add("EventId");
-        headers.add("Mean");
-        headers.add("StdDev");
+        headers.add("AAL");
+        headers.add("Std");
         headers.add("CV");
 
         // Two empty cells between Baseline and Actual
@@ -175,8 +167,7 @@ public class STATSPortfolioLossValidation {
         // Actual
 
         headers.add("perspcode");
-        headers.add("EventId");
-        headers.add("Mean");
+        headers.add("AAL");
         headers.add("StdDev");
         headers.add("CV");
 
@@ -186,14 +177,13 @@ public class STATSPortfolioLossValidation {
 
         // Result
         headers.add("perspcode");
-        headers.add("EventId");
-        headers.add("Mean");
         headers.add("AAL-Diff");
-        headers.add("StdDev");
+        headers.add("AAL");
         headers.add("STD-Diff");
         headers.add("STD");
         headers.add("CV-Diff");
         headers.add("CV");
+
 
         results.add(sectionNames);
         results.add(headers);

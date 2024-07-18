@@ -1,10 +1,9 @@
 package com.rms.automation.LossValidation.ep;
 
 import com.rms.automation.LossValidation.Analysis_Type_ENUM;
-import com.rms.automation.LossValidation.ClimateChange.CCLossValidation;
-import com.rms.automation.LossValidation.PLTLossValidation;
 import com.rms.automation.LossValidation.ValidationResult;
 import com.rms.automation.LossValidation.ep.ep_losses.EPLossValidation;
+import com.rms.automation.LossValidation.ep.plt_losses.PLTLossValidationEP;
 import com.rms.automation.LossValidation.ep.stats_losses.STATSLossValidation;
 import com.rms.automation.exportApi.Download_Settings;
 import com.rms.automation.utils.Utils;
@@ -23,11 +22,11 @@ public class EPRun {
             }
             if(Utils.isTrue(downloadSettings.getIsStatsMetric()))
             {
-                validationResult.isAllStatsPass = STATSLossValidation.run(baselinePath, actualPath, outputPath);
+                validationResult.isAllStatsPass = STATSLossValidation.run(baselinePath, actualPath, outputPath,downloadSettings);
             }
             if(Utils.isTrue(downloadSettings.getIsLossTablesMetric())) {
 
-                validationResult.isAllPLTPass = PLTLossValidation.PLTLossValidation(baselinePath, actualPath, outputPath);
+                validationResult.isAllPLTPass = PLTLossValidationEP.run(baselinePath, actualPath, outputPath,downloadSettings);
             }
         } catch (IOException e) {
             System.out.println("Loss Validation Failed "+e.getMessage());

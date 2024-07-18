@@ -7,6 +7,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -24,6 +25,17 @@ public class EPTreatyLossValidationCC {
         String baselinePathTreatyEP = baselinePathEP + "/Treaty/";
         String actualPathTreatyEP = actualPathEP + "/Treaty/";
         String outPathEP = String.format(outputPath, "EP_Treaty_Results_CC");
+
+        File baselineDir = new File(baselinePathTreatyEP);
+        if (!baselineDir.exists() || !baselineDir.isDirectory()) {
+            throw new Exception("Baseline directory '" + baselinePathTreatyEP + "' does not exist or is not a directory.");
+        }
+
+        // Check if actualPathEP directory exists
+        File actualDir = new File(actualPathTreatyEP);
+        if (!actualDir.exists() || !actualDir.isDirectory()) {
+            throw new Exception("Actual directory '" + actualPathTreatyEP + "' does not exist or is not a directory.");
+        }
 
         List<List<String>> rows = new ArrayList<>();
         Boolean isAllPass = true;

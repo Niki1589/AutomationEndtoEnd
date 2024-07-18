@@ -26,7 +26,7 @@ public class StatsTreatyLossValidation {
 
         //String actualPathTreatyStats ="/Users/Nikita.Arora/Documents/UploadEdmPoc/A002_SMOKE_EUWS/ActualResults/25014915_Testing_EDM_E2E_new3__PORTFOLIO__EUWS_01_Losses/STATS/Treaty/";
 
-        String outPathStats = String.format(outputPath, "Stats_Treaty_Results_non_ep");
+        String outPathStats = String.format(outputPath, "Stats_Treaty_Results_Non_EP");
 
         List<List<String>> rows = new ArrayList<>();
         Boolean isAllPass = true;

@@ -1,17 +1,41 @@
 package com.rms.automation.LossValidation.non_ep.plt_losses;
 
-public class PLTLossValidationNonEP {
-    public static Boolean run(String baselinePath, String actualPath, String outputPath) throws Exception {
+import java.io.File;
+import com.rms.automation.exportApi.Download_Settings;
 
-        String baselinePathPLT = baselinePath + "/non-ep/RM20_FM_EUWS_FP_03/meout/SLT";
+
+public class PLTLossValidationNonEP {
+    public static Boolean run(String baselinePath, String actualPath, String outputPath, Download_Settings downloadSettings) throws Exception {
+
+        String baselinePathPLT = baselinePath + "/non-EP/SLT";
         String actualPathPLT = actualPath + "/SAMPLED_PLT";
 
-        Boolean isPortfolioPass = PLTPortfolioLossValidation.run(baselinePathPLT, actualPathPLT, outputPath);
-        Boolean isTreatyPass = PLTTreatyLossValidation.runTreatyResults(baselinePathPLT, actualPathPLT, outputPath);
+        // Check if baselinePathEP directory exists
+        File baselineDir = new File(baselinePathPLT);
+        if (!baselineDir.exists() || !baselineDir.isDirectory()) {
+            throw new Exception("Baseline directory '" + baselinePathPLT + "' does not exist or is not a directory.");
+        }
 
-        Boolean isAllPass = (isPortfolioPass && isTreatyPass);
+        // Check if actualPathEP directory exists
+        File actualDir = new File(actualPathPLT);
+        if (!actualDir.exists() || !actualDir.isDirectory()) {
+            throw new Exception("Actual directory '" + actualPathPLT + "' does not exist or is not a directory.");
+        }
 
-        System.out.println("PLT Comparison completed and results written to Excel.");
+        Boolean isPortfolioPass = null;
+        if (downloadSettings.getIsLossTablesMetric() != null && downloadSettings.getIsLossTablesMetric().equalsIgnoreCase("Portfolio")) {
+
+            isPortfolioPass = PLTPortfolioLossValidationNonEP.run(baselinePathPLT, actualPathPLT, outputPath);
+        }
+        Boolean isTreatyPass = null;
+        if (downloadSettings.getIsLossTablesMetric() != null && downloadSettings.getIsLossTablesMetric().equalsIgnoreCase("Treaty")) {
+
+            isTreatyPass = PLTTreatyLossValidationNonEP.runTreatyResults(baselinePathPLT, actualPathPLT, outputPath);
+        }
+
+        Boolean isAllPass = (isPortfolioPass==Boolean.TRUE) || (isTreatyPass ==Boolean.TRUE);
+
+        System.out.println(" Non-EP PLT Comparison completed and results written to Excel.");
         return isAllPass;
 
     }

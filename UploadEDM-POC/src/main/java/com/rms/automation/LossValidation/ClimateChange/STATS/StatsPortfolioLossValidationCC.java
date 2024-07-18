@@ -7,6 +7,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,7 +31,22 @@ public class StatsPortfolioLossValidationCC {
         String baselinePathPortfolioStats = baselinePathStats + "/Portfolio/";
         String actualPathPortfolioStats = actualPathStats + "/Portfolio/";
         String outPathStats = String.format(outputPath, "Stats_Portfolio_Results_CC");
-    System.out.println( outPathStats );
+
+
+        // Check if baselinePathEP directory exists
+        File baselineDir = new File(baselinePathPortfolioStats);
+        if (!baselineDir.exists() || !baselineDir.isDirectory()) {
+            throw new Exception("Baseline directory '" + baselinePathPortfolioStats + "' does not exist or is not a directory.");
+        }
+
+        // Check if actualPathEP directory exists
+        File actualDir = new File(actualPathPortfolioStats);
+        if (!actualDir.exists() || !actualDir.isDirectory()) {
+            throw new Exception("Actual directory '" + actualPathPortfolioStats + "' does not exist or is not a directory.");
+        }
+
+
+        System.out.println( outPathStats );
         List<List<String>> rows = new ArrayList<>();
         Boolean isAllPass = true;
 
@@ -157,7 +173,7 @@ public class StatsPortfolioLossValidationCC {
         //EventId, Mean, Stddev,CV
         // Baseline
         headers.add("perspcode");
-        headers.add("Mean");
+        headers.add("AAL");
         headers.add("StdDev");
         headers.add("CV");
 
@@ -168,7 +184,7 @@ public class StatsPortfolioLossValidationCC {
         // Actual
 
         headers.add("perspcode");
-        headers.add("Mean");
+        headers.add("AAL");
         headers.add("StdDev");
         headers.add("CV");
 
@@ -178,10 +194,10 @@ public class StatsPortfolioLossValidationCC {
 
         // Result
         headers.add("perspcode");
-        headers.add("Mean");
         headers.add("AAL-Diff");
-        headers.add("StdDev");
-        headers.add("STD-Diff");
+        headers.add("AAL");
+        headers.add("StdDev-Diff");
+        headers.add("STD");
         headers.add("CV-Diff");
         headers.add("CV");
 

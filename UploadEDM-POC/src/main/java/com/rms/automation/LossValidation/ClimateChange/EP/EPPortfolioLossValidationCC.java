@@ -8,6 +8,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -32,6 +33,17 @@ public class EPPortfolioLossValidationCC {
         String baselinePathPortfolioEP = baselinePathEP + "/Portfolio/";
         String actualPathPortfolioEP = actualPathEP + "/Portfolio/";
         String outPathEP = String.format(outputPath, "EP_Portfolio_Results_CC");
+
+        File baselineDir = new File(baselinePathPortfolioEP);
+        if (!baselineDir.exists() || !baselineDir.isDirectory()) {
+            throw new Exception("Baseline directory '" + baselinePathPortfolioEP + "' does not exist or is not a directory.");
+        }
+
+        // Check if actualPathEP directory exists
+        File actualDir = new File(actualPathPortfolioEP);
+        if (!actualDir.exists() || !actualDir.isDirectory()) {
+            throw new Exception("Actual directory '" + actualPathPortfolioEP + "' does not exist or is not a directory.");
+        }
 
         List<List<String>> rows = new ArrayList<>();
         Boolean isAllPass = true;
