@@ -79,12 +79,12 @@ public class EPTreatyLossValidationCC {
 
                 for (Map<String, String> actualRow : actualData) {
 
-                    String actualET = baselineRow.get("EPType");
-                    String actualRP = baselineRow.get("ReturnPeriod");
-                    String actualTID = baselineRow.get("TreatyId");
-                    String actualTNum = baselineRow.get("TreatyNum");
+                    String actualET = actualRow.get("EPType");
+                    String actualRP = actualRow.get("ReturnPeriod");
+                    String actualTID = actualRow.get("TreatyId");
+                    String actualTNum = actualRow.get("TreatyNum");
                     String actualMatcher = actualET+"-"+actualRP+"-"+actualTID+"-"+actualTNum;
-                    String actualTName = baselineRow.get("TreatyName");
+                    String actualTName = actualRow.get("TreatyName");
 
                     boolean isMatches = baselineMatcher.equals(actualMatcher);
 
@@ -138,7 +138,7 @@ public class EPTreatyLossValidationCC {
                                 throw new Exception("Error");
                             }
                         } catch (Exception ex) {
-                            System.out.println("Wrong baselineLoss_ at "+baselineMatcher);
+                       //     System.out.println("Wrong baselineLoss_ at "+baselineMatcher);
                         }
 
                         try {
@@ -148,7 +148,7 @@ public class EPTreatyLossValidationCC {
                                 throw new Exception("Error");
                             }
                         } catch (Exception ex) {
-                            System.out.println("Wrong actualLoss_ at "+actualMatcher);
+                      //      System.out.println("Wrong actualLoss_ at "+actualMatcher);
                         }
 
                         Double difference = null;

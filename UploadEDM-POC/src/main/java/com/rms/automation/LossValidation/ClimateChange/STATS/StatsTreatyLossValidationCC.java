@@ -79,9 +79,9 @@ public class StatsTreatyLossValidationCC {
 
                 for (Map<String, String> actualRow : actualData) {
 
-                    String actualTID = baselineRow.get("TreatyId");
+                    String actualTID = actualRow.get("TreatyId");
                     String actualMatcher = actualTID;
-                    String actualTName = baselineRow.get("TreatyName");
+                    String actualTName = actualRow.get("TreatyName");
 
                     boolean isMatches = baselineMatcher.equals(actualMatcher);
 

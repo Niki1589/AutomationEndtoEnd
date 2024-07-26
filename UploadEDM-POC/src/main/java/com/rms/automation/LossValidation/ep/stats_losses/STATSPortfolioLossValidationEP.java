@@ -35,7 +35,7 @@ public class STATSPortfolioLossValidationEP {
         try {
             for (String folder: folders) {
                 if( Utils.isDirExists(baselinePathPortfolioStats + folder) && Utils.isDirExists(actualPathPortfolioStats + folder) ) {
-                    List<Map<String, String>> baselineData = Utils.readCSV(baselinePathPortfolioStats + folder);
+                    List<Map<String, String>> baselineData = Utils.readParquet(baselinePathPortfolioStats + folder);
                     List<Map<String, String>> actualData = Utils.readCSV(actualPathPortfolioStats + folder);
                     if (baselineData != null && actualData != null) {
                         ValidationResult validationResult = compareData(baselineData, actualData, folder);
@@ -92,15 +92,42 @@ public class STATSPortfolioLossValidationEP {
             // Actual
             row.add(folder);
 
-            List<String> AALRows = checkDiff(baselineAAL, actualAAL, "AAL", folder);
-            List<String> StdRows = checkDiff(baselineStd, actualStd, "Std", folder);
-            List<String> CVRows = checkDiff(baselineCV, actualCV, "CV", folder);
+            Double ALLDiff = Utils.checkDiff(baselineAAL, actualAAL, "AAL", folder);
+            Double STDDiff = Utils.checkDiff(baselineAAL, actualAAL, "Std", folder);
+            Double CVDiff = Utils.checkDiff(baselineAAL, actualAAL, "CV", folder);
 
-            row.addAll(AALRows);
-            row.addAll(StdRows);
-            row.addAll(CVRows);
+            if (ALLDiff != null) {
+                row.add(ALLDiff+"");
+            } else {
+                row.add("");
+            }
+            if (STDDiff != null) {
+                row.add(STDDiff+"");
+            } else {
+                row.add("");
+            }
+            if (CVDiff != null) {
+                row.add(CVDiff+"");
+            } else {
+                row.add("");
+            }
 
-            if (AALRows.get(1).equals("Fail") || StdRows.get(1).equals("Fail") || CVRows.get(1).equals("Fail"))  {
+            if (ALLDiff != null && !(ALLDiff > 1)) {
+                row.add("Pass");
+            } else {
+                row.add("Fail");
+                isAllPass = false;
+            }
+            if (STDDiff != null && !(STDDiff > 1)) {
+                row.add("Pass");
+            } else {
+                row.add("Fail");
+                isAllPass = false;
+            }
+            if (CVDiff != null && !(CVDiff > 1)) {
+                row.add("Pass");
+            } else {
+                row.add("Fail");
                 isAllPass = false;
             }
 
@@ -178,10 +205,10 @@ public class STATSPortfolioLossValidationEP {
         // Result
         headers.add("perspcode");
         headers.add("AAL-Diff");
-        headers.add("AAL");
         headers.add("STD-Diff");
-        headers.add("STD");
         headers.add("CV-Diff");
+        headers.add("AAL");
+        headers.add("STD");
         headers.add("CV");
 
 
@@ -207,34 +234,6 @@ public class STATSPortfolioLossValidationEP {
         workbook.write(fileOut);
         fileOut.close();
         workbook.close();
-    }
-
-    private  static List<String> checkDiff(String baseline, String actual, String name, String pr) {
-
-        List<String> rows = new ArrayList<>();
-
-        Double baseline_ = Utils.parseToDouble(baseline, name, pr);
-        Double actual_ = Utils.parseToDouble(actual, name, pr);
-
-        Double difference = null;
-        if (baseline_ != null && actual_ != null) {
-            difference = Math.abs(baseline_ - actual_);
-        }
-
-        if (difference != null) {
-            rows.add(difference+"");
-        } else {
-            rows.add("");
-        }
-
-        if (difference != null && !(difference > 1)) {
-            rows.add("Pass");
-        } else {
-            rows.add("Fail");
-        }
-
-        return rows;
-
     }
 
 }

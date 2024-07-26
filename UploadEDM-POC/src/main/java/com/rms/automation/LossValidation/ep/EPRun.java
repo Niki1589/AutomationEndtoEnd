@@ -14,6 +14,7 @@ public class EPRun {
 
     public static ValidationResult run(String baselinePath, String actualPath, String outputPath, Download_Settings downloadSettings) throws Exception {
         ValidationResult validationResult = new ValidationResult();
+        System.out.println("EP Comparison for Analysis Type EP started.");
         try {
 
             if (Utils.isTrue(downloadSettings.getIsEPMetric()))

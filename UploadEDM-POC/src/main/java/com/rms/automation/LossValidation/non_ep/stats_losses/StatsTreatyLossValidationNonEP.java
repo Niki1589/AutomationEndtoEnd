@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class StatsTreatyLossValidation {
+public class StatsTreatyLossValidationNonEP {
 
     public static Boolean runTreatyResults(String baselinePathStats, String actualPathStats, String outputPath) {
         

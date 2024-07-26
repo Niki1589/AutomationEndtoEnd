@@ -12,6 +12,8 @@ public class NonEPRun {
 
     public static ValidationResult run(String baselinePath, String actualPath, String outputPath, Download_Settings downloadSettings) throws Exception {
         ValidationResult validationResult = new ValidationResult();
+
+        System.out.println("EP Comparison for Analysis Type Non - EP started.");
         try {
 
             if(Utils.isTrue(downloadSettings.getIsStatsMetric()))

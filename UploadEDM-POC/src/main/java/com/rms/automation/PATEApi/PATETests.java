@@ -23,8 +23,6 @@ public class PATETests {
     private static void PATE(Map<String, String> tc, String analysisIdBatch,String username,String password,String tenant) throws Exception {
         if (tc != null) {
             Map<String, List<Map<String, Object>>> payload = new HashMap<>();
-            if (tc.get("ifRun").equalsIgnoreCase("YES")) {
-
                 String analysisId_pate = analysisIdBatch;
                 System.out.println("***** Running PATE API ********");
 
@@ -192,7 +190,6 @@ public class PATETests {
                     System.out.println("Pate Api Message: " + msg);
                 }
 
-            }
         }
     }
 }

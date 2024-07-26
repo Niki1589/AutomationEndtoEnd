@@ -26,7 +26,7 @@ public class StatsTreatyLossValidationEP {
 
         //String actualPathTreatyStats ="/Users/Nikita.Arora/Documents/UploadEdmPoc/A002_SMOKE_EUWS/ActualResults/25014915_Testing_EDM_E2E_new3__PORTFOLIO__EUWS_01_Losses/STATS/Treaty/";
 
-        String outPathStats = String.format(outputPath, "Stats_Treaty_Results");
+        String outPathStats = String.format(outputPath, "Stats_Treaty_Results_EP");
 
         List<List<String>> rows = new ArrayList<>();
         Boolean isAllPass = true;
@@ -118,17 +118,45 @@ public class StatsTreatyLossValidationEP {
                         row.add(actualTNum);
                         row.add(actualTName);
 
-                        List<String> AALRows = checkDiff(baselineAAL, actualAAL, "AAL", folder);
-                        List<String> StdRows = checkDiff(baselineAAL, actualAAL, "Std", folder);
-                        List<String> CVRows = checkDiff(baselineAAL, actualAAL, "CV", folder);
+                        Double ALLDiff = Utils.checkDiff(baselineAAL, actualAAL, "AAL", folder);
+                        Double STDDiff = Utils.checkDiff(baselineAAL, actualAAL, "Std", folder);
+                        Double CVDiff = Utils.checkDiff(baselineAAL, actualAAL, "CV", folder);
 
-                        row.addAll(AALRows);
-                        row.addAll(StdRows);
-                        row.addAll(CVRows);
+                        if (ALLDiff != null) {
+                            row.add(ALLDiff+"");
+                        } else {
+                            row.add("");
+                        }
+                        if (STDDiff != null) {
+                            row.add(STDDiff+"");
+                        } else {
+                            row.add("");
+                        }
+                        if (CVDiff != null) {
+                            row.add(CVDiff+"");
+                        } else {
+                            row.add("");
+                        }
 
-                        if (AALRows.get(1).equals("Fail") || StdRows.get(1).equals("Fail") || CVRows.get(1).equals("Fail"))  {
+                        if (ALLDiff != null && !(ALLDiff > 1)) {
+                            row.add("Pass");
+                        } else {
+                            row.add("Fail");
                             isAllPass = false;
                         }
+                        if (STDDiff != null && !(STDDiff > 1)) {
+                            row.add("Pass");
+                        } else {
+                            row.add("Fail");
+                            isAllPass = false;
+                        }
+                        if (CVDiff != null && !(CVDiff > 1)) {
+                            row.add("Pass");
+                        } else {
+                            row.add("Fail");
+                            isAllPass = false;
+                        }
+
 
                         results.add(row);
                         break;
@@ -219,10 +247,10 @@ public class StatsTreatyLossValidationEP {
         headers.add("TreatyNum");
         headers.add("TreatyName");
         headers.add("AAL-Diff");
-        headers.add("AAL");
         headers.add("STD-Diff");
-        headers.add("STD");
         headers.add("CV-Diff");
+        headers.add("AAL");
+        headers.add("STD");
         headers.add("CV");
 
         results.add(sectionNames);

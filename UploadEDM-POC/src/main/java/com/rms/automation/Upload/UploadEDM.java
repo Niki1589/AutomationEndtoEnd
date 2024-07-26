@@ -21,55 +21,65 @@ public class UploadEDM extends TestCase {
         System.out.println("File path is " + filePath);
         String fileExt = tc.get("EXP_FILE_EXT");
         String dbType = tc.get("EXP_DB_TYPE");
-      //  String dataSourceName =
-       //         fileName.substring(0, fileName.indexOf('.')) + "_" + RandomStringUtils.randomNumeric(5);
+        String shareWith = tc.get("EXP_OPT_SHARE_GROUP");
+
 
         try {
 
             String token = ApiUtil.getSmlToken(tc);
-
             String dataSourceName =tc.get("EXP_EDM_DATASOURCE_NAME");
+            //Get the group ids, if any exists.
+            List<String> ids = ApiUtil.getGroupIds(token, shareWith);
+            System.out.println(dataSourceName + " Group Ids: " + ids.toString());
+            if (dataSourceName.isEmpty()) {
+                throw new Exception("EDM name not defined, please define the EDM name in the test case sheet");
+            }
 
-            if (!dataSourceName.isEmpty()) {
+            Response res = ApiUtil.findEdmByName(token, dataSourceName);
+            Boolean isEdmExists = !res.getBody().jsonPath().getMap("$").get("searchTotalMatch").equals(0);
 
-                Response res = ApiUtil.findEdmByName(token, dataSourceName);
-                Boolean isEdmExists = !res.getBody().jsonPath().getMap("$").get("searchTotalMatch").equals(0);
-                if (isEdmExists) {
-                    throw new Exception("EDM "+dataSourceName+" already exists");
+            if (isEdmExists) {
+                System.out.println("EDM "+dataSourceName+" already exists on Risk Modeler, using the existing EDM");
+                }
+            else {
+
+                //Perform the multipart upload
+                Boolean status = ApiUtil.fileMultiPartUpload(token, dbType, filePath, fileExt, fileName);
+                System.out.println("Status of fileMultiPartUpload: " + status);
+
+                //Upload EDM
+
+
+                Map<String, Object> payload = new HashMap<>();
+                if (ids != null) {
+                    payload.put("groups", ids);
+                    payload.put("share", (ids.size() > 0));
+                } else {
+                    payload.put("groups", new ArrayList<String>());
+                    payload.put("share", false);
                 }
 
-            }  else {
-                throw  new Exception("EDM name not defined");
+                Response submitJobResponse = ApiUtil.uploadEDM(token, dataSourceName, payload);
+                actualresponse = submitJobResponse.getStatusCode();
+                System.out.println("UploadEDM Response: " + actualresponse);
+                String locationHdr = submitJobResponse.getHeader("Location");
+                String jobId = locationHdr.substring(locationHdr.lastIndexOf('/') + 1);
+                String workflowId = locationHdr.substring(locationHdr.lastIndexOf('/') + 1);
+                System.out.println("workflowId: " + workflowId);
+
+                // Wait for EDM upload job to complete
+                String msg = JobsApi.waitForJobToComplete(jobId, token, "Upload EDM API",
+                        "UPLOAD_EDM_JOB_STATUS", tc.get("INDEX"));
+                System.out.println("wait for job msg: " + msg);
+
+                if (actualresponse == AutomationConstants.STATUS_ACCEPTED && (msg.equalsIgnoreCase(AutomationConstants.JOB_STATUS_FINISHED) && (!jobId.isEmpty()))) {
+                    if (dataSourceName != "") {
+                        LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "EXP_UPLOAD_EDM_JOBID", jobId);
+                    }
+                }
             }
 
-            Boolean status = ApiUtil.fileMultiPartUpload(token, dbType, filePath, fileExt, fileName);
-            String payload = "";
-            System.out.println("Status of fileMultiPartUpload: " + status);
-            Response submitJobResponse = ApiUtil.uploadEDM(token, dataSourceName, payload);
-            actualresponse = submitJobResponse.getStatusCode();
-            System.out.println("UploadEDM Response: " + actualresponse);
-            String locationHdr = submitJobResponse.getHeader("Location");
-            String jobId = locationHdr.substring(locationHdr.lastIndexOf('/') + 1);
-            String workflowId = locationHdr.substring(locationHdr.lastIndexOf('/') + 1);
-            System.out.println("workflowId: " + workflowId);
-
-            String msg = JobsApi.waitForJobToComplete(jobId, token, "Upload EDM API",
-                    "UPLOAD_EDM_JOB_STATUS", tc.get("INDEX"));
-            System.out.println("waitforjob msg: " + msg);
-
-            if(actualresponse== AutomationConstants.STATUS_ACCEPTED &&(msg.equalsIgnoreCase(AutomationConstants.JOB_STATUS_FINISHED ) && (!jobId.isEmpty())))
-            {
-                if (dataSourceName != "") {
-                    LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "EXP_UPLOAD_EDM_JOBID", jobId);}
-            }
-
-
-            String portfolioId = null;
-        //   String portfolioNumber = tc.get("portfolioNumber");
-         //   String portfolioName = tc.get("portfolioName");
-         //  String description = tc.get("importDescrp");
-                portfolioId = tc.get("EXP_EXISTING_PORTFOLIO_ID");
-
+            String portfolioId = tc.get("EXP_EXISTING_PORTFOLIO_ID");
 
             //Batch API call
             BatchTests batchTests = new BatchTests();

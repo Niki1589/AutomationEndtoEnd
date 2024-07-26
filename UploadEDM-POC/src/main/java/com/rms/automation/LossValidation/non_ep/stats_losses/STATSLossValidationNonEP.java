@@ -25,16 +25,16 @@ public class STATSLossValidationNonEP {
 
         Boolean isPortfolioPass = null;
 
-        if (downloadSetting.getIsStatsMetric() != null && downloadSetting.getIsStatsMetric().equalsIgnoreCase("Portfolio")) {
+        if (downloadSetting.getIsStatsMetric() != null && downloadSetting.getIsStatsMetric().toUpperCase().contains("PORTFOLIO")) {
 
-            isPortfolioPass = STATSPortfolioLossValidation.run(baselinePathSTATSNonEP, actualPathSTATSNonEP, outputPath);
+            isPortfolioPass = STATSPortfolioLossValidationNonEP.run(baselinePathSTATSNonEP, actualPathSTATSNonEP, outputPath);
 
         }
         Boolean isTreatyPass = null;
 
-        if(downloadSetting.getIsStatsMetric() != null && downloadSetting.getIsStatsMetric().equalsIgnoreCase("Treaty")) {
+        if(downloadSetting.getIsStatsMetric() != null && downloadSetting.getIsStatsMetric().toUpperCase().contains("TREATY")) {
 
-            isTreatyPass = StatsTreatyLossValidation.runTreatyResults(baselinePathSTATSNonEP, actualPathSTATSNonEP, outputPath);
+            isTreatyPass = StatsTreatyLossValidationNonEP.runTreatyResults(baselinePathSTATSNonEP, actualPathSTATSNonEP, outputPath);
         }
 
         Boolean isAllPass = (isPortfolioPass==Boolean.TRUE) || (isTreatyPass==Boolean.TRUE);

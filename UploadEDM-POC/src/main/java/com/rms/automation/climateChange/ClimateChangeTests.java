@@ -1,6 +1,7 @@
 package com.rms.automation.climateChange;
 
 import com.rms.automation.JobsApi.JobsApi;
+import com.rms.automation.LossValidation.LossValidation;
 import com.rms.automation.constants.AutomationConstants;
 import com.rms.automation.edm.ApiUtil;
 import com.rms.automation.edm.LoadData;
@@ -71,6 +72,7 @@ public class ClimateChangeTests {
                                 JsonPath jsonPath = jobDetails.jsonPath();
                                 Map<String, Object> jobResponseMap = jsonPath.getMap("$");
                                 Map<String, Object> summaryMap = (Map<String, Object>) jobResponseMap.get("summary");
+                                //LossValidation.run(tc);
 
                                 //ccAnalysisId = String.valueOf(summaryMap.get("climateChangeAnalysisId"));
 

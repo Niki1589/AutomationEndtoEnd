@@ -21,6 +21,38 @@ import java.util.stream.Stream;
 
 public class PLTPortfolioLossValidationEP {
 
+    // Method to convert List<Map<String, String>> to Map<String, Map<String, String>>
+    public static Map<String, Map<String, String>> convertListToMap(List<Map<String, String>> list, String keyField) {
+        Map<String, Map<String, String>> resultMap = new HashMap<>();
+       // System.out.println("Some texts");
+        int i = 0;
+        for (Map<String, String> map : list) {
+            String key = map.get(keyField); // Replace "uniqueKey" with the actual key field
+            System.out.println(i+":"+key + ", ");
+            i++;
+            resultMap.put(key, map);
+        }
+        return resultMap;
+    }
+    public static Map<String, Map<String, String>> convertListToMap(List<Map<String, String>> list, List<String> keyField) {
+        Map<String, Map<String, String>> resultMap = new HashMap<>();
+        //System.out.println("Some texts");
+        int i = 0;
+        for (Map<String, String> map : list) {
+            String key = "";
+            for (String k : keyField) {
+                if (!key.isEmpty()) {
+                    key += "_";
+                }
+                key += map.get(k); // Replace "uniqueKey" with the actual key field
+            }
+          //  System.out.println(i+":"+key + ", ");
+            i++;
+            resultMap.put(key, map);
+        }
+        return resultMap;
+    }
+
     public static Boolean run(String baselinePathPortfolio, String actualPathPortfolio, String outputPath) throws Exception {
 
         ///Folders to read from Portfolio
@@ -35,50 +67,71 @@ public class PLTPortfolioLossValidationEP {
         folders.add("WX");
 
 
-        String baselinePathPortfolioPLT = baselinePathPortfolio + "PLT/Portfolio/";
-        String actualPathPortfolioPLT = actualPathPortfolio + "/PLT/Portfolio/";
-        String outPathPLT = String.format(outputPath, "PLT_Portfolio_Results");
+        String baselinePathPortfolioPLT = baselinePathPortfolio + "/Portfolio/";
+        String actualPathPortfolioPLT = actualPathPortfolio + "/Portfolio/";
+        String outPathPLT = String.format(outputPath, "PLT_Portfolio_Results_EP");
 
         List<List<String>> rows = new ArrayList<>();
         Boolean isAllPass = true;
 
         try {
-            for (String folder: folders) {
-                if( Utils.isDirExists(baselinePathPortfolioPLT + folder) && Utils.isDirExists(actualPathPortfolioPLT + folder) ) {
-                    System.out.println("baselinePathPortfolio PLT + folder Reading");
+            Instant start;
+            Instant end = null;
+            Duration duration;
+            for (String folder : folders) {
+                if (Utils.isDirExists(baselinePathPortfolioPLT + folder) && Utils.isDirExists(actualPathPortfolioPLT + folder)) {
+                 //   System.out.println("baselinePathPortfolio PLT + folder Reading");
 
-                    Instant start = Instant.now();
-                    Map<String, Map<String, String>> baselineData = readCSV(baselinePathPortfolioPLT + folder);
-                    Instant end = Instant.now();
-                    Duration duration = Duration.between(start, end);
-                    System.out.println("baselineDataDur took " + formatDuration(duration));
+                    // Construct the full path to the CSV file
+                    String csvFolderPathBaseline = baselinePathPortfolioPLT + folder + "/";
+                    String csvFolderPathActual = actualPathPortfolioPLT + folder;
+
+                    List<String> listOfKeys = new ArrayList<>();
+                    listOfKeys.add( "EventId" );
+                    listOfKeys.add(  "PeriodId" );
 
                     start = Instant.now();
-                    Map<String, Map<String, String>> actualData = readCSV(actualPathPortfolioPLT + folder);
+                    List<Map<String, String>> baselineData = Utils.readParquet(csvFolderPathBaseline);
+                    // Convert List<Map<String, String>> to Map<String, Map<String, String>>
+                    Map<String, Map<String, String>> baselineDataMap = convertListToMap(baselineData, listOfKeys);
                     end = Instant.now();
                     duration = Duration.between(start, end);
-                    System.out.println("actual took " + formatDuration(duration));
+                    //  System.out.println("baselineDataDur took " + formatDuration(duration));
 
-                    System.out.println("Reading Done + folder Reading");
+                    start = Instant.now();
+                    List<Map<String, String>> actualData = Utils.readMultiCSV(csvFolderPathActual);
+
+                    // Convert List<Map<String, String>> to Map<String, Map<String, String>>
+                    Map<String, Map<String, String>> actualDataMap = convertListToMap(actualData, listOfKeys);
+
+                    end = Instant.now();
+                    duration = Duration.between(start, end);
+                    //  System.out.println("actual took " + formatDuration(duration));
+
+                   // System.out.println("Reading Done + folder Reading");
                     if (baselineData != null && actualData != null) {
-                        System.out.println("Comparing");
+                    //    System.out.println("Comparing");
 
                         start = Instant.now();
-                        ValidationResult validationResult = compareData(baselineData, actualData, folder);
+                        ValidationResult validationResult = compareData(baselineDataMap, actualDataMap, folder);
                         end = Instant.now();
                         duration = Duration.between(start, end);
-                        System.out.println(folder+" compareData took " + formatDuration(duration));
+                        //   System.out.println(folder+" compareData took " + formatDuration(duration));
 
-                        System.out.println("Done COmparing");
+                    //    System.out.println("Comparison Completed for PLT Portfolio");
                         rows.addAll(validationResult.resultRows);
                         if (!validationResult.isAllPass) isAllPass = false;
                     }
                 }
             }
 
-            System.out.println("Writing to excel");
+          //  System.out.println("Writing to excel");
+            start = Instant.now();
             writeResultsToExcel(rows, outPathPLT);
-            System.out.println("PLT Comparison completed for EP Portfolio and results written to Excel.");
+            duration = Duration.between(start, end);
+          //  System.out.println( " Write results to excel took " + formatDuration(duration));
+
+            // System.out.println("PLT Comparison completed for EP Portfolio and results written to Excel.");
             return isAllPass;
         } catch (IOException e) {
             e.printStackTrace();
@@ -111,12 +164,12 @@ public class PLTPortfolioLossValidationEP {
                     }
                     String eid = row.get("EventId");
                     String pid = row.get("PeriodId");
-                    data.put(eid+"-"+pid,row);
+                    data.put(eid + "-" + pid, row);
                 }
                 br.close();
                 return data;
             } else {
-                System.out.println("No CSV files starting with 'csv' found in the folder.");
+              //  System.out.println("No CSV files starting with 'csv' found in the folder.");
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -225,18 +278,45 @@ public class PLTPortfolioLossValidationEP {
                 Map<String, String> actualRow = actualData.get(baselineEntry.getKey());
                 Map<String, String> baselineRow = baselineEntry.getValue();
 
-                String baselineEventId = baselineRow.get("EventId");
-                String baselinePeriodId = baselineRow.get("PeriodId");
-                String baselineEIDPID = baselineEntry.getKey();
 
-                String actualEID = actualRow.get("EventId");
-                String actualPID = actualRow.get("PeriodId");
-                String actualEIDPID = baselineEntry.getKey();
+                String baselineEventId = "";
+                String baselinePeriodId = "";
+
+                String actualEID = "";
+                String actualPID = "";
 
                 List<String> row = new ArrayList<>();
 
-                String baselineLoss = baselineRow.get("Loss");
-                String actualLoss = actualRow.get("Loss");
+                //Baselines Values
+
+                if (baselineRow != null) {
+
+                    baselineEventId = baselineRow.getOrDefault("EventId","");
+                    baselinePeriodId = baselineRow.getOrDefault("PeriodId","");
+                }
+
+                else {
+                  //  System.out.println("Baseline row is null for " + baselineEIDPID);
+                }
+
+                if(actualRow!=null)
+                {
+
+                    actualEID = actualRow.getOrDefault("EventId","");
+                    actualPID = actualRow.getOrDefault("PeriodId","");
+                }
+
+              //actualEIDPID = baselineEntry.getKey();
+                    else {
+               // System.out.println("Baseline row is null for " + baselineEIDPID);
+            }
+
+
+                String baselineLoss = baselineRow != null ? baselineRow.getOrDefault("Loss", "") : "";
+                String actualLoss = actualRow != null ? actualRow.getOrDefault("Loss", "") : "";
+
+//                String baselineLoss = baselineRow.get("Loss");
+//                String actualLoss = actualRow.get("Loss");
 
                 // Baseline
                 row.add(folder);
@@ -273,7 +353,7 @@ public class PLTPortfolioLossValidationEP {
                         throw new Exception("Error");
                     }
                 } catch (Exception ex) {
-                    System.out.println("Wrong baselineLoss_ at "+baselineEIDPID);
+                   // System.out.println("Wrong baselineLoss_ at "+baselineEIDPID);
                 }
 
                 try {
@@ -283,7 +363,7 @@ public class PLTPortfolioLossValidationEP {
                         throw new Exception("Error");
                     }
                 } catch (Exception ex) {
-                    System.out.println("Wrong actualLoss_ at "+actualEIDPID);
+                   // System.out.println("Wrong actualLoss_ at "+actualEIDPID);
                 }
 
                 Double difference = null;
@@ -302,7 +382,7 @@ public class PLTPortfolioLossValidationEP {
 
                 results.add(row);
             }
-            System.out.println("Comparing Done");
+            //   System.out.println("Comparing Done");
 
             ValidationResult validationResult = new ValidationResult();
             validationResult.resultRows = results;

@@ -127,7 +127,7 @@ public class PLTPortfolioLossValidationNonEP {
                                 throw new Exception("Error");
                             }
                         } catch (Exception ex) {
-                            System.out.println("Wrong baselineLoss_ at "+baselineEventId);
+                          //  System.out.println("Wrong baselineLoss_ at "+baselineEventId);
                         }
 
                         try {
@@ -137,7 +137,7 @@ public class PLTPortfolioLossValidationNonEP {
                                 throw new Exception("Error");
                             }
                         } catch (Exception ex) {
-                            System.out.println("Wrong actualLoss_ at "+actualEventId);
+                         //   System.out.println("Wrong actualLoss_ at "+actualEventId);
                         }
 
                         Double difference = null;

@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class STATSPortfolioLossValidation {
+public class STATSPortfolioLossValidationNonEP {
 
     public static Boolean run(String baselinePathStats, String actualPathStats, String outputPath) throws Exception {
 
@@ -106,18 +106,54 @@ public class STATSPortfolioLossValidation {
                         // Actual
                         row.add(folder);
 
-                        row.add(actualEventId);
-                        List<String> AALRows = checkDiff(baselineAAL, actualAAL, "AAL", folder);
-                        List<String> StdRows = checkDiff(baselineAAL, actualAAL, "Std", folder);
-                        List<String> CVRows = checkDiff(baselineAAL, actualAAL, "CV", folder);
+                      //  row.add(actualEventId);
 
-                        row.addAll(AALRows);
-                        row.addAll(StdRows);
-                        row.addAll(CVRows);
+                        Double ALLDiff = Utils.checkDiff(baselineAAL, actualAAL, "AAL", folder);
+                        Double STDDiff = Utils.checkDiff(baselineAAL, actualAAL, "Std", folder);
+                        Double CVDiff = Utils.checkDiff(baselineAAL, actualAAL, "CV", folder);
+//
+//                        row.addAll(AALRows);
+//                        row.addAll(StdRows);
+//                        row.addAll(CVRows);
 
-                        if (AALRows.get(1).equals("Fail") || StdRows.get(1).equals("Fail") || CVRows.get(1).equals("Fail")) {
+//                        if (AALRows.get(1).equals("Fail") || StdRows.get(1).equals("Fail") || CVRows.get(1).equals("Fail")) {
+//                            isAllPass = false;
+//                        }
+                        if (ALLDiff != null) {
+                            row.add(ALLDiff+"");
+                        } else {
+                            row.add("");
+                        }
+                        if (STDDiff != null) {
+                            row.add(STDDiff+"");
+                        } else {
+                            row.add("");
+                        }
+                        if (CVDiff != null) {
+                            row.add(CVDiff+"");
+                        } else {
+                            row.add("");
+                        }
+
+                        if (ALLDiff != null && !(ALLDiff > 1)) {
+                            row.add("Pass");
+                        } else {
+                            row.add("Fail");
                             isAllPass = false;
                         }
+                        if (STDDiff != null && !(STDDiff > 1)) {
+                            row.add("Pass");
+                        } else {
+                            row.add("Fail");
+                            isAllPass = false;
+                        }
+                        if (CVDiff != null && !(CVDiff > 1)) {
+                            row.add("Pass");
+                        } else {
+                            row.add("Fail");
+                            isAllPass = false;
+                        }
+
 
                         ValidationResult validationResult = new ValidationResult();
                         validationResult.resultRow = row;
@@ -208,10 +244,10 @@ public class STATSPortfolioLossValidation {
         headers.add("perscode");
         headers.add("EventId");
         headers.add("AAL");
-        headers.add("AAL-Diff");
         headers.add("STD");
-        headers.add("STD-Diff");
         headers.add("CV");
+        headers.add("AAL-Diff");
+        headers.add("STD-Diff");
         headers.add("CV-Diff");
 
         results.add(sectionNames);

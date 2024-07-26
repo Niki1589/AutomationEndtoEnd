@@ -218,9 +218,10 @@ public class ApiUtil {
         return true;
     }
 
-    public static Response uploadEDM(String authToken, String dataSource,String payload) {
+    public static Response uploadEDM(String authToken, String dataSource,Map<String, Object> payload) {
         String api = String.format(EndPointManager.apiendpoints.get("uploadEDM"), getRmsUploadId(), dataSource);
         String url = EndPointManager.baseUrl + api;
+        System.out.println("Uploading EDM: " + url);
         RestApiHelper restApiHelper = new RestApiHelper(authToken, url, "application/json", false);
         return payload.isEmpty() ? restApiHelper.submitPost() : restApiHelper.submitPost(payload);
     }
@@ -271,6 +272,7 @@ public class ApiUtil {
     public static Response getGroups(String authToken) {
         String api = EndPointManager.apiendpoints.get("getGroups");
         String url = EndPointManager.baseUrl + api;
+     //   String url="https://api-euw1.rms-npe.com/sml/tenantinfo/v1/resourcegroups?filter=ApplicationCode=RI-RISKMODELER";
         RestApiHelper restApiHelper =
                 new RestApiHelper(
                         authToken, url, "application/json", false);
@@ -286,10 +288,21 @@ public class ApiUtil {
             //converting the response into list of groups,Groups.class is a type.
             List<Groups> listOfGroups = groupResponse.jsonPath().getList("$", Groups.class);
             //Looping over list of groups to check if group name exists in the list, then get the Gguid
-            listOfGroups.stream().forEach((Groups g) -> {
-                if (Arrays.stream(groupNamesList).anyMatch((String n) -> n.equals(g.getGroupName()))) {
-                    guidList.add(g.getGroupGuid());
+
+            Arrays.stream(groupNamesList).forEach((String gName) -> {
+                Optional<Groups> isGroup = listOfGroups.stream().filter((Groups g) -> g.getGroupName().equals(gName)).findFirst();
+                if (isGroup.isPresent()) {
+                    guidList.add(isGroup.get().getGroupGuid());
+                } else {
+                    System.out.println("Group not found: " + gName + " on RM, Please make sure the Group name entered in the test case is correct");
                 }
+//                if (Arrays.stream(groupNamesList).anyMatch((String n) -> n.equals(g.getGroupName()))) {
+//                }
+//
+//                else
+//                {
+//                    System.out.println("Group not found: " + g.getGroupName() + " on RM, Please make sure the Group name entered in the test case is correct");
+//                }
             });
 
         } else {

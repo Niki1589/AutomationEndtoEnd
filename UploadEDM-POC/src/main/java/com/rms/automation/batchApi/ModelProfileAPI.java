@@ -61,10 +61,9 @@ public class ModelProfileAPI {
 
         if(tc.get("MPF_IF_CREATE_MODEL_PROFILE").equalsIgnoreCase("YES")) {
 
-            String MPName=tc.get("MPF_CREATED_NAME")+"_"+tc.get("MPF_DESCRIPTION");
+            String MPName=tc.get("MPF_CREATED_NAME");
             String MPId = tc.get("MPF_MFID");
 
-            //First, try searching the MP with the given MPFID, if not found, then search with the name
 
             Map<Object, Object> exists = null;
             Map<String, Map<Object, Object>> profilesWithId = getModelProfile(token, "id");
@@ -75,19 +74,13 @@ public class ModelProfileAPI {
                 exists = profilesWithName.get(MPName) ;
             }
 
-
-//            //Checking either MPFName or MPFID exists on the RM
-//
-//            Map<Object, Object> exists = profiles.get(MPName);
-//            if (exists == null) {
-//                exists = profiles.get(tc.get("mpfid"));
-//            }
             if (exists != null) {
                 String id = String.valueOf(exists.get("id"));
                 System.out.println("This Model Profile "+MPName+" already exists on the UI, please do not create a duplicate MP, updating the excel with Model Profile Id");
                 LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "MPF_IF_CREATE_MODEL_PROFILE", "NO");
                 LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "MPF_MFID",id);
-                throw new RuntimeException("");
+                return id;
+               // throw new RuntimeException("");
             }
 
             //If create Model Profile is set to YES and Model Profile ID is not found on RM, then create a new MP with the given name and return the ID
@@ -129,7 +122,6 @@ public class ModelProfileAPI {
                 LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "MPF_JOB_STATUS", "Model Profile is created Successfully");
             } else {
                 LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "MPF_JOB_STATUS", "Model Profile could not be created,please check the inputs.");
-
             }
             return NAEQmodelProfileId;
 

@@ -160,6 +160,20 @@ public class Utils {
         return null;
     }
 
+    public static Double checkDiff(String baseline, String actual, String name, String pr) {
+
+        Double baseline_ = Utils.parseToDouble(baseline, name, pr);
+        Double actual_ = Utils.parseToDouble(actual, name, pr);
+
+        Double difference = null;
+        if (baseline_ != null && actual_ != null) {
+            difference = Math.abs(baseline_ - actual_);
+        }
+
+        return difference;
+    }
+
+
     public static void unzip(String zipFilePath) throws IOException {
         File zipFile = new File(zipFilePath);
         String destDir = zipFile.getParent(); // Extract to the same directory as the zip file
@@ -242,33 +256,67 @@ public class Utils {
                 br.close();
                 return data;
             } else {
-                System.out.println("No CSV files starting with 'csv' found in the folder.");
+               // System.out.println("No CSV files starting with 'csv' found in the folder.");
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
         return null;
     }
-    public static List<Map<String, String>> readParquet(String folderPath) throws IOException {
+
+    public static List<Map<String, String>> readMultiCSV(String folderPath) throws IOException {
         List<Map<String, String>> data = new ArrayList<>();
-        List<String> listOfFields = new ArrayList<>();
 
         try (Stream<Path> files = Files.list(Paths.get(folderPath))) {
+            files.filter(Files::isRegularFile)
+                    .filter(path -> path.getFileName().toString().endsWith(".csv"))
+                    .forEach(path -> {
+                        try (BufferedReader br = new BufferedReader(new FileReader(path.toFile()))) {
+                            String headersLine = br.readLine();
+                            if (headersLine != null) {
+                                String[] headers = headersLine.split(",");
+                                String line;
+                                while ((line = br.readLine()) != null) {
+                                    String[] values = line.split(",");
+                                    Map<String, String> row = new HashMap<>();
+                                    for (int i = 0; i < headers.length; i++) {
+                                        String key = headers[i].replace("\"", "");
+                                        String value = values[i].replace("\"", "");
+                                        row.put(key, value);
+                                    }
+                                    data.add(row);
+                                }
+                            }
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return data;
+
+    }
+
+    // Helper method to read Parquet files from a given path
+    static List<Map<String, String>> readParquetFilesFromPath(Path path) throws IOException {
+        List<Map<String, String>> localData = new ArrayList<>();
+        List<String> listOfFields = new ArrayList<>();
+
+        Configuration conf = new Configuration();
+        try (Stream<Path> files = Files.list(path)) {
             files
                     .filter(Files::isRegularFile)
-                    .filter(path -> path.getFileName().toString().endsWith(".parquet"))
+                    .filter(p -> p.getFileName().toString().endsWith(".parquet"))
                     .forEach(file -> {
-                        Configuration conf = new Configuration();
-                        org.apache.hadoop.fs.Path path = new org.apache.hadoop.fs.Path(file.toFile().getPath());
-
-                        try (ParquetReader<Group> reader = ParquetReader.builder(new GroupReadSupport(), path)
+                        org.apache.hadoop.fs.Path hadoopPath = new org.apache.hadoop.fs.Path(file.toFile().getPath());
+                        try (ParquetReader<Group> reader = ParquetReader.builder(new GroupReadSupport(), hadoopPath)
                                 .withConf(conf)
                                 .build()) {
 
-                            // Read and write rows
                             Group group;
                             while ((group = reader.read()) != null) {
-
                                 if (group != null && listOfFields.size() == 0) {
                                     List<Type> types = group.asGroup().getType().getFields();
                                     for (Type type : types) {
@@ -282,8 +330,7 @@ public class Utils {
                                     String value = group.getValueToString(colIndex++, 0);
                                     row.put(field, value);
                                 }
-                                data.add(row);
-
+                                localData.add(row);
                             }
 
                         } catch (IOException e) {
@@ -292,8 +339,28 @@ public class Utils {
                     });
         }
 
+        return localData;
+    }
+
+    public static List<Map<String, String>> readParquet(String folderPath) throws IOException {
+        List<Map<String, String>> data = new ArrayList<>();
+
+        Path folder = Paths.get(folderPath);
+        List<Map<String, String>> initialData = readParquetFilesFromPath(folder);
+        if (initialData.isEmpty()) {
+            try (Stream<Path> subfolders = Files.list(folder).filter(Files::isDirectory)) {
+                Optional<Path> firstSubfolder = subfolders.findFirst();
+                if (firstSubfolder.isPresent()) {
+                    data = readParquetFilesFromPath(firstSubfolder.get());
+                }
+            }
+        } else {
+            data = initialData;
+        }
+
         return data;
     }
+
 //    public static List<Map<String, String>> readParquet(String folderPath) throws IOException {
 //        try (Stream<Path> files = Files.list(Paths.get(folderPath))) {
 //            Optional<Path> firstFile = files

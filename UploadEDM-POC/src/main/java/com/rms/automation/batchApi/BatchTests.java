@@ -123,15 +123,16 @@ public class BatchTests {
         Gson gson = new Gson(); //To convert JSON to Java object, we use GSON library from google
 
         String perilName = perils.getPeril().replace(" ", "_");
-        String batchName = perilName+"_BACTH";
-        String profileId = perilName+"_Process_"+ModelProfileId;
+        String batchName = perilName + "_BACTH";
+        String profileId = perilName + "_Process_" + ModelProfileId;
 
         String geoLicenseType = "0";
         if (perils.getGeoHazLayers().contains("geoLicenseType")) {
             geoLicenseType = "1";
         }
         String geoCodedPayload = "";
-        if (!isGeoCoded) {
+        String payloadInString = null;
+        if (isGeoCoded) {
             geoCodedPayload = "{\n" +
                     "\"continueOnFailure\": false,\n" +
                     "\"dependsOn\": [],\n" +
@@ -140,106 +141,166 @@ public class BatchTests {
                     "\"name\": \"geocode\",\n" +
                     "\"type\": \"geocode\",\n" +
                     "\"engineType\": \"RL\",\n" +
-                    "\"version\": \""+perils.getGeocodeVersion()+"\",\n" +
+                    "\"version\": \"" + perils.getGeocodeVersion() + "\",\n" +
                     "\"layerOptions\": {\n" +
-                    "\"skipPrevGeocoded\": "+ perils.getGeoHazLayers().contains("skipPrevGeocoded") +",\n" +
-                    "\"aggregateTriggerEnabled\": \""+ perils.getGeoHazLayers().contains("aggregateTriggerEnabled") +"\",\n" +
-                    "\"geoLicenseType\": \""+ geoLicenseType +"\"\n" +
+                    "\"skipPrevGeocoded\": " + perils.getGeoHazLayers().contains("skipPrevGeocoded") + ",\n" +
+                    "\"aggregateTriggerEnabled\": \"" + perils.getGeoHazLayers().contains("aggregateTriggerEnabled") + "\",\n" +
+                    "\"geoLicenseType\": \"" + geoLicenseType + "\"\n" +
                     "}\n" +
                     "},\n" +
                     "{\n" +
                     "\"name\": \"earthquake\",\n" +
                     "\"type\": \"hazard\",\n" +
-                    "\"version\": \""+perils.getGeoHazVersion()+"\",\n" +
+                    "\"version\": \"" + perils.getGeoHazVersion() + "\",\n" +
                     "\"engineType\": \"RL\",\n" +
                     "\"layerOptions\": {\n" +
-                    "\"skipPrevHazard\": "+ perils.getGeoHazLayers().contains("skipPrevHazard") +",\n" +
-                    "\"overrideUserDef\": "+ perils.getGeoHazLayers().contains("overrideUserDef") +"\n" +
+                    "\"skipPrevHazard\": " + perils.getGeoHazLayers().contains("skipPrevHazard") + ",\n" +
+                    "\"overrideUserDef\": " + perils.getGeoHazLayers().contains("overrideUserDef") + "\n" +
                     "}\n" +
                     "},\n" +
                     "{\n" +
                     "\"engineType\": \"RL\",\n" +
                     "\"layerOptions\": {\n" +
-                    "\"overrideUserDef\": "+ perils.getGeoHazLayers().contains("overrideUserDef") +",\n" +
-                    "\"skipPrevHazard\": "+ perils.getGeoHazLayers().contains("skipPrevHazard") +"\n" +
+                    "\"overrideUserDef\": " + perils.getGeoHazLayers().contains("overrideUserDef") + ",\n" +
+                    "\"skipPrevHazard\": " + perils.getGeoHazLayers().contains("skipPrevHazard") + "\n" +
                     "},\n" +
                     "\"type\": \"hazard\",\n" +
                     "\"name\": \"windstorm\",\n" +
-                    "\"version\": \""+perils.getGeoHazVersion()+"\"\n" +
+                    "\"version\": \"" + perils.getGeoHazVersion() + "\"\n" +
                     "}" +
                     "],\n" +
                     "\"label\": \"GEOHAZ\",\n" +
-                    "\"operation\": \"/v2/portfolios/"+portfolioId+"/geohaz?datasource="+dataSourceName+"\",\n" +
-                    "\"url\": \"/v2/portfolios/"+portfolioId+"/geohaz?datasource="+dataSourceName+"\"\n" +
+                    "\"operation\": \"/v2/portfolios/" + portfolioId + "/geohaz?datasource=" + dataSourceName + "\",\n" +
+                    "\"url\": \"/v2/portfolios/" + portfolioId + "/geohaz?datasource=" + dataSourceName + "\"\n" +
                     "},\n";
-        }
-
-        String exposurSummary = "" +
-                "        {\n" +
-                "            \"continueOnFailure\": \"true\",\n" +
-                "            \"dependsOn\": [\n" +
-                "                \"GEOHAZ\"\n" +
-                "            ],\n" +
-                "            \"input\": {\n" +
-                "                \"perilList\": [\n" +
-                "                    \"EQ\",\n" +
-                "                    \"FL\",\n" +
-                "                    \"FR\",\n" +
-                "                    \"TR\",\n" +
-                "                    \"WS\"\n" +
-                "                ],\n" +
-                "                \"reportName\": \""+batchName+"\"\n" +
-                "            },\n" +
-                "            \"label\": \"EXPOSURE_SUMMARY\",\n" +
-                "            \"operation\": \"/v2/portfolios/"+portfolioId+"/summary_report?datasource="+dataSourceName+"\"\n" +
-                "        },\n";
-        String payloadInString="{\n"+
-                "\"name\":\""+batchName+"\",\n"+
-                "\"operations\":[\n"+
-                exposurSummary+
-                geoCodedPayload+
-                "{\n"+
-                "\"continueOnFailure\":true,\n"+
-                "\"dependsOn\":[\n"+
-                "\"GEOHAZ\"\n"+
-                "],\n"+
-                "\"input\":{\n"+
-                "\"currency\":{\n"+
-                "\"asOfDate\":\""+ perils.getAsOfDateProcess() +"\",\n"+
-                "\"code\":\""+ perils.getCurrencyCodeProcess() +"\",\n"+
-                "\"scheme\":\""+ perils.getCurrencySchemeProcess() +"\",\n"+
-                "\"vintage\":\"" + perils.getCurrencyVintageProcess() + "\"\n"+
-                "},\n"+
-                "\"edm\":\""+dataSourceName+"\",\n"+
-                "\"eventRateSchemeId\":0,\n"+
-                "\"exposureType\":\"PORTFOLIO\",\n"+
-                "\"globalAnalysisSettings\":{\n"+
-                "\"franchiseDeductible\":false,\n"+
-                "\"minLossThreshold\":\"1.00\",\n"+
-                "\"numMaxLossEvent\":\"1\",\n"+
-                "\"treatConstructionOccupancyAsUnknown\":true\n"+
-                "},\n"+
-                "\"id\":"+portfolioId+",\n"+
-                "\"modelProfileId\":"+ModelProfileId+",\n"+
-                "\"outputProfileId\":"+perils.getOutputProfileId()+",\n"+
+            String exposurSummary = "" +
+                    "        {\n" +
+                    "            \"continueOnFailure\": \"true\",\n" +
+                    "            \"dependsOn\": [\n" +
+                    "                \"GEOHAZ\"\n" +
+                    "            ],\n" +
+                    "            \"input\": {\n" +
+                    "                \"perilList\": [\n" +
+                    "                    \"EQ\",\n" +
+                    "                    \"FL\",\n" +
+                    "                    \"FR\",\n" +
+                    "                    \"TR\",\n" +
+                    "                    \"WS\"\n" +
+                    "                ],\n" +
+                    "                \"reportName\": \"" + batchName + "\"\n" +
+                    "            },\n" +
+                    "            \"label\": \"EXPOSURE_SUMMARY\",\n" +
+                    "            \"operation\": \"/v2/portfolios/" + portfolioId + "/summary_report?datasource=" + dataSourceName + "\"\n" +
+                    "        },\n";
+            payloadInString = "{\n" +
+                    "\"name\":\"" + batchName + "\",\n" +
+                    "\"operations\":[\n" +
+                    exposurSummary +
+                    geoCodedPayload +
+                    "{\n" +
+                    "\"continueOnFailure\":true,\n" +
+                    "\"dependsOn\":[\n" +
+                    "\"GEOHAZ\"\n" +
+                    "],\n" +
+                    "\"input\":{\n" +
+                    "\"currency\":{\n" +
+                    "\"asOfDate\":\"" + perils.getAsOfDateProcess() + "\",\n" +
+                    "\"code\":\"" + perils.getCurrencyCodeProcess() + "\",\n" +
+                    "\"scheme\":\"" + perils.getCurrencySchemeProcess() + "\",\n" +
+                    "\"vintage\":\"" + perils.getCurrencyVintageProcess() + "\"\n" +
+                    "},\n" +
+                    "\"edm\":\"" + dataSourceName + "\",\n" +
+                    "\"eventRateSchemeId\":0,\n" +
+                    "\"exposureType\":\"PORTFOLIO\",\n" +
+                    "\"globalAnalysisSettings\":{\n" +
+                    "\"franchiseDeductible\":false,\n" +
+                    "\"minLossThreshold\":\"1.00\",\n" +
+                    "\"numMaxLossEvent\":\"1\",\n" +
+                    "\"treatConstructionOccupancyAsUnknown\":true\n" +
+                    "},\n" +
+                    "\"id\":" + portfolioId + ",\n" +
+                    "\"modelProfileId\":" + ModelProfileId + ",\n" +
+                    "\"outputProfileId\":" + perils.getOutputProfileId() + ",\n" +
 //                "\"treaties\":"+(perils.getTreaties().split(","))+",\n"+
 //                "\"treaties\":\""+perils.getTreaties()+"\",\n"+
 //                "\"treatiesName\":\""+perils.getTreatiesName() +"\",\n"+
-                "\"treaties\":["+perils.getTreaties()+"],\n"+
-                "\"treatiesName\":["+ perils.getTreatiesName() +"],\n"+
-                "\"tagIds\":[]\n"+
-                "},\n"+
-                "\"label\":\""+profileId+"\",\n"+
-                "\"operation\":\"/v2/portfolios/"+portfolioId+"/process\"\n"+
-                "}"+
-                "]\n"+
-                "}";
+                    "\"treaties\":[" + perils.getTreaties() + "],\n" +
+                    "\"treatiesName\":[" + perils.getTreatiesName() + "],\n" +
+                    "\"tagIds\":[]\n" +
+                    "},\n" +
+                    "\"label\":\"" + profileId + "\",\n" +
+                    "\"operation\":\"/v2/portfolios/" + portfolioId + "/process\"\n" +
+                    "}" +
+                    "]\n" +
+                    "}";
 
+        }
+        else {
 
+            String exposurSummary = "" +
+                    "        {\n" +
+                    "            \"continueOnFailure\": \"true\",\n" +
+//                    "            \"dependsOn\": [\n" +
+//                    "                \"GEOHAZ\"\n" +
+//                    "            ],\n" +
+                    "            \"input\": {\n" +
+                    "                \"perilList\": [\n" +
+                    "                    \"EQ\",\n" +
+                    "                    \"FL\",\n" +
+                    "                    \"FR\",\n" +
+                    "                    \"TR\",\n" +
+                    "                    \"WS\"\n" +
+                    "                ],\n" +
+                    "                \"reportName\": \"" + batchName + "\"\n" +
+                    "            },\n" +
+                    "            \"label\": \"EXPOSURE_SUMMARY\",\n" +
+                    "            \"operation\": \"/v2/portfolios/" + portfolioId + "/summary_report?datasource=" + dataSourceName + "\"\n" +
+                    "        },\n";
+            payloadInString = "{\n" +
+                    "\"name\":\"" + batchName + "\",\n" +
+                    "\"operations\":[\n" +
+                    exposurSummary +
+                    "{\n" +
+                    "\"continueOnFailure\":true,\n" +
+//                    "\"dependsOn\":[\n" +
+//                    "\"GEOHAZ\"\n" +
+//                    "],\n" +
+                    "\"input\":{\n" +
+                    "\"currency\":{\n" +
+                    "\"asOfDate\":\"" + perils.getAsOfDateProcess() + "\",\n" +
+                    "\"code\":\"" + perils.getCurrencyCodeProcess() + "\",\n" +
+                    "\"scheme\":\"" + perils.getCurrencySchemeProcess() + "\",\n" +
+                    "\"vintage\":\"" + perils.getCurrencyVintageProcess() + "\"\n" +
+                    "},\n" +
+                    "\"edm\":\"" + dataSourceName + "\",\n" +
+                    "\"eventRateSchemeId\":0,\n" +
+                    "\"exposureType\":\"PORTFOLIO\",\n" +
+                    "\"globalAnalysisSettings\":{\n" +
+                    "\"franchiseDeductible\":false,\n" +
+                    "\"minLossThreshold\":\"1.00\",\n" +
+                    "\"numMaxLossEvent\":\"1\",\n" +
+                    "\"treatConstructionOccupancyAsUnknown\":true\n" +
+                    "},\n" +
+                    "\"id\":" + portfolioId + ",\n" +
+                    "\"modelProfileId\":" + ModelProfileId + ",\n" +
+                    "\"outputProfileId\":" + perils.getOutputProfileId() + ",\n" +
+//                "\"treaties\":"+(perils.getTreaties().split(","))+",\n"+
+//                "\"treaties\":\""+perils.getTreaties()+"\",\n"+
+//                "\"treatiesName\":\""+perils.getTreatiesName() +"\",\n"+
+                    "\"treaties\":[" + perils.getTreaties() + "],\n" +
+                    "\"treatiesName\":[" + perils.getTreatiesName() + "],\n" +
+                    "\"tagIds\":[]\n" +
+                    "},\n" +
+                    "\"label\":\"" + profileId + "\",\n" +
+                    "\"operation\":\"/v2/portfolios/" + portfolioId + "/process\"\n" +
+                    "}" +
+                    "]\n" +
+                    "}";
+        }
 
 
         System.out.println("Payload Batch API");
-                System.out.println(payloadInString);
+        System.out.println(payloadInString);
         return gson.fromJson(payloadInString, Object.class);
     }
 

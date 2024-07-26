@@ -184,8 +184,6 @@ public class FileExportTests {
                     LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), fileExportColumnName, jobId);
                 }
 
-
-
                 // To check if actual results file is not empty and has valid data , then populate the complete path of actual results in excel file.
                 Path filePath = Paths.get(localPath);
                 if (Files.exists(filePath)) {

@@ -9,8 +9,8 @@ public class PLTLossValidationEP {
     public static Boolean run(String baselinePath, String actualPath, String outputPath, Download_Settings downloadSettings) throws Exception {
 
         String baselinePathPLT = baselinePath + "/EP/PLT";
+      //  String actualPathPLT = "/Users/Nikita.Arora/Documents/UploadEdmPoc/Results/A002_SMOKE_EUWS/ActualResults/CSV/25671532_Testing_EDM_E2E_latest_Automation__PORTFOLIO__EUWS_01_Losses/PLT";
         String actualPathPLT = actualPath + "/PLT";
-
         // Check if baselinePathEP directory exists
         File baselineDir = new File(baselinePathPLT);
         if (!baselineDir.exists() || !baselineDir.isDirectory()) {
@@ -24,19 +24,19 @@ public class PLTLossValidationEP {
         }
 
         Boolean isPortfolioPass = null;
-        if (downloadSettings.getOutputLevels_LossTablesMetric() !=null && downloadSettings.getOutputLevels_LossTablesMetric().equalsIgnoreCase("Portfolio")) {
+        if (downloadSettings.getOutputLevels_LossTablesMetric() !=null && downloadSettings.getOutputLevels_LossTablesMetric().toUpperCase().contains("PORTFOLIO")) {
 
             isPortfolioPass = PLTPortfolioLossValidationEP.run(baselinePathPLT, actualPathPLT, outputPath);
 
         }
 
-//        Boolean isTreatyPass = null;
-//        if (downloadSettings.getOutputLevels_EPMetric().equalsIgnoreCase("Treaty")) {
-//
-//            isTreatyPass = StatsTreatyLossValidation.run(baselinePathPLT, actualPathPLT, outputPath);
-//        }
+        Boolean isTreatyPass = null;
+        if (downloadSettings.getOutputLevels_LossTablesMetric().toUpperCase().contains("TREATY")) {
 
-        Boolean isAllPass = (isPortfolioPass==Boolean.TRUE);
+            isTreatyPass = PLTTreatyLossValidationEP.run(baselinePathPLT, actualPathPLT, outputPath);
+        }
+
+        Boolean isAllPass = (isPortfolioPass==Boolean.TRUE) ||(isTreatyPass==Boolean.TRUE);
 
         System.out.println("PLT Comparison for Analysis Type EP completed and results written to Excel.");
         return isAllPass;

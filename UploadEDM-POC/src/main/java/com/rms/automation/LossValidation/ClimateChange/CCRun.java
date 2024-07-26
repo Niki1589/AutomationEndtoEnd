@@ -31,7 +31,8 @@ public class CCRun {
             }
 
             String baselinePathCC = baselinePath + "/CC/12_R" + ccRcpTime + "/ccout";
-            String actualPathCC = actualPath;
+           // String actualPathCC = actualPath;
+            String actualPathCC ="/Users/Nikita.Arora/Documents/UploadEdmPoc/Results/A002_SMOKE_EUWS/ActualResults/CSV/25751853_rename_analysis_WS_CC_RCP4_5_2020_Losses";
 
             System.out.println("Baseline Path: " + baselinePathCC);
             System.out.println("Actual Path: " + actualPathCC);

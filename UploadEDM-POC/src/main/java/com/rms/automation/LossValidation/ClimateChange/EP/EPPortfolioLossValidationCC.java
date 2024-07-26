@@ -17,7 +17,7 @@ import java.util.Map;
 
 public class EPPortfolioLossValidationCC {
 
-    public static Boolean runPortfolioLossValidationEP(String baselinePathEP, String actualPathEP, String outputPath, Download_Settings downloadSettings) throws Exception {
+    public static Boolean runPortfolioLossValidationEPCC(String baselinePathEPCC, String actualPathEPCc, String outputPathEPCC, Download_Settings downloadSettings) throws Exception {
 
         ///Folders to read from Portfolio
         List<String> folders = new ArrayList<>();
@@ -30,19 +30,19 @@ public class EPPortfolioLossValidationCC {
         folders.add("SS");
         folders.add("WX");
 
-        String baselinePathPortfolioEP = baselinePathEP + "/Portfolio/";
-        String actualPathPortfolioEP = actualPathEP + "/Portfolio/";
-        String outPathEP = String.format(outputPath, "EP_Portfolio_Results_CC");
+        String baselinePathPortfolioEPCC = baselinePathEPCC + "/Portfolio/";
+        String actualPathPortfolioEPCC = actualPathEPCc + "/Portfolio/";
+        String outPathEPCC = String.format(outputPathEPCC, "EP_Portfolio_Results_CC");
 
-        File baselineDir = new File(baselinePathPortfolioEP);
+        File baselineDir = new File(baselinePathPortfolioEPCC);
         if (!baselineDir.exists() || !baselineDir.isDirectory()) {
-            throw new Exception("Baseline directory '" + baselinePathPortfolioEP + "' does not exist or is not a directory.");
+            throw new Exception("Baseline directory '" + baselinePathPortfolioEPCC + "' does not exist or is not a directory.");
         }
 
         // Check if actualPathEP directory exists
-        File actualDir = new File(actualPathPortfolioEP);
+        File actualDir = new File(actualPathPortfolioEPCC);
         if (!actualDir.exists() || !actualDir.isDirectory()) {
-            throw new Exception("Actual directory '" + actualPathPortfolioEP + "' does not exist or is not a directory.");
+            throw new Exception("Actual directory '" + actualPathPortfolioEPCC + "' does not exist or is not a directory.");
         }
 
         List<List<String>> rows = new ArrayList<>();
@@ -50,9 +50,9 @@ public class EPPortfolioLossValidationCC {
 
         try {
             for (String folder: folders) {
-                if( Utils.isDirExists(baselinePathPortfolioEP + folder) && Utils.isDirExists(actualPathPortfolioEP + folder) ) {
-                    List<Map<String, String>> baselineData = Utils.readCSV(baselinePathPortfolioEP + folder);
-                    List<Map<String, String>> actualData = Utils.readCSV(actualPathPortfolioEP + folder);
+                if( Utils.isDirExists(baselinePathPortfolioEPCC + folder) && Utils.isDirExists(actualPathPortfolioEPCC + folder) ) {
+                    List<Map<String, String>> baselineData = Utils.readCSV(baselinePathPortfolioEPCC + folder);
+                    List<Map<String, String>> actualData = Utils.readCSV(actualPathPortfolioEPCC + folder);
                     if (baselineData != null && actualData != null) {
                         ValidationResult validationResult = compareData(baselineData, actualData, folder);
                         rows.addAll(validationResult.resultRows);
@@ -61,7 +61,7 @@ public class EPPortfolioLossValidationCC {
                 }
             }
 
-            writeResultsToExcel(rows, outPathEP);
+            writeResultsToExcel(rows, outPathEPCC);
             return isAllPass;
         } catch (IOException e) {
             e.printStackTrace();
@@ -129,7 +129,7 @@ public class EPPortfolioLossValidationCC {
                                 throw new Exception("Error");
                             }
                         } catch (Exception ex) {
-                            System.out.println("Wrong baselineLoss_ at "+baselineMT);
+                        //    System.out.println("Wrong baselineLoss_ at "+baselineMT);
                         }
 
                         try {
@@ -139,7 +139,7 @@ public class EPPortfolioLossValidationCC {
                                 throw new Exception("Error");
                             }
                         } catch (Exception ex) {
-                            System.out.println("Wrong actualLoss_ at "+actualMT);
+                       //     System.out.println("Wrong actualLoss_ at "+actualMT);
                         }
 
                         Double difference = null;

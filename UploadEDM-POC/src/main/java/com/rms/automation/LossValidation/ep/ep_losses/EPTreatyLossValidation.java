@@ -129,7 +129,7 @@ public class EPTreatyLossValidation {
                                 throw new Exception("Error");
                             }
                         } catch (Exception ex) {
-                            System.out.println("Wrong baselineLoss_ at "+baselineMatcher);
+                         //   System.out.println("Wrong baselineLoss_ at "+baselineMatcher);
                         }
 
                         try {
@@ -139,7 +139,7 @@ public class EPTreatyLossValidation {
                                 throw new Exception("Error");
                             }
                         } catch (Exception ex) {
-                            System.out.println("Wrong actualLoss_ at "+actualMatcher);
+                         //   System.out.println("Wrong actualLoss_ at "+actualMatcher);
                         }
 
                         Double difference = null;

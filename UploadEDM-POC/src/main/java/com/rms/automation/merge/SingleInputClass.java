@@ -2,9 +2,11 @@ package com.rms.automation.merge;
 
 import com.rms.automation.PATEApi.PATETests;
 import com.rms.automation.Upload.UploadRDM;
+import com.rms.automation.bal.EndPointManager;
 import com.rms.automation.batchApi.BatchTests;
 import com.rms.automation.climateChange.ClimateChangeTests;
 import com.rms.automation.currencyConverterApi.CurrencyConverter;
+import com.rms.automation.edm.ApiUtil;
 import com.rms.automation.edm.LoadData;
 import com.rms.automation.exportApi.export;
 import com.rms.automation.mriImportApi.MRIImportTests;
@@ -14,6 +16,7 @@ import com.rms.automation.utils.Utils;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import java.util.List;
 import java.util.Map;
 
 //import static automation.mriImport.MRIImportTests.portfolioId_created;
@@ -29,22 +32,25 @@ public class SingleInputClass {
     @Test(dataProvider = "loadFromExcel")
     public void executeSingleInputExcel(Map<String, String> tc) throws Exception {
 
-      Thread thread = new Thread(() -> {
-            uploadOrImportEdm(tc);
-      });
+          Thread thread = new Thread(() -> {
+                uploadOrImportEdm(tc);
+          });
 
-     thread.start();
-     thread.join();
+         thread.start();
+         thread.join();
 
     }
 
     public void uploadOrImportEdm(Map<String, String> tc) {
         if (tc != null) {
             try {
-            try {
                 if (Utils.isTrue(tc.get("IF_TEST_CASE_RUN"))) {
+                    String tenant = tc.get("TENANT");
+                    EndPointManager.setBaseUrlByTenant(tenant);
+
                     System.out.println("Test Case No: " + tc.get("TEST_CASE_NO"));
                     if (Utils.isTrue(tc.get("EXP_IS_RUN_UPLOAD_IMPORT"))) {
+
                         switch (tc.get("EXP_IF_UPLOAD_OR_IMPORT").toUpperCase()) {
                             case "IMPORT":
                                 MRIImportTests mriImportTests = new MRIImportTests();
@@ -61,24 +67,6 @@ public class SingleInputClass {
                                 uploadEDM.executeUploadEdm(tc);
 
                                 break;
-
-//                            case "DOWNSTREAM":
-//                                if (Utils.isTrue(tc.get("if_rdm_export"))) {
-//                                    export.exportType(tc, tc.get("analysisId"));
-//                                }
-//                                if (Utils.isTrue(tc.get("isConvertCurrency"))) {
-//                                    CurrencyConverter.convert(tc, tc.get("analysisId"));
-//                                }
-//                                if (Utils.isTrue(tc.get("isRenameAnalysis"))) {
-//                                    RenameAnalysis.rename(tc, tc.get("analysisId"));
-//                                }
-//                                if (Utils.isTrue(tc.get("isPate"))) {
-//                                //    PATETests.executePATETests(tc.get("caseNo"), tc.get("analysisId"));
-//                                }
-//                                if (Utils.isTrue(tc.get("is_ClimateChange"))) {
-//                                    ClimateChangeTests.climateChange(tc, tc.get("analysisId"));
-//                                }
-                            //    break;
                             default:
                                 break;
                         }

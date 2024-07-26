@@ -24,21 +24,23 @@ public class STATSLossValidation {
         }
 
         Boolean isPortfolioPass = null;
-        if (downloadSettings.getOutputLevels_StatesMetric() != null && downloadSettings.getOutputLevels_StatesMetric().equalsIgnoreCase("Portfolio")) {
+        if (downloadSettings.getOutputLevels_StatesMetric() != null && downloadSettings.getOutputLevels_StatesMetric().toUpperCase().contains("PORTFOLIO")) {
 
             isPortfolioPass = STATSPortfolioLossValidationEP.run(baselinePathSTATS, actualPathSTATS, outputPath);
 
         }
         Boolean isTreatyPass = null;
 
-        if (downloadSettings.getOutputLevels_StatesMetric()!= null && downloadSettings.getperspectives_StatsMetric().equalsIgnoreCase("Treaty")) {
+        if (downloadSettings.getOutputLevels_StatesMetric()!= null && downloadSettings.getOutputLevels_EPMetric().toUpperCase().contains("TREATY")) {
 
             isTreatyPass = StatsTreatyLossValidationEP.run(baselinePathSTATS, actualPathSTATS, outputPath);
         }
 
         Boolean isAllPass = (isPortfolioPass==Boolean.TRUE) || (isTreatyPass==Boolean.TRUE);
 
-        System.out.println("STATS Comparison completed for analysis type EP and results written to Excel.");
+
+            System.out.println("STATS Comparison for Analysis type EP completed and results written to Excel.");
+
         return isAllPass;
 
     }

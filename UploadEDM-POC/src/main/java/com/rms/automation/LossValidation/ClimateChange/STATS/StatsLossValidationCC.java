@@ -9,7 +9,8 @@ public class StatsLossValidationCC {
     public static Boolean run(String baselinePath, String actualPath, String outputPath, Download_Settings downloadSettings) throws Exception {
 
         String baselinePathSTATS = baselinePath + "/STATS";
-        String actualPathSTATS = actualPath + "/STATS";
+        // String actualPathSTATS = actualPath + "/STATS";
+        String actualPathSTATS = "/Users/Nikita.Arora/Documents/UploadEdmPoc/Results/A002_SMOKE_EUWS/ActualResults/CSV/25751853_rename_analysis_WS_CC_RCP4_5_2020_Losses" + "/STATS";
 
         // Check if baselinePathEP directory exists
         File baselineDir = new File(baselinePathSTATS);
@@ -25,12 +26,12 @@ public class StatsLossValidationCC {
 
         Boolean isPortfolioPass=null;
 
-        if ( downloadSettings.getOutputLevels_StatesMetric()!=null && downloadSettings.getOutputLevels_StatesMetric().equalsIgnoreCase("Portfolio")) {
+        if ( downloadSettings.getOutputLevels_StatesMetric()!=null && downloadSettings.getOutputLevels_StatesMetric().toUpperCase().contains("PORTFOLIO")) {
             isPortfolioPass = StatsPortfolioLossValidationCC.run(baselinePathSTATS, actualPathSTATS, outputPath);
         }
 
         Boolean isTreatyPass=null;
-        if (downloadSettings.getOutputLevels_StatesMetric()!=null && downloadSettings.getOutputLevels_StatesMetric().equalsIgnoreCase("Treaty"))
+        if (downloadSettings.getOutputLevels_StatesMetric()!=null && downloadSettings.getOutputLevels_StatesMetric().toUpperCase().contains("TREATY"))
         {
             isTreatyPass = StatsTreatyLossValidationCC.run(baselinePathSTATS, actualPathSTATS, outputPath);
         }

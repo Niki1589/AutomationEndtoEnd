@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 public class EPPortlofioLossValidation {
-    public static Boolean runPortfolioLossValidationEP(String baselinePathEPCC, String actualPathEPCC, String outputPathCC, Download_Settings downloadSettings) throws Exception {
+    public static Boolean runPortfolioLossValidationEP(String baselinePathEP, String actualPathEP, String outputPath, Download_Settings downloadSettings) throws Exception {
 
         ///Folders to read from Portfolio
         List<String> folders = new ArrayList<>();
@@ -28,9 +28,9 @@ public class EPPortlofioLossValidation {
         folders.add("SS");
         folders.add("WX");
 
-        String baselinePathPortfolioEP = baselinePathEPCC + "/Portfolio/";
-        String actualPathPortfolioEP = actualPathEPCC + "/Portfolio/";
-        String outPathEPCC = String.format(outputPathCC, "EP_Portfolio_Results");
+        String baselinePathPortfolioEP = baselinePathEP + "/Portfolio/";
+        String actualPathPortfolioEP = actualPathEP + "/Portfolio/";
+        String outPathEP = String.format(outputPath, "EP_Portfolio_Results");
 
 
 
@@ -40,7 +40,7 @@ public class EPPortlofioLossValidation {
         try {
             for (String folder: folders) {
                 if( Utils.isDirExists(baselinePathPortfolioEP + folder) && Utils.isDirExists(actualPathPortfolioEP + folder) ) {
-                    List<Map<String, String>> baselineData = Utils.readCSV(baselinePathPortfolioEP + folder);
+                    List<Map<String, String>> baselineData = Utils.readParquet(baselinePathPortfolioEP + folder);
                     List<Map<String, String>> actualData = Utils.readCSV(actualPathPortfolioEP + folder);
                     if (baselineData != null && actualData != null) {
                         ValidationResult validationResult = compareData(baselineData, actualData, folder);
@@ -50,7 +50,7 @@ public class EPPortlofioLossValidation {
                 }
             }
 
-            writeResultsToExcel(rows, outPathEPCC);
+            writeResultsToExcel(rows, outPathEP);
             return isAllPass;
         } catch (IOException e) {
             e.printStackTrace();
@@ -118,7 +118,7 @@ public class EPPortlofioLossValidation {
                                 throw new Exception("Error");
                             }
                         } catch (Exception ex) {
-                            System.out.println("Wrong baselineLoss_ at "+baselineMT);
+                        //    System.out.println("Wrong baselineLoss_ at "+baselineMT);
                         }
 
                         try {
@@ -128,7 +128,7 @@ public class EPPortlofioLossValidation {
                                 throw new Exception("Error");
                             }
                         } catch (Exception ex) {
-                            System.out.println("Wrong actualLoss_ at "+actualMT);
+                          //  System.out.println("Wrong actualLoss_ at "+actualMT);
                         }
 
                         Double difference = null;
@@ -138,7 +138,7 @@ public class EPPortlofioLossValidation {
 
                         row.add(difference+"");
 
-                        if (difference != null && !(difference > 1)) {
+                        if (difference != null && !(difference <=1)) {
                             row.add("Pass");
                         } else {
                             isAllPass = false;

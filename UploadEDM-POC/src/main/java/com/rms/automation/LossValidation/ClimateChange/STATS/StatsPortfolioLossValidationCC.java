@@ -46,7 +46,7 @@ public class StatsPortfolioLossValidationCC {
         }
 
 
-        System.out.println( outPathStats );
+      //  System.out.println( outPathStats );
         List<List<String>> rows = new ArrayList<>();
         Boolean isAllPass = true;
 
@@ -110,15 +110,43 @@ public class StatsPortfolioLossValidationCC {
             // Actual
             row.add(folder);
 
-            List<String> AALRows = checkDiff(baselineAAL, actualAAL, "AAL", folder);
-            List<String> StdRows = checkDiff(baselineStd, actualStd, "Std", folder);
-            List<String> CVRows = checkDiff(baselineCV, actualCV, "CV", folder);
 
-            row.addAll(AALRows);
-            row.addAll(StdRows);
-            row.addAll(CVRows);
+            Double ALLDiff = Utils.checkDiff(baselineAAL, actualAAL, "AAL", folder);
+            Double STDDiff = Utils.checkDiff(baselineAAL, actualAAL, "Std", folder);
+            Double CVDiff = Utils.checkDiff(baselineAAL, actualAAL, "CV", folder);
 
-            if (AALRows.get(1).equals("Fail") || StdRows.get(1).equals("Fail") || CVRows.get(1).equals("Fail"))  {
+            if (ALLDiff != null) {
+                row.add(ALLDiff+"");
+            } else {
+                row.add("");
+            }
+            if (STDDiff != null) {
+                row.add(STDDiff+"");
+            } else {
+                row.add("");
+            }
+            if (CVDiff != null) {
+                row.add(CVDiff+"");
+            } else {
+                row.add("");
+            }
+
+            if (ALLDiff != null && !(ALLDiff > 1)) {
+                row.add("Pass");
+            } else {
+                row.add("Fail");
+                isAllPass = false;
+            }
+            if (STDDiff != null && !(STDDiff > 1)) {
+                row.add("Pass");
+            } else {
+                row.add("Fail");
+                isAllPass = false;
+            }
+            if (CVDiff != null && !(CVDiff > 1)) {
+                row.add("Pass");
+            } else {
+                row.add("Fail");
                 isAllPass = false;
             }
 
@@ -195,10 +223,10 @@ public class StatsPortfolioLossValidationCC {
         // Result
         headers.add("perspcode");
         headers.add("AAL-Diff");
-        headers.add("AAL");
         headers.add("StdDev-Diff");
-        headers.add("STD");
         headers.add("CV-Diff");
+        headers.add("AAL");
+        headers.add("STD");
         headers.add("CV");
 
         results.add(sectionNames);
