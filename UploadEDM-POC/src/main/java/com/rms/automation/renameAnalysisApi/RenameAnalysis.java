@@ -14,7 +14,7 @@ public class RenameAnalysis {
     public static void rename(Map<String, String> tc, String analysisId) throws Exception {
         System.out.println("***** Running Rename Analysis API ********");
 
-        String token = ApiUtil.getSmlToken(LoadData.config.getUsername(), LoadData.config.getPassword(), LoadData.config.getTenant(), "accessToken");
+        String token = ApiUtil.getSmlToken(tc);
 
         Map<String, Object> payload = new HashMap<>();
         payload.put("newAnalysisName", tc.get("RNM_NEW_ANALYSIS_NAME"));
@@ -28,7 +28,8 @@ public class RenameAnalysis {
             if (jobId == null) {
                 throw new Exception("JobId is null");
             }
-            String msg = JobsApi.waitForJobToComplete(jobId, token, "Rename Analysis API");
+            String msg = JobsApi.waitForJobToComplete(jobId, token, "Rename Analysis API",
+                    "RNM_RENAME_ANALYSIS_JOB_STATUS", tc.get("INDEX"));
             System.out.println("wait for job msg: " + msg);
             if(msg.equalsIgnoreCase(AutomationConstants.JOB_STATUS_FINISHED) &&(!jobId.isEmpty()))
             {

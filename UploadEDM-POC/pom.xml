@@ -119,10 +119,70 @@
     </dependency>
 
     <dependency>
+      <groupId>org.apache.parquet</groupId>
+      <artifactId>parquet-hadoop</artifactId>
+      <version>1.13.0</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/org.apache.hadoop/hadoop-common -->
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-common</artifactId>
+      <version>3.3.6</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-mapreduce-client-core</artifactId>
+      <version>3.3.1</version> <!-- Adjust version as per your requirement -->
+    </dependency>
+
+
+    <dependency>
       <groupId>com.squareup.okhttp3</groupId>
       <artifactId>okhttp</artifactId>
       <version>4.9.3</version>
     </dependency>
+
+    <dependency>
+      <groupId>org.apache.parquet</groupId>
+      <artifactId>parquet-arrow</artifactId>
+      <version>1.13.1</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/org.apache.arrow/arrow-memory -->
+    <dependency>
+      <groupId>org.apache.arrow</groupId>
+      <artifactId>arrow-memory</artifactId>
+      <version>14.0.2</version>
+      <type>pom</type>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/org.apache.arrow/arrow-vector -->
+    <dependency>
+      <groupId>org.apache.arrow</groupId>
+      <artifactId>arrow-vector</artifactId>
+      <version>14.0.2</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/org.apache.arrow/arrow-format -->
+    <dependency>
+      <groupId>org.apache.arrow</groupId>
+      <artifactId>arrow-format</artifactId>
+      <version>14.0.2</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/org.apache.parquet/parquet-avro -->
+    <dependency>
+      <groupId>org.apache.parquet</groupId>
+      <artifactId>parquet-avro</artifactId>
+      <version>1.13.0</version>
+    </dependency>
+
+
+
+    <!-- https://mvnrepository.com/artifact/org.apache.parquet/parquet-arrow -->
+
 
 
     <!--    &lt;!&ndash; https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core &ndash;&gt;-->

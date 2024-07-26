@@ -42,10 +42,18 @@ public class ApiUtil {
         return payload;
     }
 
-    public static String getSmlToken(String user, String password, String tenantName, String tokenType) throws Exception {
+    public static String getSmlToken(Map<String, String> tc) throws Exception {
+        String user = tc.get("USERNAME");
+        String password = tc.get("PASSWORD");
+        String tenantName = tc.get("TENANT");
+        return getSmlToken(user, password, tenantName);
+    }
+
+    public static String getSmlToken(String user, String password, String tenantName) throws Exception {
         RetryUtil retryRequest = new RetryUtil(5);
         String uri = EndPointManager.baseUrl+EndPointManager.apiendpoints.get("authorize");
         String payload = createAuthPayload(user, password, tenantName);
+        String tokenType = "accessToken";
         RestApiHelper apiHelper = new RestApiHelper("", uri, "application/json");
         Response response = apiHelper.submitPostWithoutToken(payload);
         if (response.getStatusCode() == AutomationConstants.STATUS_OK) {
@@ -59,6 +67,7 @@ public class ApiUtil {
             throw new Exception("Auth api failed to generate token " + var10002 + " with status code" + response.getStatusCode());
         }
     }
+
 
     public static Boolean fileMultiPartUpload(
             String authToken, String dbType, String filePath, String fileExt, String fileName)
@@ -209,9 +218,10 @@ public class ApiUtil {
         return true;
     }
 
-    public static Response uploadEDM(String authToken, String dataSource,String payload) {
+    public static Response uploadEDM(String authToken, String dataSource,Map<String, Object> payload) {
         String api = String.format(EndPointManager.apiendpoints.get("uploadEDM"), getRmsUploadId(), dataSource);
         String url = EndPointManager.baseUrl + api;
+        System.out.println("Uploading EDM: " + url);
         RestApiHelper restApiHelper = new RestApiHelper(authToken, url, "application/json", false);
         return payload.isEmpty() ? restApiHelper.submitPost() : restApiHelper.submitPost(payload);
     }
@@ -248,15 +258,6 @@ public class ApiUtil {
 
     public static Response getAnalysisNameByAnalysisId(String authToken, String analysisId)
     {
-//        String api =EndPointManager.apiendpoints.get("analysisName") +"id+IN+("+analysisId +")&sort=id+DESC";
-//        String url = EndPointManager.baseUrl + api;
-//        RestApiHelper restApiHelper =
-//                new RestApiHelper(
-//                        authToken, url, "application/json", false);
-//        Response response = restApiHelper.submitGet();
-//        return response;
-
-//https://api-euw1.rms-npe.com/riskmodeler/v2/analyses?limit=200&offset=0&q=id+IN+(124516)&sort=id+DESC
 
         String baseUrl = "https://api-euw1.rms-npe.com/riskmodeler/v2/analyses";
 
@@ -267,14 +268,11 @@ public class ApiUtil {
                 .get();
 
         return response;
-
-
-
-
     }
     public static Response getGroups(String authToken) {
         String api = EndPointManager.apiendpoints.get("getGroups");
         String url = EndPointManager.baseUrl + api;
+     //   String url="https://api-euw1.rms-npe.com/sml/tenantinfo/v1/resourcegroups?filter=ApplicationCode=RI-RISKMODELER";
         RestApiHelper restApiHelper =
                 new RestApiHelper(
                         authToken, url, "application/json", false);
@@ -290,10 +288,21 @@ public class ApiUtil {
             //converting the response into list of groups,Groups.class is a type.
             List<Groups> listOfGroups = groupResponse.jsonPath().getList("$", Groups.class);
             //Looping over list of groups to check if group name exists in the list, then get the Gguid
-            listOfGroups.stream().forEach((Groups g) -> {
-                if (Arrays.stream(groupNamesList).anyMatch((String n) -> n.equals(g.getGroupName()))) {
-                    guidList.add(g.getGroupGuid());
+
+            Arrays.stream(groupNamesList).forEach((String gName) -> {
+                Optional<Groups> isGroup = listOfGroups.stream().filter((Groups g) -> g.getGroupName().equals(gName)).findFirst();
+                if (isGroup.isPresent()) {
+                    guidList.add(isGroup.get().getGroupGuid());
+                } else {
+                    System.out.println("Group not found: " + gName + " on RM, Please make sure the Group name entered in the test case is correct");
                 }
+//                if (Arrays.stream(groupNamesList).anyMatch((String n) -> n.equals(g.getGroupName()))) {
+//                }
+//
+//                else
+//                {
+//                    System.out.println("Group not found: " + g.getGroupName() + " on RM, Please make sure the Group name entered in the test case is correct");
+//                }
             });
 
         } else {
@@ -405,6 +414,9 @@ public class ApiUtil {
            Response response = apiHelper.submitPost(payload);
             return response;
     }
+
+
+
 
     public static Response renameAnalysisApi(Map<String, Object> payload, String analysisId, String token) throws Exception {
         String api = String.format(EndPointManager.apiendpoints.get("renameAnalysis"), analysisId);
@@ -609,6 +621,16 @@ public class ApiUtil {
                 perils.getPeril(), perils.getVersion(), perils.getVendor(), perils.getInsuranceType(), perils.getAnalysisMode(),perils.getFire(),
                 perils.getCoverage(),perils.getProperty());
         System.out.println("---------ProfileTemplate payload for " + perils.getPeril() + " = " + api);
+        String url = EndPointManager.baseUrl + api;
+        RestApiHelper restApiHelper =
+                new RestApiHelper(
+                        authToken, url, "application/json", false);
+        return restApiHelper.submitGet();
+    }
+
+    public static Response getAllHDModelProfiles(String authToken) {
+
+        String api = String.format(EndPointManager.apiendpoints.get("getHDModelProfile"));
         String url = EndPointManager.baseUrl + api;
         RestApiHelper restApiHelper =
                 new RestApiHelper(

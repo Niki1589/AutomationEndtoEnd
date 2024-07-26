@@ -13,22 +13,20 @@ import java.util.Map;
 import static com.rms.automation.edm.ApiUtil.getTreatyIdByAnalysisId;
 
 public class PATETests {
-    public static void executePATETests(String caseNo, String analysisId) throws Exception {
+    public static void executePATETests(String caseNo, String analysisId,String username,String password,String tenant) throws Exception {
         List<Map<String, String>> pateList = LoadData.readCaseTCFromLocalExcel_pate(caseNo);
         for ( Map<String, String> tc : pateList) {
-            PATE(tc,analysisId);
+            PATE(tc,analysisId, username,password,tenant);
         }
     }
 
-    private static void PATE(Map<String, String> tc, String analysisIdBatch) throws Exception {
+    private static void PATE(Map<String, String> tc, String analysisIdBatch,String username,String password,String tenant) throws Exception {
         if (tc != null) {
             Map<String, List<Map<String, Object>>> payload = new HashMap<>();
-            if (tc.get("ifRun").equalsIgnoreCase("YES")) {
-
                 String analysisId_pate = analysisIdBatch;
                 System.out.println("***** Running PATE API ********");
 
-                String token = ApiUtil.getSmlToken(LoadData.config.getUsername(), LoadData.config.getPassword(), LoadData.config.getTenant(), "accessToken");
+                String token = ApiUtil.getSmlToken(username,password,tenant);
 
                 String pateOperationType = tc.get("operationType");
 
@@ -152,7 +150,8 @@ public class PATETests {
                     if (jobId == null) {
                         throw new Exception("JobId is null");
                     }
-                    String msg =  JobsApi.waitForJobToComplete(jobId, token, "Pate API");
+                    String msg = JobsApi.waitForJobToComplete(jobId, token, "Pate API",
+                            "IS_PATE_JOB_STATUS", tc.get("index"));
                     System.out.println("wait for job msg: " + msg);
                     analysisId_pate = String.valueOf(JobsApi.getAnalysisIDByJobId_Pate(jobId, token));
 
@@ -191,7 +190,6 @@ public class PATETests {
                     System.out.println("Pate Api Message: " + msg);
                 }
 
-            }
         }
     }
 }

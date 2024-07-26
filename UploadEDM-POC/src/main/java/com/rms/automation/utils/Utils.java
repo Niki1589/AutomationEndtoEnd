@@ -1,18 +1,24 @@
 package com.rms.automation.utils;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.parquet.example.data.Group;
+import org.apache.parquet.hadoop.ParquetReader;
+import org.apache.parquet.hadoop.example.GroupReadSupport;
+import org.apache.parquet.schema.Type;
 import org.apache.poi.ss.usermodel.*;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -112,7 +118,7 @@ public class Utils {
 
                 // Print progress every second
                 if (elapsedTime > 1000) {
-                    System.out.println("Downloaded " + bytesReadTotal + " of " + contentLength + " bytes (" + progress + "%)");
+                 //   System.out.println("Downloaded " + bytesReadTotal + " of " + contentLength + " bytes (" + progress + "%)");
                     startTime = currentTime;
                 }
             }
@@ -140,5 +146,267 @@ public class Utils {
         }
         return true; // The string is valid
     }
+
+    public static Double parseToDouble(String str, String name, String pr) {
+        try {
+            if (str != null && !str.isEmpty()) {
+                return Double.valueOf(str);
+            } else {
+                throw new Exception("Error");
+            }
+        } catch (Exception ex) {
+            System.out.println("Wrong "+name+" at "+pr);
+        }
+        return null;
+    }
+
+    public static Double checkDiff(String baseline, String actual, String name, String pr) {
+
+        Double baseline_ = Utils.parseToDouble(baseline, name, pr);
+        Double actual_ = Utils.parseToDouble(actual, name, pr);
+
+        Double difference = null;
+        if (baseline_ != null && actual_ != null) {
+            difference = Math.abs(baseline_ - actual_);
+        }
+
+        return difference;
+    }
+
+
+    public static void unzip(String zipFilePath) throws IOException {
+        File zipFile = new File(zipFilePath);
+        String destDir = zipFile.getParent(); // Extract to the same directory as the zip file
+
+        try (ZipInputStream zipIn = new ZipInputStream(new FileInputStream(zipFile))) {
+            ZipEntry entry = zipIn.getNextEntry();
+
+            // Iterate over all entries in the zip file
+            while (entry != null) {
+                String filePath = destDir + File.separator + entry.getName();
+
+                // Handle directories separately
+                if (entry.isDirectory()) {
+                    File dir = new File(filePath);
+                    dir.mkdirs(); // Create directory if not exists
+                } else {
+                    // Ensure parent directories exist
+                    File parentDir = new File(filePath).getParentFile();
+                    if (!parentDir.exists()) {
+                        parentDir.mkdirs();
+                    }
+
+                    // Extract file
+                    extractFile(zipIn, filePath);
+                }
+
+                zipIn.closeEntry();
+                entry = zipIn.getNextEntry();
+            }
+        }
+
+    }
+    private static void extractFile(ZipInputStream zipIn, String filePath) throws IOException {
+        try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(filePath))) {
+            byte[] bytesIn = new byte[4096];
+            int read;
+            while ((read = zipIn.read(bytesIn)) != -1) {
+                bos.write(bytesIn, 0, read);
+            }
+        }
+    }
+
+    public static Boolean isDirExists(String dir) {
+        try {
+            Path dirPath = Paths.get(dir);
+            if (Files.exists(dirPath) && Files.isDirectory(dirPath)) return true;
+           // System.out.println("Dir "+dir+" Does not exists");
+        } catch (Exception ex) {
+            System.out.println("Dir "+dir+" Does not exists");
+        }
+        return false;
+    }
+
+
+    public static List<Map<String, String>> readCSV(String folderPath) throws IOException {
+        try (Stream<Path> files = Files.list(Paths.get(folderPath))) {
+            Optional<Path> firstCsvFile = files
+                    .filter(Files::isRegularFile)
+                    .filter(path -> path.getFileName().toString().endsWith(".csv"))
+                    .findFirst();
+
+            if (firstCsvFile.isPresent()) {
+                List<Map<String, String>> data = new ArrayList<>();
+                BufferedReader br = new BufferedReader(new FileReader(firstCsvFile.get().toFile()));
+                String headersLine = br.readLine();
+                String[] headerss = headersLine.split(",");
+                String line;
+                while ((line = br.readLine()) != null) {
+                    String[] values = line.split(",");
+                    Map<String, String> row = new HashMap<>();
+                    for (int i = 0; i < headerss.length; i++) {
+                        String key = headerss[i];
+                        String value = values[i];
+                        key = key.replace("\"", "");
+                        value = value.replace("\"", "");
+                        row.put(key, value);
+                    }
+                    data.add(row);
+                }
+                br.close();
+                return data;
+            } else {
+               // System.out.println("No CSV files starting with 'csv' found in the folder.");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static List<Map<String, String>> readMultiCSV(String folderPath) throws IOException {
+        List<Map<String, String>> data = new ArrayList<>();
+
+        try (Stream<Path> files = Files.list(Paths.get(folderPath))) {
+            files.filter(Files::isRegularFile)
+                    .filter(path -> path.getFileName().toString().endsWith(".csv"))
+                    .forEach(path -> {
+                        try (BufferedReader br = new BufferedReader(new FileReader(path.toFile()))) {
+                            String headersLine = br.readLine();
+                            if (headersLine != null) {
+                                String[] headers = headersLine.split(",");
+                                String line;
+                                while ((line = br.readLine()) != null) {
+                                    String[] values = line.split(",");
+                                    Map<String, String> row = new HashMap<>();
+                                    for (int i = 0; i < headers.length; i++) {
+                                        String key = headers[i].replace("\"", "");
+                                        String value = values[i].replace("\"", "");
+                                        row.put(key, value);
+                                    }
+                                    data.add(row);
+                                }
+                            }
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return data;
+
+    }
+
+    // Helper method to read Parquet files from a given path
+    static List<Map<String, String>> readParquetFilesFromPath(Path path) throws IOException {
+        List<Map<String, String>> localData = new ArrayList<>();
+        List<String> listOfFields = new ArrayList<>();
+
+        Configuration conf = new Configuration();
+        try (Stream<Path> files = Files.list(path)) {
+            files
+                    .filter(Files::isRegularFile)
+                    .filter(p -> p.getFileName().toString().endsWith(".parquet"))
+                    .forEach(file -> {
+                        org.apache.hadoop.fs.Path hadoopPath = new org.apache.hadoop.fs.Path(file.toFile().getPath());
+                        try (ParquetReader<Group> reader = ParquetReader.builder(new GroupReadSupport(), hadoopPath)
+                                .withConf(conf)
+                                .build()) {
+
+                            Group group;
+                            while ((group = reader.read()) != null) {
+                                if (group != null && listOfFields.size() == 0) {
+                                    List<Type> types = group.asGroup().getType().getFields();
+                                    for (Type type : types) {
+                                        listOfFields.add(type.getName());
+                                    }
+                                }
+
+                                int colIndex = 0;
+                                Map<String, String> row = new HashMap<>();
+                                for (String field : listOfFields) {
+                                    String value = group.getValueToString(colIndex++, 0);
+                                    row.put(field, value);
+                                }
+                                localData.add(row);
+                            }
+
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    });
+        }
+
+        return localData;
+    }
+
+    public static List<Map<String, String>> readParquet(String folderPath) throws IOException {
+        List<Map<String, String>> data = new ArrayList<>();
+
+        Path folder = Paths.get(folderPath);
+        List<Map<String, String>> initialData = readParquetFilesFromPath(folder);
+        if (initialData.isEmpty()) {
+            try (Stream<Path> subfolders = Files.list(folder).filter(Files::isDirectory)) {
+                Optional<Path> firstSubfolder = subfolders.findFirst();
+                if (firstSubfolder.isPresent()) {
+                    data = readParquetFilesFromPath(firstSubfolder.get());
+                }
+            }
+        } else {
+            data = initialData;
+        }
+
+        return data;
+    }
+
+//    public static List<Map<String, String>> readParquet(String folderPath) throws IOException {
+//        try (Stream<Path> files = Files.list(Paths.get(folderPath))) {
+//            Optional<Path> firstFile = files
+//                    .filter(Files::isRegularFile)
+//                    .filter(path -> path.getFileName().toString().endsWith(".parquet"))
+//                    .findFirst();
+//
+//            if (firstFile.isPresent()) {
+//
+//                Configuration conf = new Configuration();
+//                org.apache.hadoop.fs.Path path = new org.apache.hadoop.fs.Path(firstFile.get().toFile().getPath());
+//
+//                List<Map<String, String>> data = new ArrayList<>();
+//                List<String> listOfFields = new ArrayList<>();
+//
+//                try (ParquetReader<Group> reader = ParquetReader.builder(new GroupReadSupport(), path)
+//                        .withConf(conf)
+//                        .build()) {
+//
+//                    // Read and write rows
+//                    Group group;
+//                    while ((group = reader.read()) != null) {
+//
+//                        if (group != null && listOfFields.size() == 0) {
+//                            List<Type> types = group.asGroup().getType().getFields();
+//                            for (Type type : types) {
+//                                listOfFields.add(type.getName());
+//                            }
+//                        }
+//
+//                        int colIndex = 0;
+//                        Map<String, String> row = new HashMap<>();
+//                        for (String field : listOfFields) {
+//                            String value = group.getValueToString(colIndex++, 0);
+//                            row.put(field, value);
+//                        }
+//                        data.add(row);
+//
+//                    }
+//
+//                }
+//
+//                return data;
+//            }
+//        }
+//        return null;
+//    }
 
 }

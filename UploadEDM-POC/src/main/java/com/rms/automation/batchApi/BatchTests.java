@@ -1,8 +1,10 @@
 package com.rms.automation.batchApi;
+import com.amazonaws.services.dynamodbv2.xspec.S;
 import com.rms.automation.JobsApi.JobsApi;
 import com.rms.automation.PATEApi.PATETests;
 import com.rms.automation.Upload.UploadRDM;
 import com.rms.automation.climateChange.ClimateChangeTests;
+import com.rms.automation.constants.AutomationConstants;
 import com.rms.automation.currencyConverterApi.CurrencyConverter;
 import com.rms.automation.edm.ApiUtil;
 import com.rms.automation.edm.LoadData;
@@ -12,6 +14,7 @@ import com.rms.automation.merge.jsonMapper.Perils;
 import com.rms.automation.renameAnalysisApi.RenameAnalysis;
 import com.rms.automation.utils.Utils;
 import com.google.gson.*;
+import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
 import java.lang.reflect.Field;
 import java.util.*;
@@ -22,17 +25,23 @@ public class BatchTests {
     public static void batchAPI(Map<String, String> tc,String portfolioId,String dataSourceName) throws Exception {
 
         String analysisId = "";
-        String token = ApiUtil.getSmlToken(LoadData.config.getUsername(), LoadData.config.getPassword(), LoadData.config.getTenant(), "accessToken");
+        String modelProfileIdRM="";
+        String token = ApiUtil.getSmlToken(tc);
 
         Perils perils = Perils.extractPerilFromTC(tc);
 
+        String username=tc.get("USERNAME");
+        String password=tc.get("PASSWORD");
+        String tenant=tc.get("TENANT");
         try {
+
+            String modelProfileId = ModelProfileAPI.getModelProfileApi(perils, tc, token);
+
+                //Code to check if Model Profile API exists on the UI
+
             if (perils.getIfModelRun().equalsIgnoreCase("YES")) {
 
-                System.out.println("***** Running Batch Api Tests ********");
-
-                String modelProfileId = ModelProfileAPI.getModelProfileApi(perils, tc, token);
-
+                System.out.println("Running Batch API");
                 System.out.println(dataSourceName + " ************* " + portfolioId);
                 if (dataSourceName == null) {
                     throw new Exception("DataSourcename is null or empty, please provide a valid dataSourceName");
@@ -41,20 +50,16 @@ public class BatchTests {
                     throw new Exception("PortfolioId is null or empty, please provide a valid portflioId");
                 }
 
-            Object payloadObject = getPayloadBatchApi(perils.getPortfolioId(), dataSourceName, modelProfileId, Utils.isTrue(tc.get("GEO_IS_GEOCODE")), perils);
+                Object payloadObject = getPayloadBatchApi(perils.getPortfolioId(), dataSourceName, modelProfileId, Utils.isTrue(tc.get("GEO_IS_GEOCODE")), perils);
                     System.out.println("After Batch payload");
                     Response batchResponse = ApiUtil.batchAPI(token, payloadObject);
                     String hdr = batchResponse.getHeader("Location");
                     String jobId = hdr.substring(hdr.lastIndexOf('/') + 1);
                     System.out.println(batchResponse.getStatusCode() + "  :Batch Status: jobId:" + jobId);
+                    LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "MRN_BATCH_JOB_ID", jobId);
 
                 String msg = null;
-                try {
-                    msg = JobsApi.waitForJobToComplete(jobId, token, "Batch API");
-                } catch (Exception e) {
-                    System.out.println("Error in waitForJobToComplete : " + e.getMessage());
-                    throw new RuntimeException(e);
-                }
+                msg = JobsApi.waitForJobToComplete(jobId, token, "Batch API", "MRN_JOB_STATUS", tc.get("INDEX"));
                 System.out.println("wait for job msg: " + msg);
                 System.out.println("***** Finished Batch Api Tests");
                 System.out.println("***** Finished till " + perils.getPeril());
@@ -64,23 +69,25 @@ public class BatchTests {
                     LoadData.UpdateTCInLocalExcel(tc.get("INDEX"), "MRN_ANALYSIS_ID", analysisId);
                 }
                 // Perform downstream workflows - RDM Export, File Export, Convert Currency , Rename Analysis, Pate, Climate Change
-                executeDownStreamWorkflows(tc, analysisId);
+                executeDownStreamWorkflows(tc, analysisId,username,password,tenant);
             }
 
             else {
                 analysisId = tc.get("MRN_ANALYSIS_ID");
 
                 // Perform downstream workflows - RDM Export, File Export, Convert Currency , Rename Analysis, Pate
-                executeDownStreamWorkflows(tc, analysisId);
+                executeDownStreamWorkflows(tc, analysisId,username,password,tenant);
             }
-        } catch (Exception e) {
+        } catch (Exception e)
+
+        {
             System.out.println("Error in Code = " + e.getMessage());
             e.printStackTrace();
             throw e;
         }
     }
 
-    private static void executeDownStreamWorkflows(Map<String, String> tc, String analysisId) throws Exception {
+    private static void executeDownStreamWorkflows(Map<String, String> tc, String analysisId, String username, String password, String tenant) throws Exception {
       //  String caseNo = tc.get("TEST_CASE_NO");
 
         if (Utils.isTrue(tc.get("REX_IF_RDM_EXPORT"))) {
@@ -99,66 +106,11 @@ public class BatchTests {
             RenameAnalysis.rename(tc, analysisId);
         }
         if (Utils.isTrue(tc.get("IS_PATE"))) {
-            PATETests.executePATETests(tc.get("TEST_CASE_NO"), analysisId);
+            PATETests.executePATETests(tc.get("TEST_CASE_NO"), analysisId,username,password,tenant);
         }
         if (Utils.isTrue(tc.get("CCG_IS_CLIMATE_CHANGE"))) {
             ClimateChangeTests.climateChange(tc, analysisId);
         }
-
-        //        for (String key : tc.keySet()) {
-//            switch (key) {
-//                case "REX_IF_RDM_EXPORT":
-//                    if (Utils.isTrue(tc.get(key))) {
-//                       // export.exportType(tc, analysisId);
-//                        RdmExportTests.rdmExport(tc,analysisId);
-//                    }
-//                    break;
-//
-//                case "REX_IF_FILE_EXPORT":
-//                    if (Utils.isTrue(tc.get(key))) {
-//                       // export.exportType(tc, analysisId);
-//                        FileExportTests.fileExport(tc,analysisId);
-//                    }
-//                    break;
-//
-//                case "IF_IMPR_ANALYSIS_FROM_RDM":
-//                    if (Utils.isTrue(tc.get(key))) {
-//                        UploadRDM.executeUploadRdm(tc);
-//                    }
-//                    break;
-//
-//                case "CCU_IS_CONVERT_CURRENCY":
-//                    if (Utils.isTrue(tc.get(key))) {
-//                        CurrencyConverter.convert(tc, analysisId);
-//                    }
-//                    break;
-//                case "RNM_IS_RENAME_ANALYSIS":
-//                    if (Utils.isTrue(tc.get(key))) {
-//                        RenameAnalysis.rename(tc, analysisId);
-//                    }
-//                    break;
-//                case "IS_PATE":
-//                    if (Utils.isTrue(tc.get(key))) {
-//                        PATETests.executePATETests(caseNo, analysisId);
-//                    }
-//                    break;
-//                case "CCG_IS_CLIMATE_CHANGE":
-//                    if (Utils.isTrue(tc.get(key))) {
-//                        ClimateChangeTests.climateChange(tc, analysisId);
-//                    }
-//                    break;
-//
-//                case "IS_GROUPING":
-//                    if (Utils.isTrue(tc.get(key))) {
-//
-//                        AnalysisGroupingTests.execute();
-//                    }
-//                    break;
-//
-//
-//
-//            }
-//        }
     }
 
     public static Object getPayloadBatchApi(
@@ -171,15 +123,16 @@ public class BatchTests {
         Gson gson = new Gson(); //To convert JSON to Java object, we use GSON library from google
 
         String perilName = perils.getPeril().replace(" ", "_");
-        String batchName = perilName+"_BACTH";
-        String profileId = perilName+"_Process_"+ModelProfileId;
+        String batchName = perilName + "_BACTH";
+        String profileId = perilName + "_Process_" + ModelProfileId;
 
         String geoLicenseType = "0";
         if (perils.getGeoHazLayers().contains("geoLicenseType")) {
             geoLicenseType = "1";
         }
         String geoCodedPayload = "";
-        if (!isGeoCoded) {
+        String payloadInString = null;
+        if (isGeoCoded) {
             geoCodedPayload = "{\n" +
                     "\"continueOnFailure\": false,\n" +
                     "\"dependsOn\": [],\n" +
@@ -188,103 +141,166 @@ public class BatchTests {
                     "\"name\": \"geocode\",\n" +
                     "\"type\": \"geocode\",\n" +
                     "\"engineType\": \"RL\",\n" +
-                    "\"version\": \""+perils.getGeocodeVersion()+"\",\n" +
+                    "\"version\": \"" + perils.getGeocodeVersion() + "\",\n" +
                     "\"layerOptions\": {\n" +
-                    "\"skipPrevGeocoded\": "+ perils.getGeoHazLayers().contains("skipPrevGeocoded") +",\n" +
-                    "\"aggregateTriggerEnabled\": \""+ perils.getGeoHazLayers().contains("aggregateTriggerEnabled") +"\",\n" +
-                    "\"geoLicenseType\": \""+ geoLicenseType +"\"\n" +
+                    "\"skipPrevGeocoded\": " + perils.getGeoHazLayers().contains("skipPrevGeocoded") + ",\n" +
+                    "\"aggregateTriggerEnabled\": \"" + perils.getGeoHazLayers().contains("aggregateTriggerEnabled") + "\",\n" +
+                    "\"geoLicenseType\": \"" + geoLicenseType + "\"\n" +
                     "}\n" +
                     "},\n" +
                     "{\n" +
                     "\"name\": \"earthquake\",\n" +
                     "\"type\": \"hazard\",\n" +
-                    "\"version\": \""+perils.getGeoHazVersion()+"\",\n" +
+                    "\"version\": \"" + perils.getGeoHazVersion() + "\",\n" +
                     "\"engineType\": \"RL\",\n" +
                     "\"layerOptions\": {\n" +
-                    "\"skipPrevHazard\": "+ perils.getGeoHazLayers().contains("skipPrevHazard") +",\n" +
-                    "\"overrideUserDef\": "+ perils.getGeoHazLayers().contains("overrideUserDef") +"\n" +
+                    "\"skipPrevHazard\": " + perils.getGeoHazLayers().contains("skipPrevHazard") + ",\n" +
+                    "\"overrideUserDef\": " + perils.getGeoHazLayers().contains("overrideUserDef") + "\n" +
                     "}\n" +
                     "},\n" +
                     "{\n" +
                     "\"engineType\": \"RL\",\n" +
                     "\"layerOptions\": {\n" +
-                    "\"overrideUserDef\": "+ perils.getGeoHazLayers().contains("overrideUserDef") +",\n" +
-                    "\"skipPrevHazard\": "+ perils.getGeoHazLayers().contains("skipPrevHazard") +"\n" +
+                    "\"overrideUserDef\": " + perils.getGeoHazLayers().contains("overrideUserDef") + ",\n" +
+                    "\"skipPrevHazard\": " + perils.getGeoHazLayers().contains("skipPrevHazard") + "\n" +
                     "},\n" +
                     "\"type\": \"hazard\",\n" +
                     "\"name\": \"windstorm\",\n" +
-                    "\"version\": \""+perils.getGeoHazVersion()+"\"\n" +
+                    "\"version\": \"" + perils.getGeoHazVersion() + "\"\n" +
                     "}" +
                     "],\n" +
                     "\"label\": \"GEOHAZ\",\n" +
-                    "\"operation\": \"/v2/portfolios/"+portfolioId+"/geohaz?datasource="+dataSourceName+"\",\n" +
-                    "\"url\": \"/v2/portfolios/"+portfolioId+"/geohaz?datasource="+dataSourceName+"\"\n" +
+                    "\"operation\": \"/v2/portfolios/" + portfolioId + "/geohaz?datasource=" + dataSourceName + "\",\n" +
+                    "\"url\": \"/v2/portfolios/" + portfolioId + "/geohaz?datasource=" + dataSourceName + "\"\n" +
                     "},\n";
+            String exposurSummary = "" +
+                    "        {\n" +
+                    "            \"continueOnFailure\": \"true\",\n" +
+                    "            \"dependsOn\": [\n" +
+                    "                \"GEOHAZ\"\n" +
+                    "            ],\n" +
+                    "            \"input\": {\n" +
+                    "                \"perilList\": [\n" +
+                    "                    \"EQ\",\n" +
+                    "                    \"FL\",\n" +
+                    "                    \"FR\",\n" +
+                    "                    \"TR\",\n" +
+                    "                    \"WS\"\n" +
+                    "                ],\n" +
+                    "                \"reportName\": \"" + batchName + "\"\n" +
+                    "            },\n" +
+                    "            \"label\": \"EXPOSURE_SUMMARY\",\n" +
+                    "            \"operation\": \"/v2/portfolios/" + portfolioId + "/summary_report?datasource=" + dataSourceName + "\"\n" +
+                    "        },\n";
+            payloadInString = "{\n" +
+                    "\"name\":\"" + batchName + "\",\n" +
+                    "\"operations\":[\n" +
+                    exposurSummary +
+                    geoCodedPayload +
+                    "{\n" +
+                    "\"continueOnFailure\":true,\n" +
+                    "\"dependsOn\":[\n" +
+                    "\"GEOHAZ\"\n" +
+                    "],\n" +
+                    "\"input\":{\n" +
+                    "\"currency\":{\n" +
+                    "\"asOfDate\":\"" + perils.getAsOfDateProcess() + "\",\n" +
+                    "\"code\":\"" + perils.getCurrencyCodeProcess() + "\",\n" +
+                    "\"scheme\":\"" + perils.getCurrencySchemeProcess() + "\",\n" +
+                    "\"vintage\":\"" + perils.getCurrencyVintageProcess() + "\"\n" +
+                    "},\n" +
+                    "\"edm\":\"" + dataSourceName + "\",\n" +
+                    "\"eventRateSchemeId\":0,\n" +
+                    "\"exposureType\":\"PORTFOLIO\",\n" +
+                    "\"globalAnalysisSettings\":{\n" +
+                    "\"franchiseDeductible\":false,\n" +
+                    "\"minLossThreshold\":\"1.00\",\n" +
+                    "\"numMaxLossEvent\":\"1\",\n" +
+                    "\"treatConstructionOccupancyAsUnknown\":true\n" +
+                    "},\n" +
+                    "\"id\":" + portfolioId + ",\n" +
+                    "\"modelProfileId\":" + ModelProfileId + ",\n" +
+                    "\"outputProfileId\":" + perils.getOutputProfileId() + ",\n" +
+//                "\"treaties\":"+(perils.getTreaties().split(","))+",\n"+
+//                "\"treaties\":\""+perils.getTreaties()+"\",\n"+
+//                "\"treatiesName\":\""+perils.getTreatiesName() +"\",\n"+
+                    "\"treaties\":[" + perils.getTreaties() + "],\n" +
+                    "\"treatiesName\":[" + perils.getTreatiesName() + "],\n" +
+                    "\"tagIds\":[]\n" +
+                    "},\n" +
+                    "\"label\":\"" + profileId + "\",\n" +
+                    "\"operation\":\"/v2/portfolios/" + portfolioId + "/process\"\n" +
+                    "}" +
+                    "]\n" +
+                    "}";
+
         }
+        else {
 
-        String exposurSummary = "" +
-                "        {\n" +
-                "            \"continueOnFailure\": \"true\",\n" +
-                "            \"dependsOn\": [\n" +
-                "                \"GEOHAZ\"\n" +
-                "            ],\n" +
-                "            \"input\": {\n" +
-                "                \"perilList\": [\n" +
-                "                    \"EQ\",\n" +
-                "                    \"FL\",\n" +
-                "                    \"FR\",\n" +
-                "                    \"TR\",\n" +
-                "                    \"WS\"\n" +
-                "                ],\n" +
-                "                \"reportName\": \""+batchName+"\"\n" +
-                "            },\n" +
-                "            \"label\": \"EXPOSURE_SUMMARY\",\n" +
-                "            \"operation\": \"/v2/portfolios/"+portfolioId+"/summary_report?datasource="+dataSourceName+"\"\n" +
-                "        },\n";
-        String payloadInString="{\n"+
-                "\"name\":\""+batchName+"\",\n"+
-                "\"operations\":[\n"+
-                exposurSummary+
-                geoCodedPayload+
-                "{\n"+
-                "\"continueOnFailure\":true,\n"+
-                "\"dependsOn\":[\n"+
-                "\"GEOHAZ\"\n"+
-                "],\n"+
-                "\"input\":{\n"+
-                "\"currency\":{\n"+
-                "\"asOfDate\":\""+ perils.getAsOfDateProcess() +"\",\n"+
-                "\"code\":\""+ perils.getCurrencyCodeProcess() +"\",\n"+
-                "\"scheme\":\""+ perils.getCurrencySchemeProcess() +"\",\n"+
-                "\"vintage\":\"" + perils.getCurrencyVintageProcess() + "\"\n"+
-                "},\n"+
-                "\"edm\":\""+dataSourceName+"\",\n"+
-                "\"eventRateSchemeId\":0,\n"+
-                "\"exposureType\":\"PORTFOLIO\",\n"+
-                "\"globalAnalysisSettings\":{\n"+
-                "\"franchiseDeductible\":false,\n"+
-                "\"minLossThreshold\":\"1.00\",\n"+
-                "\"numMaxLossEvent\":\"1\",\n"+
-                "\"treatConstructionOccupancyAsUnknown\":true\n"+
-                "},\n"+
-                "\"id\":"+portfolioId+",\n"+
-                "\"modelProfileId\":"+ModelProfileId+",\n"+
-                "\"outputProfileId\":"+perils.getOutputProfileId()+",\n"+
-                "\"treaties\":["+perils.getTreaties()+"],\n"+
-                "\"treatiesName\":["+ perils.getTreatiesName() +"],\n"+
-                "\"tagIds\":[]\n"+
-                "},\n"+
-                "\"label\":\""+profileId+"\",\n"+
-                "\"operation\":\"/v2/portfolios/"+portfolioId+"/process\"\n"+
-                "}"+
-                "]\n"+
-                "}";
-
-
+            String exposurSummary = "" +
+                    "        {\n" +
+                    "            \"continueOnFailure\": \"true\",\n" +
+//                    "            \"dependsOn\": [\n" +
+//                    "                \"GEOHAZ\"\n" +
+//                    "            ],\n" +
+                    "            \"input\": {\n" +
+                    "                \"perilList\": [\n" +
+                    "                    \"EQ\",\n" +
+                    "                    \"FL\",\n" +
+                    "                    \"FR\",\n" +
+                    "                    \"TR\",\n" +
+                    "                    \"WS\"\n" +
+                    "                ],\n" +
+                    "                \"reportName\": \"" + batchName + "\"\n" +
+                    "            },\n" +
+                    "            \"label\": \"EXPOSURE_SUMMARY\",\n" +
+                    "            \"operation\": \"/v2/portfolios/" + portfolioId + "/summary_report?datasource=" + dataSourceName + "\"\n" +
+                    "        },\n";
+            payloadInString = "{\n" +
+                    "\"name\":\"" + batchName + "\",\n" +
+                    "\"operations\":[\n" +
+                    exposurSummary +
+                    "{\n" +
+                    "\"continueOnFailure\":true,\n" +
+//                    "\"dependsOn\":[\n" +
+//                    "\"GEOHAZ\"\n" +
+//                    "],\n" +
+                    "\"input\":{\n" +
+                    "\"currency\":{\n" +
+                    "\"asOfDate\":\"" + perils.getAsOfDateProcess() + "\",\n" +
+                    "\"code\":\"" + perils.getCurrencyCodeProcess() + "\",\n" +
+                    "\"scheme\":\"" + perils.getCurrencySchemeProcess() + "\",\n" +
+                    "\"vintage\":\"" + perils.getCurrencyVintageProcess() + "\"\n" +
+                    "},\n" +
+                    "\"edm\":\"" + dataSourceName + "\",\n" +
+                    "\"eventRateSchemeId\":0,\n" +
+                    "\"exposureType\":\"PORTFOLIO\",\n" +
+                    "\"globalAnalysisSettings\":{\n" +
+                    "\"franchiseDeductible\":false,\n" +
+                    "\"minLossThreshold\":\"1.00\",\n" +
+                    "\"numMaxLossEvent\":\"1\",\n" +
+                    "\"treatConstructionOccupancyAsUnknown\":true\n" +
+                    "},\n" +
+                    "\"id\":" + portfolioId + ",\n" +
+                    "\"modelProfileId\":" + ModelProfileId + ",\n" +
+                    "\"outputProfileId\":" + perils.getOutputProfileId() + ",\n" +
+//                "\"treaties\":"+(perils.getTreaties().split(","))+",\n"+
+//                "\"treaties\":\""+perils.getTreaties()+"\",\n"+
+//                "\"treatiesName\":\""+perils.getTreatiesName() +"\",\n"+
+                    "\"treaties\":[" + perils.getTreaties() + "],\n" +
+                    "\"treatiesName\":[" + perils.getTreatiesName() + "],\n" +
+                    "\"tagIds\":[]\n" +
+                    "},\n" +
+                    "\"label\":\"" + profileId + "\",\n" +
+                    "\"operation\":\"/v2/portfolios/" + portfolioId + "/process\"\n" +
+                    "}" +
+                    "]\n" +
+                    "}";
+        }
 
 
         System.out.println("Payload Batch API");
-                System.out.println(payloadInString);
+        System.out.println(payloadInString);
         return gson.fromJson(payloadInString, Object.class);
     }
 

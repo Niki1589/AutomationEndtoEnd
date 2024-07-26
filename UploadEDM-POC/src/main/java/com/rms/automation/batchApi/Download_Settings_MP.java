@@ -103,7 +103,7 @@ public class Download_Settings_MP {
             return  obj;
 
         }
-        return  new Download_Settings_MP();
+        return new Download_Settings_MP();
     }
 
 }

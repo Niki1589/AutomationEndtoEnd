@@ -8,9 +8,16 @@ import com.rms.automation.utils.Utils;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 public class RdmExportTests {
+
+    public static String fileNameRDM;
+    public static String localPathRDM;
 
     public static void rdmExport(Map<String, String> tc, String analysisId) throws Exception {
         RDMModel rdm = RDMMapper.map(tc, analysisId);
@@ -19,7 +26,7 @@ public class RdmExportTests {
     }
     public static void execute(Map<String, String> tc,RDMModel rdm, REX_EXPORT_HD_LOSSES_AS_ENUM exportHdLossesAs, String index) throws Exception {
         System.out.println("***** Running RDM Export API ********");
-        String token = ApiUtil.getSmlToken(LoadData.config.getUsername(), LoadData.config.getPassword(), LoadData.config.getTenant(), "accessToken");
+        String token = ApiUtil.getSmlToken(tc);
 
         if (REX_RDM_LOCATION_ENUM.PLATFORM.equals(rdm.getREX_RDM_LOCATION())) {
             Response response = ApiUtil.exportRDMToPlatform(
@@ -43,7 +50,10 @@ public class RdmExportTests {
                 if (jobId == null) {
                     throw new Exception("JobId is null");
                 }
-                String msg =   msg = JobsApi.waitForJobToComplete(jobId, token, "Export to RDM API");
+
+                String columnName = "RDM_EXPORT_JOB_STATUS_"+exportHdLossesAs.getValue();
+                String msg = JobsApi.waitForJobToComplete(jobId, token, "Export to RDM API",
+                        columnName, tc.get("INDEX"));
                 System.out.println("wait for job msg: " + msg);
                 if(msg.equalsIgnoreCase(AutomationConstants.JOB_STATUS_FINISHED) && (!jobId.isEmpty())) {
                     Response jobDetails = JobsApi.getJobDetailsByJobId(token, jobId);
@@ -51,16 +61,44 @@ public class RdmExportTests {
                     Map<String, Object> jobResponseMap = jsonPath.getMap("$");
                     Map<String, Object> summaryMap = (Map<String, Object>) jobResponseMap.get("summary");
 
-                    String s3Link = String.valueOf(summaryMap.get("downloadLink"));
-                    String fileName = s3Link.substring(s3Link.lastIndexOf("/") + 1, s3Link.indexOf("?"));
-                    String localPath = "/Users/Nikita.Arora/Documents/UploadEdmPoc/A002_SMOKE_EUWS/RDM/" + fileName;
-                    Utils.downloadFile(s3Link, localPath);
+                  String rdmLink = String.valueOf(summaryMap.get("downloadLink"));
+                    fileNameRDM = rdmLink.substring(rdmLink.lastIndexOf("/") + 1, rdmLink.indexOf("?"));
+
+                //  Create the folder RDM for the RDM files
+                    String RDMFolderPath = tc.get("FILE_EXPORT_PATH") + "RDM/";
+
+                    // Create a Path object representing the directory
+                    Path RDMFolder = Paths.get(RDMFolderPath);
+
+                    try {
+                        // Check if the base folder already exists
+                        if (Files.exists(RDMFolder)) {
+                            throw new IOException("Comparison folder already exists: " + RDMFolderPath);
+                        }
+
+                        // Attempt to create the directory
+                        Files.createDirectories(RDMFolder);
+                        System.out.println("RDM Folder created successfully.");
+                    } catch (IOException e) {
+                        System.err.println("Failed to create folder: " + e.getMessage());
+                    }
+
+                    localPathRDM = RDMFolderPath + fileNameRDM;
+                    Utils.downloadFile(rdmLink, localPathRDM);
+
+                    //Only PLT type losses can be imported as RDM to RM
 
                     if (tc.get("REX_EXPORT_HD_LOSSES_AS").equalsIgnoreCase(String.valueOf(REX_EXPORT_HD_LOSSES_AS_ENUM.PLT))) {
 
-                        LoadData.UpdateTCInLocalExcel(index, "IMPR_ANALYSIS_FROM_RDM_FILE_NAME", fileName);
-                        LoadData.UpdateTCInLocalExcel(index, "IMPR_ANALYSIS_FROM_RDM_FILE_PATH", localPath);
-                        LoadData.UpdateTCInLocalExcel(index, "RDM_EXPORT_JOBID", jobId);
+                        LoadData.UpdateTCInLocalExcel(index, "IMPR_ANALYSIS_FROM_RDM_FILE_NAME", fileNameRDM);
+                        LoadData.UpdateTCInLocalExcel(index, "IMPR_ANALYSIS_FROM_RDM_FILE_PATH", localPathRDM);
+                        LoadData.UpdateTCInLocalExcel(index, "RDM_EXPORT_JOBID_PLT", jobId);
+                    }
+                    else if (tc.get("REX_EXPORT_HD_LOSSES_AS").equalsIgnoreCase(String.valueOf(REX_EXPORT_HD_LOSSES_AS_ENUM.ELT)))
+                    {
+                        LoadData.UpdateTCInLocalExcel(index, "RDM_EXPORT_JOBID_ELT", jobId);
+
+
                     }
                 }
             }
@@ -89,7 +127,9 @@ public class RdmExportTests {
                 if (jobId == null) {
                     throw new Exception("JobId is null");
                 }
-                String msg = JobsApi.waitForJobToComplete(jobId, token, "Export to RDM API");
+                String columnName = "RDM_EXPORT_JOB_STATUS_"+exportHdLossesAs.getValue();
+                String msg = JobsApi.waitForJobToComplete(jobId, token, "Export to RDM API",
+                        columnName, tc.get("INDEX"));
                 System.out.println("wait for job msg: " + msg);
                 if(msg.equalsIgnoreCase(AutomationConstants.JOB_STATUS_FINISHED) && (!jobId.isEmpty()))
                 {

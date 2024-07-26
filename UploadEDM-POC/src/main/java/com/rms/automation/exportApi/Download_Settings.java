@@ -4,6 +4,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class Download_Settings {
 
     @JsonProperty("IsStatsMetric")
@@ -68,6 +72,14 @@ public class Download_Settings {
     public String getOutputLevels_EPMetric() {
         return outputLevels_EPMetric;
     }
+
+    // Adjusted method to return a list of values
+//    public List<String> getOutputLevels_EPMetric() {
+//        // Split the input string by commas and trim any whitespace
+//        return Arrays.stream(outputLevels_EPMetric.split(","))
+//                .map(String::trim)
+//                .collect(Collectors.toList());
+//    }
 
     public void setOutputLevels_EPMetric(String outputLevels_EPMetric) {
         this.outputLevels_EPMetric = outputLevels_EPMetric;

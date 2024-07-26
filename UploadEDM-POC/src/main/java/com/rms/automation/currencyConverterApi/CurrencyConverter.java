@@ -15,7 +15,7 @@ public class CurrencyConverter {
         int newAnalysisIdConvertCurrency=0;
         System.out.println("***** Running Currency Converter API ********");
 
-        String token = ApiUtil.getSmlToken(LoadData.config.getUsername(), LoadData.config.getPassword(), LoadData.config.getTenant(), "accessToken");
+        String token = ApiUtil.getSmlToken(tc);
 
         Map<String, Object> currency = new HashMap<>();
         currency.put("code", tc.get("CCU_CURRENCY"));
@@ -35,7 +35,8 @@ public class CurrencyConverter {
             if (jobId == null) {
                 throw new Exception("JobId is null");
             }
-            String msg = JobsApi.waitForJobToComplete(jobId, token, "Convert Currency API");;
+            String msg = JobsApi.waitForJobToComplete(jobId, token, "Convert Currency API",
+                    "CCU_CONVERT_CURRENCY_JOB_STATUS", tc.get("INDEX"));
             System.out.println("wait for job msg: " + msg);
             newAnalysisIdConvertCurrency = JobsApi.getnewAnalysisIDByJobId(jobId, token);
             if(msg.equalsIgnoreCase(AutomationConstants.JOB_STATUS_FINISHED ) && (!jobId.isEmpty()))
