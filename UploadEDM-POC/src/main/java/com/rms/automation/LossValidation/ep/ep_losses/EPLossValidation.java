@@ -4,7 +4,6 @@ import com.rms.automation.exportApi.Download_Settings;
 
 import java.io.File;
 import java.util.List;
-
 import static org.apache.commons.lang.StringUtils.containsIgnoreCase;
 
 public class EPLossValidation {
@@ -28,13 +27,15 @@ public class EPLossValidation {
             System.out.println("Actual directory '" + actualPathEP + "' does not exist or is not a directory.");
         }
 
+
         Boolean isPortfolioPass = null;
         if (downloadSettings.getOutputLevels_EPMetric()!=null && (downloadSettings.getOutputLevels_EPMetric().toUpperCase().contains("PORTFOLIO")))
             //||containsIgnoreCase(downloadSettings.getOutputLevels_EPMetric(),"Treaty")))
         {
+            //isPortfolioPass = EPPortlofioLossValidation.runPortfolioLossValidationEP(baselinePathEP, actualPathEP, outputPath, downloadSettings);
 
+            isPortfolioPass = EPPortlofioLossValidation.runPortfolioLossValidationEP(baselinePathEP, actualPathEP, outputPath,downloadSettings);
 
-            isPortfolioPass = EPPortlofioLossValidation.runPortfolioLossValidationEP(baselinePathEP, actualPathEP, outputPath, downloadSettings);
         }
 
         Boolean isTreatyPass = null;

@@ -99,7 +99,7 @@ public class PLTPortfolioLossValidationEP {
                     //  System.out.println("baselineDataDur took " + formatDuration(duration));
 
                     start = Instant.now();
-                    List<Map<String, String>> actualData = Utils.readMultiCSV(csvFolderPathActual);
+                    List<Map<String, String>> actualData = Utils.readParquet(csvFolderPathActual);
 
                     // Convert List<Map<String, String>> to Map<String, Map<String, String>>
                     Map<String, Map<String, String>> actualDataMap = convertListToMap(actualData, listOfKeys);

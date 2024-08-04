@@ -112,19 +112,19 @@ public class STATSPortfolioLossValidationEP {
                 row.add("");
             }
 
-            if (ALLDiff != null && !(ALLDiff > 1)) {
+            if (ALLDiff != null && !(ALLDiff <=1 )) {
                 row.add("Pass");
             } else {
                 row.add("Fail");
                 isAllPass = false;
             }
-            if (STDDiff != null && !(STDDiff > 1)) {
+            if (STDDiff != null && !(STDDiff <= 1)) {
                 row.add("Pass");
             } else {
                 row.add("Fail");
                 isAllPass = false;
             }
-            if (CVDiff != null && !(CVDiff > 1)) {
+            if (CVDiff != null && !(CVDiff <= 1)) {
                 row.add("Pass");
             } else {
                 row.add("Fail");
